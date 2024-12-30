@@ -35,7 +35,7 @@ const Index = () => {
     }
   };
 
-  const createNodesAndEdges = (data: any) => {
+  const createNodesAndEdges = (data: any, workflows: any[] = []) => {
     const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
     let yOffset = 0;
@@ -66,9 +66,9 @@ const Index = () => {
     });
 
     // Add workflow files if they exist
-    if (data.workflows) {
+    if (workflows.length > 0) {
       yOffset += 100;
-      data.workflows.forEach((workflow: any, index: number) => {
+      workflows.forEach((workflow: any, index: number) => {
         const id = `workflow-${index}`;
         newNodes.push({
           id,
@@ -96,17 +96,25 @@ const Index = () => {
       if (!repoResponse.ok) throw new Error("Repository not found");
       const repoData = await repoResponse.json();
 
-      // Fetch workflow files
-      const workflowsResponse = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/contents/.github/workflows`
-      );
-      
-      if (workflowsResponse.ok) {
-        const workflowsData = await workflowsResponse.json();
-        repoData.workflows = workflowsData;
+      // Try to fetch workflow files, but don't fail if they don't exist
+      let workflows: any[] = [];
+      try {
+        const workflowsResponse = await fetch(
+          `https://api.github.com/repos/${owner}/${repo}/contents/.github/workflows`
+        );
+        
+        if (workflowsResponse.ok) {
+          workflows = await workflowsResponse.json();
+          console.log("Workflows found:", workflows);
+        } else {
+          console.log("No workflows found in repository");
+        }
+      } catch (error) {
+        console.log("Error fetching workflows:", error);
+        // Continue without workflows
       }
 
-      return repoData;
+      return { repoData, workflows };
     } catch (error) {
       console.error("Error fetching repository data:", error);
       throw error;
@@ -127,15 +135,17 @@ const Index = () => {
     setLoading(true);
     try {
       const { owner, repo } = extractRepoInfo(repoUrl);
-      const repoData = await fetchRepoData(owner, repo);
-      const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(repoData);
+      const { repoData, workflows } = await fetchRepoData(owner, repo);
+      const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(repoData, workflows);
       
       setNodes(newNodes);
       setEdges(newEdges);
       
       toast({
         title: "Success",
-        description: "Repository workflow visualization created!",
+        description: workflows.length > 0 
+          ? "Repository workflow visualization created!"
+          : "Repository visualization created! (No workflows found)",
       });
     } catch (error: any) {
       toast({
