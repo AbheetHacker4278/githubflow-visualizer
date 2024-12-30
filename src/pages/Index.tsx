@@ -17,36 +17,101 @@ const nodeTypes = {
   github: GitHubNode,
 };
 
-const initialNodes: Node[] = [
-  {
-    id: "1",
-    type: "github",
-    data: { label: "main", type: "branch" },
-    position: { x: 250, y: 0 },
-  },
-  {
-    id: "2",
-    type: "github",
-    data: { label: "src", type: "folder" },
-    position: { x: 250, y: 100 },
-  },
-  {
-    id: "3",
-    type: "github",
-    data: { label: "App.tsx", type: "file" },
-    position: { x: 250, y: 200 },
-  },
-];
-
-const initialEdges: Edge[] = [
-  { id: "e1-2", source: "1", target: "2", animated: true },
-  { id: "e2-3", source: "2", target: "3", animated: true },
-];
-
 const Index = () => {
   const [repoUrl, setRepoUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
   const { toast } = useToast();
+
+  const extractRepoInfo = (url: string) => {
+    try {
+      const regex = /github\.com\/([^/]+)\/([^/]+)/;
+      const matches = url.match(regex);
+      if (!matches) throw new Error("Invalid GitHub URL");
+      return { owner: matches[1], repo: matches[2] };
+    } catch (error) {
+      throw new Error("Invalid GitHub URL format");
+    }
+  };
+
+  const createNodesAndEdges = (data: any) => {
+    const newNodes: Node[] = [];
+    const newEdges: Edge[] = [];
+    let yOffset = 0;
+
+    // Add repository node
+    newNodes.push({
+      id: "repo",
+      type: "github",
+      data: { label: data.name, type: "folder" },
+      position: { x: 250, y: yOffset },
+    });
+
+    yOffset += 100;
+
+    // Add default branch node
+    newNodes.push({
+      id: "branch",
+      type: "github",
+      data: { label: data.default_branch, type: "branch" },
+      position: { x: 250, y: yOffset },
+    });
+
+    newEdges.push({
+      id: "e-repo-branch",
+      source: "repo",
+      target: "branch",
+      animated: true,
+    });
+
+    // Add workflow files if they exist
+    if (data.workflows) {
+      yOffset += 100;
+      data.workflows.forEach((workflow: any, index: number) => {
+        const id = `workflow-${index}`;
+        newNodes.push({
+          id,
+          type: "github",
+          data: { label: workflow.name || workflow.path, type: "file" },
+          position: { x: 250, y: yOffset },
+        });
+        newEdges.push({
+          id: `e-branch-${id}`,
+          source: "branch",
+          target: id,
+          animated: true,
+        });
+        yOffset += 100;
+      });
+    }
+
+    return { nodes: newNodes, edges: newEdges };
+  };
+
+  const fetchRepoData = async (owner: string, repo: string) => {
+    try {
+      // Fetch repository information
+      const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+      if (!repoResponse.ok) throw new Error("Repository not found");
+      const repoData = await repoResponse.json();
+
+      // Fetch workflow files
+      const workflowsResponse = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/contents/.github/workflows`
+      );
+      
+      if (workflowsResponse.ok) {
+        const workflowsData = await workflowsResponse.json();
+        repoData.workflows = workflowsData;
+      }
+
+      return repoData;
+    } catch (error) {
+      console.error("Error fetching repository data:", error);
+      throw error;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,14 +125,27 @@ const Index = () => {
     }
 
     setLoading(true);
-    // Here we would normally fetch the repository data
-    // For now, we'll just show a success message
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast({
-      title: "Success",
-      description: "Repository structure loaded successfully!",
-    });
-    setLoading(false);
+    try {
+      const { owner, repo } = extractRepoInfo(repoUrl);
+      const repoData = await fetchRepoData(owner, repo);
+      const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(repoData);
+      
+      setNodes(newNodes);
+      setEdges(newEdges);
+      
+      toast({
+        title: "Success",
+        description: "Repository workflow visualization created!",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch repository data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -77,7 +155,7 @@ const Index = () => {
           GitHub Flow Visualizer
         </h1>
         <p className="text-gray-400 mb-8">
-          Enter a GitHub repository URL to visualize its structure
+          Enter a GitHub repository URL to visualize its workflow structure
         </p>
 
         <form onSubmit={handleSubmit} className="flex gap-4 glass-card p-4 rounded-lg">
@@ -100,8 +178,8 @@ const Index = () => {
 
       <div className="flow-container">
         <ReactFlow
-          nodes={initialNodes}
-          edges={initialEdges}
+          nodes={nodes}
+          edges={edges}
           nodeTypes={nodeTypes}
           fitView
         >
@@ -110,7 +188,7 @@ const Index = () => {
           <Panel position="top-left" className="glass-card p-4 rounded-lg">
             <h3 className="text-sm font-medium mb-2">Repository Structure</h3>
             <p className="text-xs text-gray-400">
-              Visualizing the main branch and its contents
+              Visualizing the repository workflow structure
             </p>
           </Panel>
         </ReactFlow>
