@@ -68,7 +68,9 @@ const Index = () => {
       
       toast({
         title: "Success",
-        description: "Repository visualization created with commits and deployments!",
+        description: workflows.length > 0 
+          ? "Repository visualization created with workflows, commits and deployments!"
+          : "Repository visualization created! (No GitHub Actions workflows found)",
       });
     } catch (error: any) {
       toast({

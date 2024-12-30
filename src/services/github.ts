@@ -22,8 +22,9 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
     if (!repoResponse.ok) throw new Error("Repository not found");
     const repoData = await repoResponse.json();
+    console.log("Repository data:", repoData);
 
-    // Try to fetch workflow files
+    // Try to fetch workflow files - handle 404 gracefully
     let workflows: any[] = [];
     try {
       const workflowsResponse = await fetch(
@@ -32,9 +33,14 @@ export const fetchRepoData = async (owner: string, repo: string) => {
       if (workflowsResponse.ok) {
         workflows = await workflowsResponse.json();
         console.log("Workflows found:", workflows);
+      } else if (workflowsResponse.status === 404) {
+        console.log("No workflows directory found - this is normal for repositories without GitHub Actions");
+      } else {
+        console.warn("Unexpected status when fetching workflows:", workflowsResponse.status);
       }
     } catch (error) {
-      console.log("Error fetching workflows:", error);
+      console.log("No workflows found:", error);
+      // Continue execution - workflows will remain an empty array
     }
 
     // Fetch recent commits
