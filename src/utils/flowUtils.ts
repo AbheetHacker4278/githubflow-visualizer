@@ -1,13 +1,11 @@
 import { Node, Edge } from "@xyflow/react";
-import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../services/github";
+import { GitHubCommit, GitHubDeployment } from "../services/github";
 
 export const createNodesAndEdges = (
   data: any,
   workflows: any[] = [],
   commits: GitHubCommit[] = [],
-  deployments: GitHubDeployment[] = [],
-  branches: GitHubBranch[] = [],
-  pulls: any[] = []
+  deployments: GitHubDeployment[] = []
 ) => {
   const newNodes: Node[] = [];
   const newEdges: Edge[] = [];
@@ -23,54 +21,43 @@ export const createNodesAndEdges = (
 
   yOffset += 100;
 
-  // Add branch nodes
-  const branchSpacing = 300;
-  branches.forEach((branch, index) => {
-    const branchId = `branch-${branch.name}`;
-    newNodes.push({
-      id: branchId,
-      type: "github",
-      data: { 
-        label: branch.name,
-        type: "branch",
-        commitCount: commits.filter(c => c.sha === branch.commit.sha).length,
-        pullCount: pulls.filter(pr => pr.head.ref === branch.name).length
-      },
-      position: { x: index * branchSpacing, y: yOffset },
-    });
-
-    // Connect branch to repo
-    newEdges.push({
-      id: `e-repo-${branchId}`,
-      source: "repo",
-      target: branchId,
-      animated: true,
-    });
+  // Add default branch node
+  newNodes.push({
+    id: "branch",
+    type: "github",
+    data: { label: data.default_branch, type: "branch" },
+    position: { x: 250, y: yOffset },
   });
 
-  yOffset += 100;
+  newEdges.push({
+    id: "e-repo-branch",
+    source: "repo",
+    target: "branch",
+    animated: true,
+  });
 
   // Add workflow files
   if (workflows.length > 0) {
+    yOffset += 100;
     workflows.forEach((workflow: any, index: number) => {
       const id = `workflow-${index}`;
       newNodes.push({
         id,
         type: "github",
         data: { label: workflow.name || workflow.path, type: "file" },
-        position: { x: 250, y: yOffset + index * 100 },
+        position: { x: 250, y: yOffset },
       });
       newEdges.push({
         id: `e-branch-${id}`,
-        source: "branch-main",
+        source: "branch",
         target: id,
         animated: true,
       });
+      yOffset += 100;
     });
-    yOffset += workflows.length * 100;
   }
 
-  // Add commit nodes with branch connections
+  // Add commit nodes
   if (commits.length > 0) {
     commits.forEach((commit, index) => {
       const id = `commit-${index}`;
@@ -82,14 +69,11 @@ export const createNodesAndEdges = (
           message: commit.commit.message.split("\n")[0],
           date: new Date(commit.commit.author.date).toLocaleDateString(),
         },
-        position: { x: 500, y: yOffset + index * 100 },
+        position: { x: 500, y: 100 + index * 100 },
       });
-
-      // Connect commit to its branch if we can determine it
-      const branchId = `branch-${branches.find(b => b.commit.sha === commit.sha)?.name || 'main'}`;
       newEdges.push({
         id: `e-branch-${id}`,
-        source: branchId,
+        source: "branch",
         target: id,
         animated: true,
       });
@@ -109,11 +93,11 @@ export const createNodesAndEdges = (
           status: deployment.state,
           date: new Date(deployment.created_at).toLocaleDateString(),
         },
-        position: { x: 0, y: yOffset + index * 100 },
+        position: { x: 0, y: 100 + index * 100 },
       });
       newEdges.push({
         id: `e-branch-${id}`,
-        source: "branch-main",
+        source: "branch",
         target: id,
         animated: true,
       });
