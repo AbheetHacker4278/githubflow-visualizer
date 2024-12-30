@@ -49,16 +49,12 @@ export const fetchRepoData = async (owner: string, repo: string) => {
       }
     } catch (error) {
       console.log("Error fetching workflows (this is normal if the repository doesn't use GitHub Actions):", error);
-      // Continue execution - workflows will remain an empty array
     }
 
     // Fetch recent commits
     const commitsResponse = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/commits?per_page=5`
     );
-    if (!commitsResponse.ok) {
-      console.warn("Failed to fetch commits:", commitsResponse.status);
-    }
     const commits: GitHubCommit[] = commitsResponse.ok ? await commitsResponse.json() : [];
     console.log("Commits found:", commits.length);
 
@@ -66,9 +62,6 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     const deploymentsResponse = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/deployments?per_page=5`
     );
-    if (!deploymentsResponse.ok) {
-      console.warn("Failed to fetch deployments:", deploymentsResponse.status);
-    }
     const deployments: GitHubDeployment[] = deploymentsResponse.ok ? await deploymentsResponse.json() : [];
     console.log("Deployments found:", deployments.length);
 
