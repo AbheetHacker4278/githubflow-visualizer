@@ -11,10 +11,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import GitHubNode from "@/components/GitHubNode";
+import CommitNode from "@/components/CommitNode";
+import DeploymentNode from "@/components/DeploymentNode";
+import { fetchRepoData } from "@/services/github";
+import { createNodesAndEdges } from "@/utils/flowUtils";
 import "@xyflow/react/dist/style.css";
 
 const nodeTypes = {
   github: GitHubNode,
+  commit: CommitNode,
+  deployment: DeploymentNode,
 };
 
 const Index = () => {
@@ -35,92 +41,6 @@ const Index = () => {
     }
   };
 
-  const createNodesAndEdges = (data: any, workflows: any[] = []) => {
-    const newNodes: Node[] = [];
-    const newEdges: Edge[] = [];
-    let yOffset = 0;
-
-    // Add repository node
-    newNodes.push({
-      id: "repo",
-      type: "github",
-      data: { label: data.name, type: "folder" },
-      position: { x: 250, y: yOffset },
-    });
-
-    yOffset += 100;
-
-    // Add default branch node
-    newNodes.push({
-      id: "branch",
-      type: "github",
-      data: { label: data.default_branch, type: "branch" },
-      position: { x: 250, y: yOffset },
-    });
-
-    newEdges.push({
-      id: "e-repo-branch",
-      source: "repo",
-      target: "branch",
-      animated: true,
-    });
-
-    // Add workflow files if they exist
-    if (workflows.length > 0) {
-      yOffset += 100;
-      workflows.forEach((workflow: any, index: number) => {
-        const id = `workflow-${index}`;
-        newNodes.push({
-          id,
-          type: "github",
-          data: { label: workflow.name || workflow.path, type: "file" },
-          position: { x: 250, y: yOffset },
-        });
-        newEdges.push({
-          id: `e-branch-${id}`,
-          source: "branch",
-          target: id,
-          animated: true,
-        });
-        yOffset += 100;
-      });
-    }
-
-    return { nodes: newNodes, edges: newEdges };
-  };
-
-  const fetchRepoData = async (owner: string, repo: string) => {
-    try {
-      // Fetch repository information
-      const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
-      if (!repoResponse.ok) throw new Error("Repository not found");
-      const repoData = await repoResponse.json();
-
-      // Try to fetch workflow files, but don't fail if they don't exist
-      let workflows: any[] = [];
-      try {
-        const workflowsResponse = await fetch(
-          `https://api.github.com/repos/${owner}/${repo}/contents/.github/workflows`
-        );
-        
-        if (workflowsResponse.ok) {
-          workflows = await workflowsResponse.json();
-          console.log("Workflows found:", workflows);
-        } else {
-          console.log("No workflows found in repository");
-        }
-      } catch (error) {
-        console.log("Error fetching workflows:", error);
-        // Continue without workflows
-      }
-
-      return { repoData, workflows };
-    } catch (error) {
-      console.error("Error fetching repository data:", error);
-      throw error;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!repoUrl) {
@@ -135,17 +55,20 @@ const Index = () => {
     setLoading(true);
     try {
       const { owner, repo } = extractRepoInfo(repoUrl);
-      const { repoData, workflows } = await fetchRepoData(owner, repo);
-      const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(repoData, workflows);
+      const { repoData, workflows, commits, deployments } = await fetchRepoData(owner, repo);
+      const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
+        repoData,
+        workflows,
+        commits,
+        deployments
+      );
       
       setNodes(newNodes);
       setEdges(newEdges);
       
       toast({
         title: "Success",
-        description: workflows.length > 0 
-          ? "Repository workflow visualization created!"
-          : "Repository visualization created! (No workflows found)",
+        description: "Repository visualization created with commits and deployments!",
       });
     } catch (error: any) {
       toast({
@@ -198,7 +121,7 @@ const Index = () => {
           <Panel position="top-left" className="glass-card p-4 rounded-lg">
             <h3 className="text-sm font-medium mb-2">Repository Structure</h3>
             <p className="text-xs text-gray-400">
-              Visualizing the repository workflow structure
+              Visualizing repository workflow, commits, and deployments
             </p>
           </Panel>
         </ReactFlow>

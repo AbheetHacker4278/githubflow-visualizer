@@ -1,0 +1,108 @@
+import { Node, Edge } from "@xyflow/react";
+import { GitHubCommit, GitHubDeployment } from "../services/github";
+
+export const createNodesAndEdges = (
+  data: any,
+  workflows: any[] = [],
+  commits: GitHubCommit[] = [],
+  deployments: GitHubDeployment[] = []
+) => {
+  const newNodes: Node[] = [];
+  const newEdges: Edge[] = [];
+  let yOffset = 0;
+
+  // Add repository node
+  newNodes.push({
+    id: "repo",
+    type: "github",
+    data: { label: data.name, type: "folder" },
+    position: { x: 250, y: yOffset },
+  });
+
+  yOffset += 100;
+
+  // Add default branch node
+  newNodes.push({
+    id: "branch",
+    type: "github",
+    data: { label: data.default_branch, type: "branch" },
+    position: { x: 250, y: yOffset },
+  });
+
+  newEdges.push({
+    id: "e-repo-branch",
+    source: "repo",
+    target: "branch",
+    animated: true,
+  });
+
+  // Add workflow files
+  if (workflows.length > 0) {
+    yOffset += 100;
+    workflows.forEach((workflow: any, index: number) => {
+      const id = `workflow-${index}`;
+      newNodes.push({
+        id,
+        type: "github",
+        data: { label: workflow.name || workflow.path, type: "file" },
+        position: { x: 250, y: yOffset },
+      });
+      newEdges.push({
+        id: `e-branch-${id}`,
+        source: "branch",
+        target: id,
+        animated: true,
+      });
+      yOffset += 100;
+    });
+  }
+
+  // Add commit nodes
+  if (commits.length > 0) {
+    commits.forEach((commit, index) => {
+      const id = `commit-${index}`;
+      newNodes.push({
+        id,
+        type: "commit",
+        data: {
+          label: commit.sha.substring(0, 7),
+          message: commit.commit.message.split("\n")[0],
+          date: new Date(commit.commit.author.date).toLocaleDateString(),
+        },
+        position: { x: 500, y: 100 + index * 100 },
+      });
+      newEdges.push({
+        id: `e-branch-${id}`,
+        source: "branch",
+        target: id,
+        animated: true,
+      });
+    });
+  }
+
+  // Add deployment nodes
+  if (deployments.length > 0) {
+    deployments.forEach((deployment, index) => {
+      const id = `deployment-${index}`;
+      newNodes.push({
+        id,
+        type: "deployment",
+        data: {
+          label: `Deployment #${deployment.id}`,
+          environment: deployment.environment,
+          status: deployment.state,
+          date: new Date(deployment.created_at).toLocaleDateString(),
+        },
+        position: { x: 0, y: 100 + index * 100 },
+      });
+      newEdges.push({
+        id: `e-branch-${id}`,
+        source: "branch",
+        target: id,
+        animated: true,
+      });
+    });
+  }
+
+  return { nodes: newNodes, edges: newEdges };
+};
