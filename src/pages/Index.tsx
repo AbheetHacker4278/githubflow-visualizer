@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
+import LanguageNode from "@/components/LanguageNode";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
 import "@xyflow/react/dist/style.css";
@@ -21,6 +22,7 @@ const nodeTypes = {
   github: GitHubNode,
   commit: CommitNode,
   deployment: DeploymentNode,
+  language: LanguageNode,
 };
 
 const Index = () => {
@@ -55,12 +57,13 @@ const Index = () => {
     setLoading(true);
     try {
       const { owner, repo } = extractRepoInfo(repoUrl);
-      const { repoData, workflows, commits, deployments } = await fetchRepoData(owner, repo);
+      const { repoData, workflows, commits, deployments, languages } = await fetchRepoData(owner, repo);
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
         repoData,
         workflows,
         commits,
-        deployments
+        deployments,
+        languages
       );
       
       setNodes(newNodes);
@@ -68,9 +71,7 @@ const Index = () => {
       
       toast({
         title: "Success",
-        description: workflows.length > 0 
-          ? "Repository visualization created with workflows, commits and deployments!"
-          : "Repository visualization created! (No GitHub Actions workflows found)",
+        description: `Repository visualization created with ${Object.keys(languages).length} languages${workflows.length > 0 ? ', workflows' : ''}, commits and deployments!`,
       });
     } catch (error: any) {
       toast({
@@ -123,7 +124,7 @@ const Index = () => {
           <Panel position="top-left" className="glass-card p-4 rounded-lg">
             <h3 className="text-sm font-medium mb-2">Repository Structure</h3>
             <p className="text-xs text-gray-400">
-              Visualizing repository workflow, commits, and deployments
+              Visualizing repository languages, workflow, commits, and deployments
             </p>
           </Panel>
         </ReactFlow>

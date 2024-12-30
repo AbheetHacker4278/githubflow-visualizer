@@ -24,6 +24,11 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     const repoData = await repoResponse.json();
     console.log("Repository data:", repoData);
 
+    // Fetch languages data
+    const languagesResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`);
+    const languages = languagesResponse.ok ? await languagesResponse.json() : {};
+    console.log("Languages data:", languages);
+
     // Try to fetch workflow files - handle 404 gracefully
     let workflows: any[] = [];
     try {
@@ -57,7 +62,7 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     const deployments: GitHubDeployment[] = deploymentsResponse.ok ? await deploymentsResponse.json() : [];
     console.log("Deployments found:", deployments);
 
-    return { repoData, workflows, commits, deployments };
+    return { repoData, workflows, commits, deployments, languages };
   } catch (error) {
     console.error("Error fetching repository data:", error);
     throw error;

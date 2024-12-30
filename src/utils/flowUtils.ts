@@ -5,7 +5,8 @@ export const createNodesAndEdges = (
   data: any,
   workflows: any[] = [],
   commits: GitHubCommit[] = [],
-  deployments: GitHubDeployment[] = []
+  deployments: GitHubDeployment[] = [],
+  languages: Record<string, number> = {}
 ) => {
   const newNodes: Node[] = [];
   const newEdges: Edge[] = [];
@@ -35,6 +36,27 @@ export const createNodesAndEdges = (
     target: "branch",
     animated: true,
   });
+
+  // Add language nodes
+  if (Object.keys(languages).length > 0) {
+    const totalBytes = Object.values(languages).reduce((a, b) => a + b, 0);
+    Object.entries(languages).forEach(([language, bytes], index) => {
+      const percentage = (bytes / totalBytes) * 100;
+      const id = `lang-${index}`;
+      newNodes.push({
+        id,
+        type: "language",
+        data: { language, percentage },
+        position: { x: -200, y: 100 + index * 80 },
+      });
+      newEdges.push({
+        id: `e-repo-${id}`,
+        source: "repo",
+        target: id,
+        animated: true,
+      });
+    });
+  }
 
   // Add workflow files
   if (workflows.length > 0) {
