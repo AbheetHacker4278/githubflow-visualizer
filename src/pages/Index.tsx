@@ -1,12 +1,13 @@
 import { useState } from "react";
-import ReactFlow, {
+import {
+  ReactFlow,
   Background,
   Controls,
   Edge,
   Node,
   Panel,
 } from "@xyflow/react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import GitHubNode from "@/components/GitHubNode";
