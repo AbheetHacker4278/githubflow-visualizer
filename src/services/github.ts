@@ -16,12 +16,26 @@ export interface GitHubDeployment {
   state: string;
 }
 
+export interface GitHubBranch {
+  name: string;
+  commit: {
+    sha: string;
+  };
+}
+
 export const fetchRepoData = async (owner: string, repo: string) => {
   try {
     // Fetch repository information
     const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
     if (!repoResponse.ok) throw new Error("Repository not found");
     const repoData = await repoResponse.json();
+
+    // Fetch branches
+    const branchesResponse = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/branches`
+    );
+    const branches: GitHubBranch[] = branchesResponse.ok ? await branchesResponse.json() : [];
+    console.log("Branches found:", branches);
 
     // Try to fetch workflow files
     let workflows: any[] = [];
@@ -34,15 +48,22 @@ export const fetchRepoData = async (owner: string, repo: string) => {
         console.log("Workflows found:", workflows);
       }
     } catch (error) {
-      console.log("Error fetching workflows:", error);
+      console.log("No workflows found");
     }
 
-    // Fetch recent commits
+    // Fetch recent commits with their branch information
     const commitsResponse = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/commits?per_page=5`
+      `https://api.github.com/repos/${owner}/${repo}/commits?per_page=10`
     );
     const commits: GitHubCommit[] = commitsResponse.ok ? await commitsResponse.json() : [];
     console.log("Commits found:", commits);
+
+    // Fetch pull requests
+    const pullsResponse = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/pulls?state=all&per_page=5`
+    );
+    const pulls = pullsResponse.ok ? await pullsResponse.json() : [];
+    console.log("Pull requests found:", pulls);
 
     // Fetch deployments
     const deploymentsResponse = await fetch(
@@ -51,7 +72,7 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     const deployments: GitHubDeployment[] = deploymentsResponse.ok ? await deploymentsResponse.json() : [];
     console.log("Deployments found:", deployments);
 
-    return { repoData, workflows, commits, deployments };
+    return { repoData, workflows, commits, deployments, branches, pulls };
   } catch (error) {
     console.error("Error fetching repository data:", error);
     throw error;

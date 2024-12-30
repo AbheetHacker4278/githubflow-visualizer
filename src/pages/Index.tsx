@@ -55,12 +55,14 @@ const Index = () => {
     setLoading(true);
     try {
       const { owner, repo } = extractRepoInfo(repoUrl);
-      const { repoData, workflows, commits, deployments } = await fetchRepoData(owner, repo);
+      const { repoData, workflows, commits, deployments, branches, pulls } = await fetchRepoData(owner, repo);
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
         repoData,
         workflows,
         commits,
-        deployments
+        deployments,
+        branches,
+        pulls
       );
       
       setNodes(newNodes);
@@ -68,7 +70,7 @@ const Index = () => {
       
       toast({
         title: "Success",
-        description: "Repository visualization created with commits and deployments!",
+        description: `Repository visualization created with ${branches.length} branches, ${commits.length} commits, and ${pulls.length} pull requests!`,
       });
     } catch (error: any) {
       toast({
