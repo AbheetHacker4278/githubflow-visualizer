@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = "AIzaSyD7tGADeRlGAIB7jVihfOqrFKWyQwuyx2Q";
-const genAI = new GoogleGenerativeAI(API_KEY);
+const genAI = new GoogleGenerativeAI("AIzaSyD7tGADeRlGAIB7jVihfOqrFKWyQwuyx2Q"); // Replaced API key
 
 export const getLanguagePurpose = async (language: string, repoName: string) => {
   try {
@@ -15,7 +14,7 @@ export const getLanguagePurpose = async (language: string, repoName: string) => 
     
     console.log(`Gemini response for ${language}:`, text);
     return text;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error getting language purpose:", error);
     return `Could not fetch purpose for ${language}`;
   }
