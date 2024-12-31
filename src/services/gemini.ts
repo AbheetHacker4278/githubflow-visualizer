@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 
+const API_KEY = import.meta.env.VITE_API_KEY
+
 // Initialize genAI and model instance once
-const genAI = new GoogleGenerativeAI("AIzaSyD7tGADeRlGAIB7jVihfOqrFKWyQwuyx2Q"); // Replace with a secure key storage method
+const genAI = new GoogleGenerativeAI(API_KEY); // Replace with a secure key storage method
 const model: GenerativeModel = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 /**
