@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 
-const GEMINI_API_KEY = process.env.VITE_API_KEY || import.meta.env.VITE_API_KEY;
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_KEY;
 
 // Initialize genAI and model instance once
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY); // Replace with a secure key storage method
