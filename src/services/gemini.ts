@@ -3,7 +3,7 @@ import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_KEY;
 
 // Initialize genAI and model instance once
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY); // Replace with a secure key storage method
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model: GenerativeModel = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 /**
@@ -13,6 +13,11 @@ const model: GenerativeModel = genAI.getGenerativeModel({ model: "gemini-pro" })
  * @returns {Promise<string>} Purpose explanation
  */
 export const getLanguagePurpose = async (language: string, repoName: string): Promise<string> => {
+  if (!GEMINI_API_KEY) {
+    console.error("Gemini API key not found. Please set VITE_GEMINI_KEY in your environment variables.");
+    return `Could not fetch purpose for ${language}: Missing API key`;
+  }
+
   const prompt = `What is the purpose of using ${language} programming language in the GitHub repository named ${repoName}? Please provide a concise explanation in 2-3 sentences.`;
 
   try {

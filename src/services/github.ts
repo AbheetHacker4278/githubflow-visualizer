@@ -14,9 +14,10 @@ const clearGitHubToken = () => {
   localStorage.removeItem(GITHUB_TOKEN_KEY);
 };
 
-const getHeaders = (token: string | null) => {
-  return token ? {
-    'Authorization': `Bearer ${token}`,
+const getHeaders = (token: string | null = null) => {
+  const currentToken = token || getGitHubToken();
+  return currentToken ? {
+    'Authorization': `Bearer ${currentToken}`,
     'Accept': 'application/vnd.github.v3+json'
   } : {
     'Accept': 'application/vnd.github.v3+json'
@@ -24,23 +25,43 @@ const getHeaders = (token: string | null) => {
 };
 
 const validateToken = async (token: string): Promise<boolean> => {
-  const response = await fetch('https://api.github.com/user', {
-    headers: getHeaders(token)
-  });
-  return response.status === 200;
+  try {
+    const response = await fetch('https://api.github.com/user', {
+      headers: getHeaders(token)
+    });
+    return response.status === 200;
+  } catch (error) {
+    console.error("Error validating token:", error);
+    return false;
+  }
 };
 
 const getValidToken = async (): Promise<string | null> => {
   let token = getGitHubToken();
+  
+  // If we have a token and it's valid, use it
   if (token && await validateToken(token)) {
     return token;
   }
+  
+  // Clear invalid token
   clearGitHubToken();
-  token = prompt('Please enter your GitHub token:');
+  
+  // Prompt for new token with clear instructions
+  token = prompt(
+    'Please enter your GitHub Personal Access Token (PAT).\n\n' +
+    'To create a new token:\n' +
+    '1. Go to GitHub.com → Settings → Developer settings → Personal access tokens → Tokens (classic)\n' +
+    '2. Generate new token (classic)\n' +
+    '3. Give it "repo" scope\n' +
+    '4. Copy and paste the token here'
+  );
+  
   if (token && await validateToken(token)) {
     setGitHubToken(token);
     return token;
   }
+  
   return null;
 };
 
@@ -54,6 +75,7 @@ export const fetchRepoData = async (owner: string, repo: string) => {
 
   const fetchWithRetry = async (url: string, retries = 3): Promise<Response> => {
     for (let i = 0; i < retries; i++) {
+      console.log(`Attempting to fetch ${url} (attempt ${i + 1}/${retries})`);
       const response = await fetch(url, { headers: getHeaders(token) });
       
       if (response.status === 404) {
@@ -63,8 +85,12 @@ export const fetchRepoData = async (owner: string, repo: string) => {
       if (response.status === 403) {
         const data = await response.json();
         if (data.message?.includes('API rate limit exceeded')) {
-          console.log('Rate limit exceeded. Waiting before retry...');
-          await wait(5000); // Wait for 5 seconds before retrying
+          // Clear token and try to get a new one
+          clearGitHubToken();
+          token = await getValidToken();
+          if (!token) {
+            throw new Error('Rate limit exceeded. Please provide a valid GitHub token with higher rate limits.');
+          }
           continue;
         }
       }
@@ -80,6 +106,10 @@ export const fetchRepoData = async (owner: string, repo: string) => {
       
       if (response.ok) {
         return response;
+      }
+
+      if (i < retries - 1) {
+        await wait(2000 * (i + 1)); // Exponential backoff
       }
     }
     
@@ -134,4 +164,3 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     throw new Error(error.message || "Failed to fetch repository data");
   }
 };
-
