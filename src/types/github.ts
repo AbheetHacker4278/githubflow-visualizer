@@ -18,3 +18,9 @@ export interface GitHubDeployment {
 export interface GitHubBranch {
   name: string;
 }
+
+export interface DatabaseInfo {
+  name: string;
+  type: string;
+  tables?: string[];
+}

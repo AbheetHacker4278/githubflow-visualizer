@@ -14,6 +14,7 @@ import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
 import LanguageNode from "@/components/LanguageNode";
+import DatabaseNode from "@/components/DatabaseNode";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
 import "@xyflow/react/dist/style.css";
@@ -23,6 +24,7 @@ const nodeTypes = {
   commit: CommitNode,
   deployment: DeploymentNode,
   language: LanguageNode,
+  database: DatabaseNode,
 };
 
 const Index = () => {
