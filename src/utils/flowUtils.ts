@@ -59,7 +59,7 @@ export const createNodesAndEdges = (
     });
   }
 
-  // Add language nodes
+  // Add language nodes with repo name
   if (Object.keys(languages).length > 0) {
     const totalBytes = Object.values(languages).reduce((a, b) => a + b, 0);
     Object.entries(languages).forEach(([language, bytes], index) => {
@@ -68,7 +68,11 @@ export const createNodesAndEdges = (
       newNodes.push({
         id,
         type: "language",
-        data: { language, percentage },
+        data: { 
+          language, 
+          percentage,
+          repoName: data.name 
+        },
         position: { x: -200, y: 200 + index * 80 },
       });
       newEdges.push({
