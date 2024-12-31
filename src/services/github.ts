@@ -1,4 +1,4 @@
-import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../services/github";
+import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
 
 export const fetchRepoData = async (owner: string, repo: string) => {
   try {

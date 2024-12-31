@@ -1,5 +1,5 @@
 import { Node, Edge } from "@xyflow/react";
-import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../services/github";
+import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
 
 export const createNodesAndEdges = (
   data: any,
