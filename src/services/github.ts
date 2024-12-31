@@ -1,4 +1,4 @@
-import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
+import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../services/github";
 
 export const fetchRepoData = async (owner: string, repo: string) => {
   try {
@@ -6,23 +6,20 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
     if (!repoResponse.ok) {
       const errorData = await repoResponse.json();
-      if (repoResponse.status === 404) {
-        throw new Error(`Repository ${owner}/${repo} not found. Please check if the repository exists and is public.`);
-      }
       throw new Error(errorData.message || "Repository not found");
     }
     const repoData = await repoResponse.json();
     console.log("Repository data:", repoData);
 
+    // Fetch branches data
+    const branchesResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches`);
+    const branches: GitHubBranch[] = branchesResponse.ok ? await branchesResponse.json() : [];
+    console.log("Branches found:", branches.length);
+
     // Fetch languages data
     const languagesResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`);
     const languages = languagesResponse.ok ? await languagesResponse.json() : {};
     console.log("Languages data:", languages);
-
-    // Fetch branches
-    const branchesResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches`);
-    const branches: GitHubBranch[] = branchesResponse.ok ? await branchesResponse.json() : [];
-    console.log("Branches found:", branches.length);
 
     // Try to fetch workflow files - handle 404 gracefully
     let workflows: any[] = [];
@@ -33,7 +30,7 @@ export const fetchRepoData = async (owner: string, repo: string) => {
       
       if (workflowsResponse.ok) {
         workflows = await workflowsResponse.json();
-        console.log("Workflows found:", workflows.length);
+        console.log("Workflows found:", workflows);
       } else if (workflowsResponse.status === 404) {
         console.log("No workflows directory found - this is normal for repositories without GitHub Actions");
       } else {

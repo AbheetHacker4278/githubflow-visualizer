@@ -1,5 +1,5 @@
 import { Node, Edge } from "@xyflow/react";
-import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
+import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../services/github";
 
 export const createNodesAndEdges = (
   data: any,
@@ -23,24 +23,41 @@ export const createNodesAndEdges = (
 
   yOffset += 100;
 
-  // Add branch nodes
-  branches.forEach((branch, index) => {
-    const id = `branch-${index}`;
+  // Add branches nodes
+  if (branches.length > 0) {
+    branches.forEach((branch, index) => {
+      const id = `branch-${index}`;
+      newNodes.push({
+        id,
+        type: "github",
+        data: { label: branch.name, type: "branch" },
+        position: { x: -200 + (index * 150), y: yOffset },
+      });
+      newEdges.push({
+        id: `e-repo-${id}`,
+        source: "repo",
+        target: id,
+        animated: true,
+      });
+    });
+    yOffset += 100;
+  }
+
+  // Add default branch node if no branches were found
+  if (branches.length === 0) {
     newNodes.push({
-      id,
+      id: "branch",
       type: "github",
-      data: { label: branch.name, type: "branch" },
-      position: { x: 250, y: yOffset + (index * 80) },
+      data: { label: data.default_branch, type: "branch" },
+      position: { x: 250, y: yOffset },
     });
     newEdges.push({
-      id: `e-repo-${id}`,
+      id: "e-repo-branch",
       source: "repo",
-      target: id,
+      target: "branch",
       animated: true,
     });
-  });
-
-  yOffset += (branches.length * 80) + 100;
+  }
 
   // Add language nodes
   if (Object.keys(languages).length > 0) {
@@ -52,7 +69,7 @@ export const createNodesAndEdges = (
         id,
         type: "language",
         data: { language, percentage },
-        position: { x: -200, y: 100 + index * 80 },
+        position: { x: -200, y: 200 + index * 80 },
       });
       newEdges.push({
         id: `e-repo-${id}`,
@@ -65,6 +82,7 @@ export const createNodesAndEdges = (
 
   // Add workflow files
   if (workflows.length > 0) {
+    yOffset += 100;
     workflows.forEach((workflow: any, index: number) => {
       const id = `workflow-${index}`;
       newNodes.push({
@@ -75,7 +93,7 @@ export const createNodesAndEdges = (
       });
       newEdges.push({
         id: `e-branch-${id}`,
-        source: "branch-0",
+        source: branches.length > 0 ? `branch-0` : "branch",
         target: id,
         animated: true,
       });
@@ -99,7 +117,7 @@ export const createNodesAndEdges = (
       });
       newEdges.push({
         id: `e-branch-${id}`,
-        source: "branch-0",
+        source: branches.length > 0 ? `branch-0` : "branch",
         target: id,
         animated: true,
       });
@@ -123,7 +141,7 @@ export const createNodesAndEdges = (
       });
       newEdges.push({
         id: `e-branch-${id}`,
-        source: "branch-0",
+        source: branches.length > 0 ? `branch-0` : "branch",
         target: id,
         animated: true,
       });
