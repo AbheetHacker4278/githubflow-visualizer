@@ -23,4 +23,5 @@ export interface DatabaseInfo {
   name: string;
   type: string;
   tables?: string[];
+  [key: string]: unknown;  // Add index signature to satisfy Record<string, unknown>
 }

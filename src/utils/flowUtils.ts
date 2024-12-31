@@ -160,7 +160,11 @@ export const createNodesAndEdges = (
       newNodes.push({
         id,
         type: "database",
-        data: database,
+        data: {
+          name: database.name,
+          type: database.type,
+          tables: database.tables
+        } as DatabaseInfo,
         position: { x: 750, y: 100 + index * 150 },
       });
       newEdges.push({
