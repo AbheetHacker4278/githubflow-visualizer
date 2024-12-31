@@ -57,14 +57,13 @@ const Index = () => {
     setLoading(true);
     try {
       const { owner, repo } = extractRepoInfo(repoUrl);
-      const { repoData, workflows, commits, deployments, languages, branches } = await fetchRepoData(owner, repo);
+      const { repoData, workflows, commits, deployments, languages } = await fetchRepoData(owner, repo);
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
         repoData,
         workflows,
         commits,
         deployments,
-        languages,
-        branches
+        languages
       );
       
       setNodes(newNodes);
