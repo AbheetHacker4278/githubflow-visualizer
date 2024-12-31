@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI("YOUR_API_KEY"); // Replace with your actual API key
+const genAI = new GoogleGenerativeAI("AIzaSyD7tGADeRlGAIB7jVihfOqrFKWyQwuyx2Q"); // Replaced API key
 
 export const getLanguagePurpose = async (language: string, repoName: string) => {
   try {
