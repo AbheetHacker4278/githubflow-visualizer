@@ -1,12 +1,13 @@
 import { Node, Edge } from "@xyflow/react";
-import { GitHubCommit, GitHubDeployment } from "../services/github";
+import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
 
 export const createNodesAndEdges = (
   data: any,
   workflows: any[] = [],
   commits: GitHubCommit[] = [],
   deployments: GitHubDeployment[] = [],
-  languages: Record<string, number> = {}
+  languages: Record<string, number> = {},
+  branches: GitHubBranch[] = []
 ) => {
   const newNodes: Node[] = [];
   const newEdges: Edge[] = [];
@@ -22,20 +23,24 @@ export const createNodesAndEdges = (
 
   yOffset += 100;
 
-  // Add default branch node
-  newNodes.push({
-    id: "branch",
-    type: "github",
-    data: { label: data.default_branch, type: "branch" },
-    position: { x: 250, y: yOffset },
+  // Add branch nodes
+  branches.forEach((branch, index) => {
+    const id = `branch-${index}`;
+    newNodes.push({
+      id,
+      type: "github",
+      data: { label: branch.name, type: "branch" },
+      position: { x: 250, y: yOffset + (index * 80) },
+    });
+    newEdges.push({
+      id: `e-repo-${id}`,
+      source: "repo",
+      target: id,
+      animated: true,
+    });
   });
 
-  newEdges.push({
-    id: "e-repo-branch",
-    source: "repo",
-    target: "branch",
-    animated: true,
-  });
+  yOffset += (branches.length * 80) + 100;
 
   // Add language nodes
   if (Object.keys(languages).length > 0) {
@@ -60,7 +65,6 @@ export const createNodesAndEdges = (
 
   // Add workflow files
   if (workflows.length > 0) {
-    yOffset += 100;
     workflows.forEach((workflow: any, index: number) => {
       const id = `workflow-${index}`;
       newNodes.push({
@@ -71,7 +75,7 @@ export const createNodesAndEdges = (
       });
       newEdges.push({
         id: `e-branch-${id}`,
-        source: "branch",
+        source: "branch-0",
         target: id,
         animated: true,
       });
@@ -95,7 +99,7 @@ export const createNodesAndEdges = (
       });
       newEdges.push({
         id: `e-branch-${id}`,
-        source: "branch",
+        source: "branch-0",
         target: id,
         animated: true,
       });
@@ -119,7 +123,7 @@ export const createNodesAndEdges = (
       });
       newEdges.push({
         id: `e-branch-${id}`,
-        source: "branch",
+        source: "branch-0",
         target: id,
         animated: true,
       });

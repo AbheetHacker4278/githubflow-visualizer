@@ -1,20 +1,4 @@
-export interface GitHubCommit {
-  sha: string;
-  commit: {
-    message: string;
-    author: {
-      date: string;
-    };
-  };
-}
-
-export interface GitHubDeployment {
-  id: number;
-  environment: string;
-  description: string;
-  created_at: string;
-  state: string;
-}
+import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
 
 export const fetchRepoData = async (owner: string, repo: string) => {
   try {
@@ -22,6 +6,9 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
     if (!repoResponse.ok) {
       const errorData = await repoResponse.json();
+      if (repoResponse.status === 404) {
+        throw new Error(`Repository ${owner}/${repo} not found. Please check if the repository exists and is public.`);
+      }
       throw new Error(errorData.message || "Repository not found");
     }
     const repoData = await repoResponse.json();
@@ -32,6 +19,11 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     const languages = languagesResponse.ok ? await languagesResponse.json() : {};
     console.log("Languages data:", languages);
 
+    // Fetch branches
+    const branchesResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches`);
+    const branches: GitHubBranch[] = branchesResponse.ok ? await branchesResponse.json() : [];
+    console.log("Branches found:", branches.length);
+
     // Try to fetch workflow files - handle 404 gracefully
     let workflows: any[] = [];
     try {
@@ -41,7 +33,7 @@ export const fetchRepoData = async (owner: string, repo: string) => {
       
       if (workflowsResponse.ok) {
         workflows = await workflowsResponse.json();
-        console.log("Workflows found:", workflows);
+        console.log("Workflows found:", workflows.length);
       } else if (workflowsResponse.status === 404) {
         console.log("No workflows directory found - this is normal for repositories without GitHub Actions");
       } else {
@@ -65,7 +57,7 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     const deployments: GitHubDeployment[] = deploymentsResponse.ok ? await deploymentsResponse.json() : [];
     console.log("Deployments found:", deployments.length);
 
-    return { repoData, workflows, commits, deployments, languages };
+    return { repoData, workflows, commits, deployments, languages, branches };
   } catch (error: any) {
     console.error("Error fetching repository data:", error);
     throw new Error(error.message || "Failed to fetch repository data");
