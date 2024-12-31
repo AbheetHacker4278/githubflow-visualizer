@@ -27,6 +27,10 @@ export const fetchRepoData = async (owner: string, repo: string) => {
       console.log(`Fetching ${url}...`);
       const response = await fetch(url, { headers: getHeaders() });
       
+      if (response.status === 404) {
+        throw new Error(`Repository "${owner}/${repo}" not found. Please check if the URL is correct and the repository exists.`);
+      }
+      
       if (response.status === 403) {
         const data = await response.json();
         if (data.message?.includes('API rate limit exceeded')) {
