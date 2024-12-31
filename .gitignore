@@ -26,8 +26,6 @@ dist-ssr
 
 # Environment variable
 .env
-.env.local
-.env.*.local
 
 # System files
 Thumbs.db
