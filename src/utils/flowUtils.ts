@@ -1,5 +1,5 @@
 import { Node, Edge } from "@xyflow/react";
-import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
+import { GitHubCommit, GitHubDeployment, GitHubBranch, DatabaseInfo } from "../types/github";
 
 export const createNodesAndEdges = (
   data: any,
@@ -7,7 +7,8 @@ export const createNodesAndEdges = (
   commits: GitHubCommit[] = [],
   deployments: GitHubDeployment[] = [],
   languages: Record<string, number> = {},
-  branches: GitHubBranch[] = []
+  branches: GitHubBranch[] = [],
+  databases: DatabaseInfo[] = []
 ) => {
   const newNodes: Node[] = [];
   const newEdges: Edge[] = [];
@@ -146,6 +147,29 @@ export const createNodesAndEdges = (
       newEdges.push({
         id: `e-branch-${id}`,
         source: branches.length > 0 ? `branch-0` : "branch",
+        target: id,
+        animated: true,
+      });
+    });
+  }
+
+  // Add database nodes
+  if (databases.length > 0) {
+    databases.forEach((database, index) => {
+      const id = `database-${index}`;
+      newNodes.push({
+        id,
+        type: "database",
+        data: {
+          name: database.name,
+          type: database.type,
+          tables: database.tables
+        } as DatabaseInfo,
+        position: { x: 750, y: 100 + index * 150 },
+      });
+      newEdges.push({
+        id: `e-repo-${id}`,
+        source: "repo",
         target: id,
         animated: true,
       });
