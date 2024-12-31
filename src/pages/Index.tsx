@@ -14,7 +14,7 @@ import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
 import LanguageNode from "@/components/LanguageNode";
-import { fetchRepoData } from "@/services/github";
+import { fetchRepoData, initializeGitHubToken } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
 import "@xyflow/react/dist/style.css";
 
@@ -30,6 +30,8 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
+  const [showTokenInput, setShowTokenInput] = useState(!localStorage.getItem('GITHUB_TOKEN'));
+  const [githubToken, setGithubToken] = useState("");
   const { toast } = useToast();
 
   const extractRepoInfo = (url: string) => {
@@ -41,6 +43,24 @@ const Index = () => {
     } catch (error) {
       throw new Error("Invalid GitHub URL format");
     }
+  };
+
+  const handleSetToken = () => {
+    if (!githubToken.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid GitHub token",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    initializeGitHubToken(githubToken);
+    setShowTokenInput(false);
+    toast({
+      title: "Success",
+      description: "GitHub token has been set",
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,10 +100,45 @@ const Index = () => {
         description: error.message || "Failed to fetch repository data",
         variant: "destructive",
       });
+      
+      // Show token input if rate limit error
+      if (error.message?.includes('rate limit exceeded')) {
+        setShowTokenInput(true);
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  if (showTokenInput) {
+    return (
+      <div className="min-h-screen p-8 flex flex-col items-center justify-center gap-8">
+        <div className="max-w-md w-full text-center">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-github-accent to-github-success bg-clip-text text-transparent">
+            GitHub Authentication
+          </h1>
+          <p className="text-gray-400 mb-8">
+            Please provide a GitHub token to continue. This will increase your API rate limits.
+          </p>
+
+          <div className="glass-card p-4 rounded-lg flex flex-col gap-4">
+            <Input
+              type="password"
+              placeholder="Enter GitHub token"
+              value={githubToken}
+              onChange={(e) => setGithubToken(e.target.value)}
+            />
+            <Button
+              onClick={handleSetToken}
+              className="bg-github-accent hover:bg-github-accent/80"
+            >
+              Set Token
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-8 flex flex-col gap-8">
