@@ -10,7 +10,7 @@ const model: GenerativeModel = genAI.getGenerativeModel({ model: "gemini-pro" })
  * Get the purpose of a programming language in a GitHub repository.
  * @param {string} language - The programming language.
  * @param {string} repoName - The GitHub repository name.
- * @returns {Promise<string>} Purpose explanation.
+ * @returns {Promise<string>} Purpose explanation
  */
 export const getLanguagePurpose = async (language: string, repoName: string): Promise<string> => {
   const prompt = `What is the purpose of using ${language} programming language in the GitHub repository named ${repoName}? Please provide a concise explanation in 2-3 sentences.`;
