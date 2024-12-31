@@ -30,3 +30,4 @@ dist-ssr
 # System files
 Thumbs.db
 *.bak
+.vercel
