@@ -6,6 +6,9 @@ import {
   Edge,
   Node,
   Panel,
+  OnNodesChange,
+  NodeChange,
+  applyNodeChanges,
 } from "@xyflow/react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -31,7 +34,22 @@ const Index = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [branches, setBranches] = useState<string[]>([]);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { toast } = useToast();
+
+  const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
+    setNodes((nds) => applyNodeChanges(changes, nds));
+  };
+
+  const onNodeClick = (_: React.MouseEvent, node: Node) => {
+    setSelectedNode(node);
+    if (node.type === 'language') {
+      toast({
+        title: "Node Selected",
+        description: `Selected language: ${node.data.language} (${node.data.percentage.toFixed(1)}%)`,
+      });
+    }
+  };
 
   const extractRepoInfo = (url: string) => {
     try {
@@ -109,33 +127,33 @@ const Index = () => {
             type="submit"
             disabled={loading}
             className={`
-      relative px-6 py-2.5
-      bg-black/40 backdrop-blur-md
-      border border-white/10
-      rounded-lg
-      text-white
-      font-medium
-      shadow-lg
-      transition-all duration-200
-      hover:bg-black/50
-      hover:shadow-xl
-      hover:scale-[1.02]
-      active:scale-[0.98]
-      disabled:opacity-50
-      disabled:cursor-not-allowed
-      disabled:hover:scale-100
-      disabled:hover:bg-black/40
-      before:absolute
-      before:inset-0
-      before:rounded-lg
-      before:bg-gradient-to-t
-      before:from-white/5
-      before:to-transparent
-      before:opacity-0
-      hover:before:opacity-100
-      before:transition-opacity
-      overflow-hidden
-    `}
+              relative px-6 py-2.5
+              bg-black/40 backdrop-blur-md
+              border border-white/10
+              rounded-lg
+              text-white
+              font-medium
+              shadow-lg
+              transition-all duration-200
+              hover:bg-black/50
+              hover:shadow-xl
+              hover:scale-[1.02]
+              active:scale-[0.98]
+              disabled:opacity-50
+              disabled:cursor-not-allowed
+              disabled:hover:scale-100
+              disabled:hover:bg-black/40
+              before:absolute
+              before:inset-0
+              before:rounded-lg
+              before:bg-gradient-to-t
+              before:from-white/5
+              before:to-transparent
+              before:opacity-0
+              hover:before:opacity-100
+              before:transition-opacity
+              overflow-hidden
+            `}
           >
             {loading ? (
               <span className="flex items-center gap-2">
@@ -169,6 +187,8 @@ const Index = () => {
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+          onNodeClick={onNodeClick}
           fitView
         >
           <Background color="#58A6FF" className="opacity-9" />
@@ -178,6 +198,12 @@ const Index = () => {
             <p className="text-xs text-gray-400 mb-2">
               Visualizing repository languages, workflow, commits, and deployments
             </p>
+            {selectedNode?.type === 'language' && (
+              <div className="mt-2 p-2 bg-github-darker/30 rounded">
+                <p className="text-xs">Selected: {selectedNode.data.language}</p>
+                <p className="text-xs text-gray-400">Usage: {selectedNode.data.percentage.toFixed(1)}%</p>
+              </div>
+            )}
             {branches.length > 0 && (
               <div>
                 <h4 className="text-xs font-medium mb-1">Branches ({branches.length}):</h4>
@@ -196,4 +222,3 @@ const Index = () => {
 };
 
 export default Index;
-
