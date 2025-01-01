@@ -41,15 +41,18 @@ const Index = () => {
     setNodes((nds) => applyNodeChanges(changes, nds));
   };
 
-  const onNodeClick = (_: React.MouseEvent, node: Node) => {
+  const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
     if (node.type === 'language') {
+      const percentage = (node.data.percentage as number).toFixed(1);
       toast({
         title: "Node Selected",
-        description: `Selected language: ${node.data.language} (${node.data.percentage.toFixed(1)}%)`,
+        description: `Selected language: ${node.data.language} (${percentage}%)`,
       });
     }
   };
+  
+  
 
   const extractRepoInfo = (url: string) => {
     try {
