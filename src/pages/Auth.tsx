@@ -12,7 +12,7 @@ const AuthPage = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/");
+        navigate("/app");
       }
     };
     
@@ -21,7 +21,7 @@ const AuthPage = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        navigate("/");
+        navigate("/app");
       }
     });
 
@@ -48,7 +48,7 @@ const AuthPage = () => {
             }
           }}
           providers={["github", "google"]}
-          redirectTo={window.location.origin}
+          redirectTo={window.location.origin + "/app"}
         />
       </div>
     </div>
