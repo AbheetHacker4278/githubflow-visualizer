@@ -29,6 +29,10 @@ const validateToken = async (token: string): Promise<boolean> => {
     const response = await fetch('https://api.github.com/user', {
       headers: getHeaders(token)
     });
+    if (response.status === 401) {
+      console.error("Invalid GitHub token");
+      return false;
+    }
     return response.status === 200;
   } catch (error) {
     console.error("Error validating token:", error);
@@ -57,12 +61,16 @@ const getValidToken = async (): Promise<string | null> => {
     '4. Copy and paste the token here'
   );
   
-  if (token && await validateToken(token)) {
+  if (!token) {
+    throw new Error('GitHub token is required to fetch repository data');
+  }
+
+  if (await validateToken(token)) {
     setGitHubToken(token);
     return token;
   }
   
-  return null;
+  throw new Error('Invalid GitHub token provided');
 };
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -79,13 +87,17 @@ export const fetchRepoData = async (owner: string, repo: string) => {
       const response = await fetch(url, { headers: getHeaders(token) });
       
       if (response.status === 404) {
+        if (url.includes('workflows')) {
+          // This is normal for repos without GitHub Actions
+          console.log("No workflows found (this is normal for repositories without GitHub Actions)");
+          return response;
+        }
         throw new Error(`Repository "${owner}/${repo}" not found. Please check if the URL is correct and the repository exists.`);
       }
       
       if (response.status === 403) {
         const data = await response.json();
         if (data.message?.includes('API rate limit exceeded')) {
-          // Clear token and try to get a new one
           clearGitHubToken();
           token = await getValidToken();
           if (!token) {

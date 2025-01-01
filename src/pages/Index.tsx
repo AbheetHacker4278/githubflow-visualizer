@@ -19,6 +19,7 @@ import DeploymentNode from "@/components/DeploymentNode";
 import LanguageNode from "@/components/LanguageNode";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
+import { LanguageNodeData } from "@/types/nodes";
 import "@xyflow/react/dist/style.css";
 
 const nodeTypes = {
@@ -44,15 +45,14 @@ const Index = () => {
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
     if (node.type === 'language') {
-      const percentage = (node.data.percentage as number).toFixed(1);
+      const data = node.data as LanguageNodeData;
+      const percentage = data.percentage.toFixed(1);
       toast({
         title: "Node Selected",
-        description: `Selected language: ${node.data.language} (${percentage}%)`,
+        description: `Selected language: ${data.language} (${percentage}%)`,
       });
     }
   };
-  
-  
 
   const extractRepoInfo = (url: string) => {
     try {
@@ -203,8 +203,10 @@ const Index = () => {
             </p>
             {selectedNode?.type === 'language' && (
               <div className="mt-2 p-2 bg-github-darker/30 rounded">
-                <p className="text-xs">Selected: {selectedNode.data.language}</p>
-                <p className="text-xs text-gray-400">Usage: {selectedNode.data.percentage.toFixed(1)}%</p>
+                <p className="text-xs">Selected: {(selectedNode.data as LanguageNodeData).language}</p>
+                <p className="text-xs text-gray-400">
+                  Usage: {(selectedNode.data as LanguageNodeData).percentage.toFixed(1)}%
+                </p>
               </div>
             )}
             {branches.length > 0 && (
