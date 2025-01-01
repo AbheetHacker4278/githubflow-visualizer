@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/AuthProvider";
 import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
@@ -37,6 +38,7 @@ const Index = () => {
   const [branches, setBranches] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { toast } = useToast();
+  const { signOut } = useAuth();
 
   const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
@@ -111,6 +113,15 @@ const Index = () => {
   return (
     <div className="min-h-screen p-8 flex flex-col gap-8">
       <div className="max-w-2xl mx-auto w-full text-center">
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            onClick={signOut}
+            className="text-sm hover:bg-github-darker/50"
+          >
+            Sign Out
+          </Button>
+        </div>
         <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-github-accent to-github-success bg-clip-text text-transparent">
           GitHub Flow Visualizer
         </h1>
