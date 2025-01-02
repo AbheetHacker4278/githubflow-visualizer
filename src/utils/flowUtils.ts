@@ -1,5 +1,6 @@
 import { Node, Edge } from "@xyflow/react";
 import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
+import { LanguageNodeData } from "../types/nodes";
 
 export const createNodesAndEdges = (
   data: any,
@@ -23,14 +24,25 @@ export const createNodesAndEdges = (
 
   yOffset += 100;
 
-  // Add branches nodes
+  // Add branches nodes with commit data
   if (branches.length > 0) {
     branches.forEach((branch, index) => {
       const id = `branch-${index}`;
+      const branchCommits = commits
+        .slice(0, 5)
+        .map(commit => ({
+          sha: commit.sha,
+          message: commit.commit.message,
+          date: new Date(commit.commit.author.date).toLocaleDateString()
+        }));
+
       newNodes.push({
         id,
-        type: "github",
-        data: { label: branch.name, type: "branch" },
+        type: "branch",
+        data: { 
+          label: branch.name,
+          commits: branchCommits
+        },
         position: { x: -200 + (index * 150), y: yOffset },
       });
       newEdges.push({
@@ -43,36 +55,21 @@ export const createNodesAndEdges = (
     yOffset += 100;
   }
 
-  // Add default branch node if no branches were found
-  if (branches.length === 0) {
-    newNodes.push({
-      id: "branch",
-      type: "github",
-      data: { label: data.default_branch, type: "branch" },
-      position: { x: 250, y: yOffset },
-    });
-    newEdges.push({
-      id: "e-repo-branch",
-      source: "repo",
-      target: "branch",
-      animated: true,
-    });
-  }
-
   // Add language nodes with repo name
   if (Object.keys(languages).length > 0) {
     const totalBytes = Object.values(languages).reduce((a, b) => a + b, 0);
     Object.entries(languages).forEach(([language, bytes], index) => {
       const percentage = (bytes / totalBytes) * 100;
       const id = `lang-${index}`;
+      const nodeData: LanguageNodeData = {
+        language,
+        percentage,
+        repoName: data.name
+      };
       newNodes.push({
         id,
         type: "language",
-        data: { 
-          language, 
-          percentage,
-          repoName: data.name 
-        },
+        data: nodeData,
         position: { x: -200, y: 200 + index * 80 },
       });
       newEdges.push({

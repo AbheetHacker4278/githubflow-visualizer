@@ -13,11 +13,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/AuthProvider";
 import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
 import LanguageNode from "@/components/LanguageNode";
+import BranchNode from "@/components/BranchNode";
 import { UserMenu } from "@/components/UserMenu";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
@@ -29,6 +29,7 @@ const nodeTypes = {
   commit: CommitNode,
   deployment: DeploymentNode,
   language: LanguageNode,
+  branch: BranchNode,
 };
 
 const Index = () => {
