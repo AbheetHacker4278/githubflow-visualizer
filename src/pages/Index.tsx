@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
@@ -62,6 +62,7 @@ const Index = () => {
 
   const handleHomeClick = () => {
     navigate('/');
+    console.log("Navigating to home page");
   };
 
   const extractRepoInfo = (url: string) => {
