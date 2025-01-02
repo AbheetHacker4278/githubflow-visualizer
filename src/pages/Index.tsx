@@ -122,14 +122,11 @@ const Index = () => {
   return (
     <div className="min-h-screen p-8 flex flex-col gap-8">
       <div className="flex justify-between items-center">
-        <Button
-          onClick={handleHomeClick}
-          variant="ghost"
-          size="icon"
-          className="rounded-full hover:bg-github-darker/50"
-        >
-          <Home className="h-6 w-6" />
-        </Button>
+        <a href="/" className="flex items-center space-x-2">
+          <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
+            GitViz
+          </span>
+        </a>
         <UserMenu />
       </div>
 
