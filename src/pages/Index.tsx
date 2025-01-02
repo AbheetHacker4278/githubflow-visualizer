@@ -61,8 +61,8 @@ const Index = () => {
   };
 
   const handleHomeClick = () => {
-    navigate('/');
-    console.log("Navigating to home page");
+    console.log("Attempting to navigate to landing page...");
+    navigate("/", { replace: true });
   };
 
   const extractRepoInfo = (url: string) => {

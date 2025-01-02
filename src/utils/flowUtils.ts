@@ -55,7 +55,7 @@ export const createNodesAndEdges = (
     yOffset += 100;
   }
 
-  // Add language nodes with repo name
+  // Add language nodes
   if (Object.keys(languages).length > 0) {
     const totalBytes = Object.values(languages).reduce((a, b) => a + b, 0);
     Object.entries(languages).forEach(([language, bytes], index) => {
