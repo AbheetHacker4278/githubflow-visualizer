@@ -13,6 +13,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
+import { Link } from "react-router-dom";
 import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
@@ -113,7 +115,19 @@ const Index = () => {
 
   return (
     <div className="min-h-screen p-8 flex flex-col gap-8">
-      <UserMenu />
+      <div className="flex justify-between items-center">
+        <Link to="/">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full hover:bg-github-darker/50"
+          >
+            <Home className="h-6 w-6" />
+          </Button>
+        </Link>
+        <UserMenu />
+      </div>
+
       <div className="max-w-2xl mx-auto w-full text-center">
         <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-github-accent to-github-success bg-clip-text text-transparent">
           GitHub Flow Visualizer
