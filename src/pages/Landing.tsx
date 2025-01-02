@@ -4,8 +4,11 @@ import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BarChart2, Code2, GitBranch, Github, Twitter, Mail, ExternalLink, Menu, X } from 'lucide-react';
 import { motion } from "framer-motion";
-import ElectricityAnimation from './ElectricityAnimation';
 import { useAnimateInView } from '@/hooks/useAnimateInView';
+import GitHubReleaseBadge from '@/components/GitHubReleaseBadge';
+import ElectricityAnimation from './ElectricityAnimation';
+import SparkAnimation from './SparkAnimation';
+import NavAnimation from './NavAnimation';
 
 
 const Landing = () => {
@@ -86,8 +89,11 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 to-black overflow-hidden">
       {/* Navbar */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-black/50 backdrop-blur-lg border-b border-white/10' : ''}`}>
-        <div className="container mx-auto px-4">
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-black/30 backdrop-blur-sm border-b border-white/10' : ''}`}>
+        <div className="absolute inset-0 overflow-hidden">
+          <NavAnimation />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <a href="/" className="flex items-center space-x-2">
@@ -137,8 +143,8 @@ const Landing = () => {
           {/* Mobile Navigation */}
           <div
             className={`md:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen
-                ? 'max-h-96 opacity-100'
-                : 'max-h-0 opacity-0 pointer-events-none'
+              ? 'max-h-96 opacity-100'
+              : 'max-h-0 opacity-0 pointer-events-none'
               }`}
           >
             <div className="py-4 space-y-4 bg-gray-900 text-white">
@@ -182,11 +188,11 @@ const Landing = () => {
           >
             <div className="flex-1 text-center lg:text-left">
               <div className="inline-block">
-                <span className="bg-gradient-to-r from-emerald-400/20 to-emerald-400/0 text-emerald-400 text-sm font-medium px-4 py-1 rounded-full mb-6 inline-block">
-                  New Release v2.0
-                </span>
+                <div className="inline-block">
+                  <GitHubReleaseBadge />
+                </div>
               </div>
-              <motion.h1 
+              <motion.h1
                 className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
                 initial={{ backgroundPosition: "0% 50%" }}
                 animate={{ backgroundPosition: "100% 50%" }}
@@ -212,13 +218,13 @@ const Landing = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.8 }}
               >
-                  <Button
-                    onClick={() => navigate("/auth")}
-                    className="border rounded border-purple-500 group px-6 py-6 text-lg bg-transparent hover:bg-white/10 text-white transition-colors duration-300"
-                  >
-                    Get Started Free
-                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                  </Button>
+                <Button
+                  onClick={() => navigate("/auth")}
+                  className="border rounded border-purple-500 group px-6 py-6 text-lg bg-transparent hover:bg-white/10 text-white transition-colors duration-300"
+                >
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Button>
               </motion.div>
             </div>
             <motion.div
@@ -291,12 +297,12 @@ const Landing = () => {
                     hidden: { opacity: 0, y: 20 }
                   }}
                   transition={{ duration: 0.5, delay: index * 0.2 }}
-                  className="group p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:bg-white/[0.07] transition-all duration-300"
+                  className="group p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition-all duration-300"
                 >
                   <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 w-fit">
                     <feature.icon className="h-6 w-6 text-emerald-400" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3 text-white group-hover:text-emerald-400 transition-colors">
+                  <h3 className="text-xl font-semibold mb-3 text-white group-hover:text-green-400 transition-colors">
                     {feature.title}
                   </h3>
                   <p className="text-zinc-400 leading-relaxed">
@@ -307,13 +313,110 @@ const Landing = () => {
             })}
           </motion.div>
 
+          {/* Timeline Section */}
+          <motion.div
+            className="mt-32 relative"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8, duration: 0.8 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
+              Development Timeline
+            </h2>
+            <div className="relative">
+              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-px bg-gradient-to-b from-emerald-500/50 to-transparent" />
+              {[
+                { year: "2025", title: "Launch", description: "Initial platform release with core features" },
+                { year: "2025 Q2", title: "Expansion", description: "Advanced analytics and team collaboration" },
+                { year: "2025 Q3", title: "Integration", description: "Other Collaborators integrations and API access" },
+              ].map((item, index) => (
+                <motion.div
+                  key={index}
+                  className={`flex items-center gap-8 mb-12 ${index % 2 === 0 ? "flex-row" : "flex-row-reverse"
+                    }`}
+                  initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.2 }}
+                >
+                  <div className="flex-1 text-right">
+                    <motion.div
+                      className={`space-y-2 ${index % 2 === 0 ? "text-right" : "text-left"} relative`}
+                      whileHover="hover"
+                    >
+                      <motion.div
+                        className="absolute inset-0 bg-emerald-500/10 rounded-lg -z-10"
+                        initial={{ opacity: 0 }}
+                        variants={{
+                          hover: { opacity: 1 }
+                        }}
+                      />
+                      <ElectricityAnimation />
+                      <div className="text-emerald-400 font-mono">{item.year}</div>
+                      <h3 className="text-xl font-semibold text-white">{item.title}</h3>
+                      <p className="text-zinc-400">{item.description}</p>
+                    </motion.div>
+                  </div>
+                  <div className="relative z-10">
+                    <motion.div
+                      className="w-4 h-4 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 relative"
+                      whileHover="hover"
+                    >
+                      <motion.div
+                        className="absolute inset-0"
+                        variants={{
+                          hover: { scale: 1.5, opacity: 0 }
+                        }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <SparkAnimation />
+                      </motion.div>
+                    </motion.div>
+                  </div>
+                  <div className="flex-1" />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Statistics Section */}
+          <motion.div
+            className="mt-32 grid md:grid-cols-3 gap-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            {[
+              { value: "2 Months+ ", label: "Takes more than 2 months for code optimization" },
+              { value: "8K+", label: "Lines of Code Written by Me + AI tools" },
+              { value: "99.9%", label: "Uptime" },
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                className="relative group"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+                <div className="relative p-8 rounded-2xl border border-white/10 bg-white/5">
+                  <div className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent mb-2">
+                    {stat.value}
+                  </div>
+                  <div className="text-zinc-400">{stat.label}</div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
           {/* Footer Section */}
           <footer className="mt-32 border-t border-white/10">
             <div className="py-16">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
                 {/* Brand section */}
                 <div className="col-span-2 md:col-span-1">
-                  <h3 className="text-white font-bold text-lg mb-4">GitViz</h3>
+                  <h3 className="font-bold text-lg mb-4 bg-gradient-to-r from-blue-400 to-green-200 bg-clip-text text-transparent">GitViz</h3>
+
                   <p className="text-zinc-400 text-sm mb-6">
                     Transforming GitHub data into actionable insights for developers and teams.
                   </p>
@@ -354,7 +457,7 @@ const Landing = () => {
               {/* Bottom footer */}
               <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
                 <p className="text-zinc-400 text-sm">
-                  © 2024 GitViz. All rights reserved.
+                  © 2025 GitViz. All rights reserved.
                 </p>
                 <div className="flex gap-6">
                   <a href="#" className="text-zinc-400 hover:text-white transition-colors text-sm">
