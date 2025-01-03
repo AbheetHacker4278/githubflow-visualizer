@@ -217,7 +217,7 @@ const Index = () => {
         >
           <Background color="#58A6FF" className="opacity-9" />
           <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
-          <Panel position="top-left" className="glass-card p-4 rounded-lg max-w-md">
+          <Panel position="top-left" className="glass-card p-4 rounded-lg max-w-72">
             <h3 className="text-sm font-medium mb-2">Repository Structure</h3>
             <p className="text-xs text-gray-400 mb-2">
               Visualizing repository languages, workflow, commits, and deployments
