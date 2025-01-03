@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState , useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -44,6 +44,9 @@ const Index = () => {
   const [branches, setBranches] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { toast } = useToast();
+  const flowRef = useRef<HTMLDivElement>(null); // Ref for the flow container
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
@@ -117,6 +120,16 @@ const Index = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      flowRef.current?.requestFullscreen();
+      setIsFullscreen(true);
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen();
+      setIsFullscreen(false);
     }
   };
 
@@ -206,7 +219,7 @@ const Index = () => {
         </form>
       </div>
 
-      <div className="flow-container">
+      <div ref={flowRef} className="flow-container relative">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -217,6 +230,11 @@ const Index = () => {
         >
           <Background color="#58A6FF" className="opacity-9" />
           <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
+          <Panel position="top-right" className="p-2">
+            <Button onClick={toggleFullscreen} className="bg-gray-700 text-white px-4 py-2 rounded-md">
+              {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            </Button>
+          </Panel>
           <Panel position="top-left" className="glass-card p-4 rounded-lg max-w-72">
             <h3 className="text-sm font-medium mb-2">Repository Structure</h3>
             <p className="text-xs text-gray-400 mb-2">
