@@ -421,13 +421,13 @@ const Landing = () => {
                     Transforming GitHub data into actionable insights for developers and teams.
                   </p>
                   <div className="flex gap-4">
-                    <a href="#" className="text-zinc-400 hover:text-white transition-colors">
+                    <a href="https://github.com/AbheetHacker4278/githubflow-visualizer.git" className="text-zinc-400 hover:text-white transition-colors">
                       <Github className="h-5 w-5" />
                     </a>
                     <a href="#" className="text-zinc-400 hover:text-white transition-colors">
                       <Twitter className="h-5 w-5" />
                     </a>
-                    <a href="#" className="text-zinc-400 hover:text-white transition-colors">
+                    <a href="mailto:aseth9588@gmail.com" className="text-zinc-400 hover:text-white transition-colors">
                       <Mail className="h-5 w-5" />
                     </a>
                   </div>
