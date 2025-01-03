@@ -13,7 +13,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
@@ -24,6 +23,8 @@ import { UserMenu } from "@/components/UserMenu";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
 import { LanguageNodeData } from "@/types/nodes";
+import BranchDetailsPanel from "@/components/BranchDetailsPanel";
+import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import "@xyflow/react/dist/style.css";
 
 const nodeTypes = {
@@ -228,6 +229,12 @@ const Index = () => {
                   Usage: {(selectedNode.data as LanguageNodeData).percentage.toFixed(1)}%
                 </p>
               </div>
+            )}
+            {selectedNode?.type === 'branch' && (
+              <BranchDetailsPanel branch={selectedNode.data} />
+            )}
+            {selectedNode?.type === 'deployment' && (
+              <DeploymentDetailsPanel deployment={selectedNode.data} />
             )}
             {branches.length > 0 && (
               <div>

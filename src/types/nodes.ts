@@ -18,7 +18,8 @@ export interface CommitNodeData {
 }
 
 export interface DeploymentNodeData {
+  label: string;
   environment: string;
   status: string;
-  url: string;
+  date: string;
 }
