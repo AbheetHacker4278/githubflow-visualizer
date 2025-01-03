@@ -1,14 +1,38 @@
 import { useState } from "react";
-import { Edge, Node, NodeChange, applyNodeChanges } from "@xyflow/react";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  Edge,
+  Node,
+  Panel,
+  OnNodesChange,
+  NodeChange,
+  applyNodeChanges,
+} from "@xyflow/react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import GitHubNode from "@/components/GitHubNode";
+import CommitNode from "@/components/CommitNode";
+import DeploymentNode from "@/components/DeploymentNode";
+import LanguageNode from "@/components/LanguageNode";
+import BranchNode from "@/components/BranchNode";
 import { UserMenu } from "@/components/UserMenu";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
-import { DirectoryTree } from "@/components/DirectoryTree";
-import { RepoVisualizer } from "@/components/RepoVisualizer";
+import { LanguageNodeData } from "@/types/nodes";
+import "@xyflow/react/dist/style.css";
+
+const nodeTypes = {
+  github: GitHubNode,
+  commit: CommitNode,
+  deployment: DeploymentNode,
+  language: LanguageNode,
+  branch: BranchNode,
+};
 
 const Index = () => {
   const navigate = useNavigate();
@@ -18,23 +42,27 @@ const Index = () => {
   const [edges, setEdges] = useState<Edge[]>([]);
   const [branches, setBranches] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [directoryData, setDirectoryData] = useState<any[]>([]);
   const { toast } = useToast();
 
-  const onNodesChange = (changes: NodeChange[]) => {
+  const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
   };
 
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
-    if (node.type === "language") {
-      const data = node.data;
+    if (node.type === 'language') {
+      const data = node.data as LanguageNodeData;
       const percentage = data.percentage.toFixed(1);
       toast({
         title: "Node Selected",
         description: `Selected language: ${data.language} (${percentage}%)`,
       });
     }
+  };
+
+  const handleHomeClick = () => {
+    console.log("Attempting to navigate to landing page...");
+    navigate("/", { replace: true });
   };
 
   const extractRepoInfo = (url: string) => {
@@ -62,10 +90,7 @@ const Index = () => {
     setLoading(true);
     try {
       const { owner, repo } = extractRepoInfo(repoUrl);
-      const { repoData, workflows, commits, deployments, languages, branches } = await fetchRepoData(
-        owner,
-        repo
-      );
+      const { repoData, workflows, commits, deployments, languages, branches } = await fetchRepoData(owner, repo);
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
         repoData,
         workflows,
@@ -77,43 +102,11 @@ const Index = () => {
 
       setNodes(newNodes);
       setEdges(newEdges);
-      setBranches(branches.map((branch) => branch.name));
-
-      // Mock directory data - this should be replaced with actual API data
-      setDirectoryData([
-        {
-          name: repo,
-          type: "directory",
-          path: "/",
-          children: [
-            {
-              name: "src",
-              type: "directory",
-              path: "/src",
-              children: [
-                { name: "index.js", type: "file", path: "/src/index.js" },
-                { name: "styles.css", type: "file", path: "/src/styles.css" },
-              ],
-            },
-            {
-              name: "public",
-              type: "directory",
-              path: "/public",
-              children: [{ name: "index.html", type: "file", path: "/public/index.html" }],
-            },
-            { name: "README.md", type: "file", path: "/README.md" },
-            { name: "package.json", type: "file", path: "/package.json" },
-          ],
-        },
-      ]);
+      setBranches(branches.map(branch => branch.name));
 
       toast({
         title: "Success",
-        description: `Repository visualization created with ${
-          Object.keys(languages).length
-        } languages${workflows.length > 0 ? ", workflows" : ""}, commits, deployments, and ${
-          branches.length
-        } branches!`,
+        description: `Repository visualization created with ${Object.keys(languages).length} languages${workflows.length > 0 ? ', workflows' : ''}, commits, deployments, and ${branches.length} branches!`,
       });
     } catch (error: any) {
       toast({
@@ -212,25 +205,42 @@ const Index = () => {
         </form>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1">
-          {directoryData.length > 0 && (
-            <div className="glass-card p-4 rounded-lg">
-              <h3 className="text-sm font-medium mb-4">Repository Structure</h3>
-              <DirectoryTree data={directoryData} />
-            </div>
-          )}
-        </div>
-        <div className="md:col-span-2">
-          <RepoVisualizer
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onNodeClick={onNodeClick}
-            selectedNode={selectedNode}
-            branches={branches}
-          />
-        </div>
+      <div className="flow-container">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+          onNodeClick={onNodeClick}
+          fitView
+        >
+          <Background color="#58A6FF" className="opacity-9" />
+          <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
+          <Panel position="top-left" className="glass-card p-4 rounded-lg max-w-md">
+            <h3 className="text-sm font-medium mb-2">Repository Structure</h3>
+            <p className="text-xs text-gray-400 mb-2">
+              Visualizing repository languages, workflow, commits, and deployments
+            </p>
+            {selectedNode?.type === 'language' && (
+              <div className="mt-2 p-2 bg-github-darker/30 rounded">
+                <p className="text-xs">Selected: {(selectedNode.data as LanguageNodeData).language}</p>
+                <p className="text-xs text-gray-400">
+                  Usage: {(selectedNode.data as LanguageNodeData).percentage.toFixed(1)}%
+                </p>
+              </div>
+            )}
+            {branches.length > 0 && (
+              <div>
+                <h4 className="text-xs font-medium mb-1">Branches ({branches.length}):</h4>
+                <ul className="text-xs text-gray-400 list-disc list-inside max-h-32 overflow-y-auto">
+                  {branches.map((branch, index) => (
+                    <li key={index}>{branch}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </Panel>
+        </ReactFlow>
       </div>
     </div>
   );

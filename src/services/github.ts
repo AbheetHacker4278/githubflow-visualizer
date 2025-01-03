@@ -170,8 +170,6 @@ export const fetchRepoData = async (owner: string, repo: string) => {
     const deployments: GitHubDeployment[] = await deploymentsResponse.json();
     console.log("Deployments found:", deployments.length);
 
-    // TODO: Implement actual directory tree fetching
-    // For now, we'll return the existing data
     return { repoData, workflows, commits, deployments, languages, branches };
   } catch (error: any) {
     console.error("Error fetching repository data:", error);
