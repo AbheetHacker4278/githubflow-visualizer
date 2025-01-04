@@ -10,7 +10,6 @@ import ElectricityAnimation from './ElectricityAnimation';
 import SparkAnimation from './SparkAnimation';
 import NavAnimation from './NavAnimation';
 
-
 const Landing = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -25,12 +24,6 @@ const Landing = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    if (session) {
-      navigate("/app");
-    }
-  }, [session, navigate]);
 
   const navLinks = [
     { label: "Features", href: "#features" },
@@ -219,7 +212,7 @@ const Landing = () => {
                 transition={{ delay: 0.4, duration: 0.8 }}
               >
                 <Button
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate("/app")}
                   className="border rounded border-purple-500 group px-6 py-6 text-lg bg-transparent hover:bg-white/10 text-white transition-colors duration-300"
                 >
                   Get Started Free
@@ -480,4 +473,3 @@ const Landing = () => {
 };
 
 export default Landing;
-

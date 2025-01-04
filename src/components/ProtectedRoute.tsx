@@ -1,20 +1,10 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { ReactNode } from "react";
 import { useAuth } from "./AuthProvider";
 
-export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { session } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!session) {
-      navigate("/");
-    }
-  }, [session, navigate]);
-
-  if (!session) {
-    return null;
-  }
-
+  console.log("ProtectedRoute - Session status:", session ? "Authenticated" : "Unauthenticated");
+  
+  // Allow access regardless of authentication status
   return <>{children}</>;
 };
