@@ -43,7 +43,6 @@ const BranchDetailsPanel = ({
   tags = [],
   fileChanges = [],
   contributors = [],
-  isFullscreen = false
 }: BranchDetailsPanelProps) => {
   const [showFileChanges, setShowFileChanges] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -133,21 +132,6 @@ const BranchDetailsPanel = ({
       </div>
     </>
   );
-
-  if (isFullscreen || !isDesktop) {
-    return (
-      <Drawer open={isOpen} onOpenChange={onClose}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{branchName}</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-4">
-            <Content />
-          </div>
-        </DrawerContent>
-      </Drawer>
-    );
-  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
