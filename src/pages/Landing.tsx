@@ -344,7 +344,7 @@ const Landing = () => {
               {[
                 { year: "2025", title: "Launch", description: "Initial platform release with core features" },
                 { year: "2025 Q2", title: "Expansion", description: "Advanced analytics and team collaboration" },
-                { year: "2025 Q3", title: "Integration", description: "Other Collaborators integrations and API access" },
+                { year: "2025 Q3", title: "More Features", description: "Other Collaborators integrations and API access" },
               ].map((item, index) => (
                 <motion.div
                   key={index}
