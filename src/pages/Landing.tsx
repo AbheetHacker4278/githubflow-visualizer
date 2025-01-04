@@ -9,6 +9,7 @@ import GitHubReleaseBadge from '@/components/GitHubReleaseBadge';
 import ElectricityAnimation from './ElectricityAnimation';
 import SparkAnimation from './SparkAnimation';
 import NavAnimation from './NavAnimation';
+import ContributorsSection from '@/components/ContributorsSection';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const Landing = () => {
   const navLinks = [
     { label: "Features", href: "#features" },
     { label: "Documentation", href: "#docs" },
-    { label: "About", href: "#about" },
+    { label: "About Us", href: "#about" },
   ];
 
   const features = [
@@ -48,6 +49,25 @@ const Landing = () => {
       icon: GitBranch,
     },
   ];
+
+  const aboutContent = {
+    mainHeading: "Revolutionizing GitHub Analytics",
+    description: "We're on a mission to transform how developers understand and interact with their GitHub data. Our platform combines powerful analytics with intuitive visualizations to help you make better decisions.",
+    benefits: [
+      {
+        title: "Real-time Insights",
+        description: "Get instant updates on your repository metrics and team performance."
+      },
+      {
+        title: "AI-Powered Analysis",
+        description: "Advanced algorithms help identify patterns and optimization opportunities."
+      },
+      {
+        title: "Team Collaboration",
+        description: "Foster better collaboration with shared dashboards and insights."
+      }
+    ]
+  };
 
   const footerLinks = [
     {
@@ -215,7 +235,7 @@ const Landing = () => {
                   onClick={() => navigate("/app")}
                   className="border rounded border-purple-500 group px-6 py-6 text-lg bg-transparent hover:bg-white/10 text-white transition-colors duration-300"
                 >
-                  Get Started Free
+                  Get Started For Free
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </motion.div>
@@ -271,6 +291,9 @@ const Landing = () => {
           </motion.div>
 
           {/* Features Section */}
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
+            How GitViz works
+          </h2>
           <motion.div
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
             initial={{ opacity: 0, y: 20 }}
@@ -371,6 +394,66 @@ const Landing = () => {
               ))}
             </div>
           </motion.div>
+
+          <motion.section
+            id='features'
+            className="mt-32 relative"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            {/* Background Elements */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-full blur-3xl" />
+            </div>
+
+            <div className="relative container mx-auto px-4">
+              {/* Header */}
+              <motion.div
+                className="text-center max-w-3xl mx-auto mb-16"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
+                  {aboutContent.mainHeading}
+                </h2>
+                <p className="text-zinc-400 text-lg leading-relaxed">
+                  {aboutContent.description}
+                </p>
+              </motion.div>
+              
+              {/* Benefits Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {aboutContent.benefits.map((benefit, index) => (
+                  <motion.div
+                    key={index}
+                    className="relative group"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: index * 0.2 }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-blue-500/5 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                    <div className="relative p-6 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm">
+                      <h3 className="text-xl font-semibold mb-3 text-white group-hover:text-emerald-400 transition-colors">
+                        {benefit.title}
+                      </h3>
+                      <p className="text-zinc-400 leading-relaxed">
+                        {benefit.description}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.section>
+
+          <div id='about'>
+            <ContributorsSection />
+          </div>
 
           {/* Statistics Section */}
           <motion.div
