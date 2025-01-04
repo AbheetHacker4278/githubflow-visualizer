@@ -1,6 +1,18 @@
 import { Node, Edge } from "@xyflow/react";
 import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
-import { LanguageNodeData } from "../types/nodes";
+import { LanguageNodeData, BranchNodeData } from "../types/nodes";
+
+const calculateBranchHeatLevel = (commits: GitHubCommit[] = [], branch: GitHubBranch): number => {
+  if (!commits.length) return 0;
+  const now = new Date();
+  const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
+  
+  const recentCommits = commits.filter(commit => 
+    new Date(commit.commit.author.date) > oneMonthAgo
+  );
+
+  return Math.min(100, Math.round((recentCommits.length / commits.length) * 100));
+};
 
 export const createNodesAndEdges = (
   data: any,
@@ -24,7 +36,7 @@ export const createNodesAndEdges = (
 
   yOffset += 100;
 
-  // Add branches nodes with commit data
+  // Add branches nodes with commit data and heat levels
   if (branches.length > 0) {
     branches.forEach((branch, index) => {
       const id = `branch-${index}`;
@@ -36,12 +48,31 @@ export const createNodesAndEdges = (
           date: new Date(commit.commit.author.date).toLocaleDateString()
         }));
 
+      const heatLevel = calculateBranchHeatLevel(commits, branch);
+      const isCollapsed = heatLevel < 25; // Collapse inactive branches by default
+
+      // Mock tags for demonstration - replace with actual tags data
+      const tags = branch.name === "main" ? [
+        { name: "v1.0.0", type: "annotated" as const, message: "Major release" },
+        { name: "latest", type: "lightweight" as const }
+      ] : [];
+
+      // Mock file changes - replace with actual file changes data
+      const fileChanges = [
+        { path: "src/main.ts", changes: 15 },
+        { path: "package.json", changes: 3 }
+      ];
+
       newNodes.push({
         id,
         type: "branch",
         data: { 
           label: branch.name,
-          commits: branchCommits
+          commits: branchCommits,
+          heatLevel,
+          isCollapsed,
+          tags,
+          fileChanges
         },
         position: { x: -200 + (index * 150), y: yOffset },
       });

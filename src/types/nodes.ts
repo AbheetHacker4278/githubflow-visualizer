@@ -10,6 +10,17 @@ export interface BranchNodeData {
   lastCommit: string;
   author: string;
   protected: boolean;
+  heatLevel?: number;
+  isCollapsed?: boolean;
+  tags?: Array<{
+    name: string;
+    type: "lightweight" | "annotated";
+    message?: string;
+  }>;
+  fileChanges?: Array<{
+    path: string;
+    changes: number;
+  }>;
   [key: string]: unknown;
 }
 
