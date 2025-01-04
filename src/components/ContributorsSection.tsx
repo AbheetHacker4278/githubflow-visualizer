@@ -19,13 +19,13 @@ const contributors: Contributor[] = [
     github: "https://github.com/AbheetHacker4278",
     linkedin: "https://www.linkedin.com/in/abheet-seth-58533a251/",
   },
-  {
-    name: "Abhishek Singhvi",
-    role: "Web Developer",
-    image: "https://avatars.githubusercontent.com/u/88542573?v=4",
-    github: "https://github.com/abhisheksinghvi09",
-    linkedin: "https://www.linkedin.com/in/abhishek--singhvi/"
-  },
+  // {
+  //   name: "Abhishek Singhvi",
+  //   role: "Web Developer",
+  //   image: "https://avatars.githubusercontent.com/u/88542573?v=4",
+  //   github: "https://github.com/abhisheksinghvi09",
+  //   linkedin: "https://www.linkedin.com/in/abhishek--singhvi/"
+  // },
 ];
 
 const ContributorsSection: React.FC = () => {
