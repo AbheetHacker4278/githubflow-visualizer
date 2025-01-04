@@ -1,27 +1,18 @@
-import { memo } from "react";
+import { DeploymentNodeData } from "@/types/nodes";
 
-interface DeploymentDetailsPanelProps {
-  deployment: {
-    label: string;
-    environment: string;
-    status: string;
-    date: string;
-  };
+export interface DeploymentDetailsPanelProps {
+  deployment: DeploymentNodeData;
 }
 
-const DeploymentDetailsPanel = memo(({ deployment }: DeploymentDetailsPanelProps) => {
+const DeploymentDetailsPanel = ({ deployment }: DeploymentDetailsPanelProps) => {
   return (
     <div className="mt-2 p-2 bg-github-darker/30 rounded">
-      <h4 className="text-sm font-medium mb-2">{deployment.label}</h4>
-      <ul className="text-xs text-gray-400 space-y-1">
-        <li>Environment: {deployment.environment}</li>
-        <li>Status: {deployment.status}</li>
-        <li>Date: {deployment.date}</li>
-      </ul>
+      <p className="text-xs">Deployment: {deployment.label}</p>
+      <p className="text-xs text-gray-400">Environment: {deployment.environment}</p>
+      <p className="text-xs text-gray-400">Status: {deployment.status}</p>
+      <p className="text-xs text-gray-400">Date: {deployment.date}</p>
     </div>
   );
-});
-
-DeploymentDetailsPanel.displayName = "DeploymentDetailsPanel";
+};
 
 export default DeploymentDetailsPanel;

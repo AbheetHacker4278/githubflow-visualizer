@@ -2,19 +2,15 @@ export interface LanguageNodeData {
   language: string;
   percentage: number;
   repoName: string;
+  [key: string]: unknown;
 }
 
-export interface GitHubNodeData {
+export interface BranchNodeData {
   name: string;
-  description: string;
-  stars: number;
-  forks: number;
-}
-
-export interface CommitNodeData {
-  message: string;
+  lastCommit: string;
   author: string;
-  date: string;
+  protected: boolean;
+  [key: string]: unknown;
 }
 
 export interface DeploymentNodeData {
@@ -22,4 +18,5 @@ export interface DeploymentNodeData {
   environment: string;
   status: string;
   date: string;
+  [key: string]: unknown;
 }
