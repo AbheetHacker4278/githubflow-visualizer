@@ -1,3 +1,5 @@
+import { Contributor } from "./collaboration";
+
 export interface LanguageNodeData {
   language: string;
   percentage: number;
@@ -21,6 +23,7 @@ export interface BranchNodeData {
     path: string;
     changes: number;
   }>;
+  contributors?: Contributor[];
   [key: string]: unknown;
 }
 

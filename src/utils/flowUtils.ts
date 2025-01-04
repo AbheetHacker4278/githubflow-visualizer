@@ -1,6 +1,7 @@
 import { Node, Edge } from "@xyflow/react";
 import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
 import { LanguageNodeData, BranchNodeData } from "../types/nodes";
+import { Contributor } from "@/types/collaboration";
 
 const calculateBranchHeatLevel = (commits: GitHubCommit[] = [], branch: GitHubBranch): number => {
   if (!commits.length) return 0;
@@ -12,6 +13,30 @@ const calculateBranchHeatLevel = (commits: GitHubCommit[] = [], branch: GitHubBr
   );
 
   return Math.min(100, Math.round((recentCommits.length / commits.length) * 100));
+};
+
+const getContributors = (commits: GitHubCommit[]): Contributor[] => {
+  const contributorMap = new Map<string, { commits: number; lastActive: string }>();
+  
+  commits.forEach(commit => {
+    const name = commit.commit.author.name;
+    const existing = contributorMap.get(name) || { commits: 0, lastActive: commit.commit.author.date };
+    
+    contributorMap.set(name, {
+      commits: existing.commits + 1,
+      lastActive: new Date(existing.lastActive) > new Date(commit.commit.author.date) 
+        ? existing.lastActive 
+        : commit.commit.author.date
+    });
+  });
+
+  return Array.from(contributorMap.entries())
+    .map(([name, data]) => ({
+      name,
+      commits: data.commits,
+      lastActive: data.lastActive
+    }))
+    .sort((a, b) => b.commits - a.commits);
 };
 
 export const createNodesAndEdges = (
@@ -36,7 +61,7 @@ export const createNodesAndEdges = (
 
   yOffset += 100;
 
-  // Add branches nodes with commit data and heat levels
+  // Add branches nodes with commit data, heat levels, and contributors
   if (branches.length > 0) {
     branches.forEach((branch, index) => {
       const id = `branch-${index}`;
@@ -50,6 +75,7 @@ export const createNodesAndEdges = (
 
       const heatLevel = calculateBranchHeatLevel(commits, branch);
       const isCollapsed = heatLevel < 25; // Collapse inactive branches by default
+      const contributors = getContributors(commits);
 
       // Mock tags for demonstration - replace with actual tags data
       const tags = branch.name === "main" ? [
@@ -72,7 +98,8 @@ export const createNodesAndEdges = (
           heatLevel,
           isCollapsed,
           tags,
-          fileChanges
+          fileChanges,
+          contributors
         },
         position: { x: -200 + (index * 150), y: yOffset },
       });

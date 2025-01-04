@@ -3,8 +3,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Users } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { Contributor } from "@/types/collaboration";
 
 export interface BranchDetailsPanelProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export interface BranchDetailsPanelProps {
     path: string;
     changes: number;
   }>;
+  contributors?: Contributor[];
   isFullscreen?: boolean;
 }
 
@@ -40,6 +42,7 @@ const BranchDetailsPanel = ({
   onToggleCollapse,
   tags = [],
   fileChanges = [],
+  contributors = [],
   isFullscreen = false
 }: BranchDetailsPanelProps) => {
   const [showFileChanges, setShowFileChanges] = useState(false);
@@ -60,6 +63,28 @@ const BranchDetailsPanel = ({
           Activity: {heatLevel}%
         </Badge>
       </div>
+
+      {contributors.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Contributors
+          </h3>
+          <div className="space-y-2">
+            {contributors.map((contributor, index) => (
+              <div key={contributor.name} className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{contributor.name}</span>
+                  {index === 0 && <Badge variant="secondary">Top Contributor</Badge>}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {contributor.commits} commits
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {tags.length > 0 && (
         <div className="mt-4">

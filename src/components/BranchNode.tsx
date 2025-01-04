@@ -2,7 +2,8 @@ import { memo, useState, useCallback } from "react";
 import { Handle, Position } from "@xyflow/react";
 import BranchDetailsPanel from "./BranchDetailsPanel";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronRight, ChevronDown, Users } from "lucide-react";
+import { Contributor } from "@/types/collaboration";
 
 interface BranchNodeProps {
   data: {
@@ -23,6 +24,7 @@ interface BranchNodeProps {
       path: string;
       changes: number;
     }>;
+    contributors?: Contributor[];
   };
 }
 
@@ -44,6 +46,8 @@ const BranchNode = memo(({ data }: BranchNodeProps) => {
     if (level > 25) return "bg-yellow-500/20";
     return "bg-green-500/20";
   };
+
+  const topContributor = data.contributors?.[0];
 
   return (
     <>
@@ -73,6 +77,12 @@ const BranchNode = memo(({ data }: BranchNodeProps) => {
               {data.tags.length} tags
             </Badge>
           )}
+          {topContributor && (
+            <div className="flex items-center gap-1 ml-auto" title={`Top contributor: ${topContributor.name}`}>
+              <Users className="w-3 h-3" />
+              <span className="text-xs opacity-70">{data.contributors?.length}</span>
+            </div>
+          )}
         </div>
         <Handle type="target" position={Position.Top} className="!bg-github-accent" />
         <Handle type="source" position={Position.Bottom} className="!bg-github-accent" />
@@ -87,6 +97,7 @@ const BranchNode = memo(({ data }: BranchNodeProps) => {
         onToggleCollapse={handleToggleCollapse}
         tags={data.tags}
         fileChanges={data.fileChanges}
+        contributors={data.contributors}
       />
     </>
   );
