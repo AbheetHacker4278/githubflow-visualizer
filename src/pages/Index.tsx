@@ -47,6 +47,7 @@ const Index = () => {
   const flowRef = useRef<HTMLDivElement>(null); // Ref for the flow container
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<Node | null>(null);
 
   const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
@@ -54,6 +55,9 @@ const Index = () => {
 
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
+    if (node.type === 'branch') {
+      setSelectedBranch(node);
+    }
     if (node.type === 'language') {
       const data = node.data as LanguageNodeData;
       const percentage = data.percentage.toFixed(1);
@@ -267,6 +271,20 @@ const Index = () => {
           </Panel>
         </ReactFlow>
       </div>
+
+      {selectedBranch && (
+        <BranchDetailsPanel
+          isOpen={!!selectedBranch}
+          onClose={() => setSelectedBranch(null)}
+          branchName={selectedBranch.data.label}
+          commits={selectedBranch.data.commits}
+          heatLevel={selectedBranch.data.heatLevel}
+          isCollapsed={selectedBranch.data.isCollapsed}
+          tags={selectedBranch.data.tags}
+          fileChanges={selectedBranch.data.fileChanges}
+          isFullscreen={isFullscreen}
+        />
+      )}
     </div>
   );
 };
