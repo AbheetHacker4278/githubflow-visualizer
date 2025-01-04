@@ -329,7 +329,7 @@ const Landing = () => {
             })}
           </motion.div>
 
-          {/* Timeline Section */}
+          {/* Timeline Sections */}
           <motion.div
             className="mt-32 relative"
             initial={{ opacity: 0 }}
@@ -424,7 +424,7 @@ const Landing = () => {
                   {aboutContent.description}
                 </p>
               </motion.div>
-              
+
               {/* Benefits Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {aboutContent.benefits.map((benefit, index) => (
