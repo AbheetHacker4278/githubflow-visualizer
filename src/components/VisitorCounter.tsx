@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface VisitorCount {
   id: string;
@@ -12,35 +13,15 @@ interface VisitorCount {
 
 export const VisitorCounter = () => {
   const [visitorCount, setVisitorCount] = useState<number>(0)
+  const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
   useEffect(() => {
     const checkAndIncrementVisitorCount = async () => {
       try {
-        // Check if user has already visited
+        setIsLoading(true)
         const hasVisited = localStorage.getItem('has_visited')
         
-        if (hasVisited) {
-          console.log('User has already visited, fetching current count...')
-          // Just fetch and display the current count without incrementing
-          const { data: currentData, error: fetchError } = await supabase
-            .from('visitor_counts')
-            .select('*')
-            .single()
-
-          if (fetchError) {
-            console.error('Error fetching visitor count:', fetchError)
-            return
-          }
-
-          console.log('Current visitor count:', currentData?.count)
-          setVisitorCount(currentData?.count || 0)
-          return
-        }
-
-        console.log('New visitor detected, incrementing count...')
-        
-        // First, get the current count
         const { data: currentData, error: fetchError } = await supabase
           .from('visitor_counts')
           .select('*')
@@ -51,26 +32,20 @@ export const VisitorCounter = () => {
           return
         }
 
-        console.log('Current visitor count:', currentData?.count)
+        let newCount = currentData?.count || 0
 
-        // Increment the count
-        const newCount = (currentData?.count || 0) + 1
-        const { error: updateError } = await supabase
-          .from('visitor_counts')
-          .update({ count: newCount, last_updated: new Date().toISOString() })
-          .eq('id', currentData?.id)
+        if (!hasVisited) {
+          newCount += 1
+          await supabase
+            .from('visitor_counts')
+            .update({ count: newCount, last_updated: new Date().toISOString() })
+            .eq('id', currentData?.id)
 
-        if (updateError) {
-          console.error('Error updating visitor count:', updateError)
-          return
+          localStorage.setItem('has_visited', 'true')
         }
 
-        console.log('Visitor count updated to:', newCount)
         setVisitorCount(newCount)
-
-        // Mark user as having visited
-        localStorage.setItem('has_visited', 'true')
-
+        setIsLoading(false)
       } catch (error) {
         console.error('Error in visitor counter:', error)
         toast({
@@ -78,18 +53,62 @@ export const VisitorCounter = () => {
           description: "Failed to update visitor count",
           variant: "destructive",
         })
+        setIsLoading(false)
       }
     }
 
     checkAndIncrementVisitorCount()
-  }, []) // Run once on component mount
+
+    // Set up real-time subscription
+    const subscription = supabase
+      .channel('visitor_counts')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'visitor_counts' }, (payload) => {
+        setVisitorCount(payload.new.count)
+      })
+      .subscribe()
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
 
   return (
-    <div className="flex items-center justify-center space-x-2 text-sm text-zinc-400">
-      <span>Unique Visitors:</span>
-      <span className="font-mono bg-zinc-800/50 px-2 py-0.5 rounded">
-        {visitorCount.toLocaleString()}
-      </span>
-    </div>
+    <AnimatePresence>
+      {!isLoading && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-center space-x-2 text-sm text-zinc-100 p-1 rounded-xl bg-gradient-to-r from-green-400 to-transparent shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 px-2"
+        >
+          <span className='text-white'>Unique Visitors:</span>
+          <motion.div
+            key={visitorCount}
+            initial={{ rotateX: -90 }}
+            animate={{ rotateX: 0 }}
+            exit={{ rotateX: 90 }}
+            transition={{ duration: 0.5 }}
+            className="font-mono px-3 py-1 bg-white bg-opacity-20 rounded-full overflow-hidden"
+          >
+            <AnimatePresence mode="popLayout">
+              {visitorCount.toString().split('').map((digit, index) => (
+                <motion.span
+                  key={`${index}-${digit}`}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -20, opacity: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="inline-block"
+                >
+                  {digit}
+                </motion.span>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
+
