@@ -1,33 +1,17 @@
-import { Edge as ReactFlowEdge, Node } from "@xyflow/react";
-import { Contributor } from "@/types/collaboration";
-
-export interface ShareableState {
-  nodes: Node[];
-  edges: ReactFlowEdge[];
-  zoom: number;
-  position: [number, number];
-}
-
-export interface DeploymentNodeData {
-  label: string;
-  environment: string;
-  status: string;
-  date: string;
-}
+import { Contributor } from "./collaboration";
 
 export interface LanguageNodeData {
   language: string;
   percentage: number;
   repoName: string;
+  [key: string]: unknown;
 }
 
 export interface BranchNodeData {
-  label: string;
-  commits?: Array<{
-    sha: string;
-    message: string;
-    date: string;
-  }>;
+  name: string;
+  lastCommit: string;
+  author: string;
+  protected: boolean;
   heatLevel?: number;
   isCollapsed?: boolean;
   tags?: Array<{
@@ -40,4 +24,13 @@ export interface BranchNodeData {
     changes: number;
   }>;
   contributors?: Contributor[];
+  [key: string]: unknown;
+}
+
+export interface DeploymentNodeData {
+  label: string;
+  environment: string;
+  status: string;
+  date: string;
+  [key: string]: unknown;
 }

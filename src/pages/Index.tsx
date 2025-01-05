@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState , useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -6,21 +6,25 @@ import {
   Edge,
   Node,
   Panel,
-  ReactFlowProvider,
+  OnNodesChange,
+  NodeChange,
+  applyNodeChanges,
 } from "@xyflow/react";
 import { useToast } from "@/hooks/use-toast";
-import { UserMenu } from "@/components/UserMenu";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
 import LanguageNode from "@/components/LanguageNode";
 import BranchNode from "@/components/BranchNode";
-import BranchDetailsPanel from "@/components/BranchDetailsPanel";
-import { ShareDialog } from "@/components/ShareDialog";
-import RepositoryForm from "@/components/RepositoryForm";
+import { UserMenu } from "@/components/UserMenu";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
-import { getStateFromUrl } from "@/utils/shareUtils";
+import { LanguageNodeData } from "@/types/nodes";
+import BranchDetailsPanel from "@/components/BranchDetailsPanel";
+import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import "@xyflow/react/dist/style.css";
 
 const nodeTypes = {
@@ -31,87 +35,43 @@ const nodeTypes = {
   branch: BranchNode,
 };
 
-const FlowContent = () => {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [selectedBranch, setSelectedBranch] = useState<Node | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const flowRef = useRef<HTMLDivElement>(null);
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      flowRef.current?.requestFullscreen();
-      setIsFullscreen(true);
-    } else if (document.exitFullscreen) {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  };
-
-  const getCurrentState = () => ({
-    nodes,
-    edges,
-    zoom: 1,
-    position: [0, 0] as [number, number],
-  });
-
-  return (
-    <div ref={flowRef} className="flow-container relative">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        onNodeClick={(_, node) => setSelectedNode(node)}
-        fitView
-      >
-        <Background color="#58A6FF" className="opacity-9" />
-        <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
-        <Panel position="top-right" className="space-x-2">
-          <Button onClick={toggleFullscreen} className="bg-gray-700 text-white px-4 py-2 rounded-md">
-            {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          </Button>
-          <ShareDialog currentState={getCurrentState()} />
-        </Panel>
-      </ReactFlow>
-      
-      {selectedBranch && (
-        <BranchDetailsPanel
-          isOpen={!!selectedBranch}
-          onClose={() => setSelectedBranch(null)}
-          branchName={selectedBranch.data.label}
-          commits={selectedBranch.data.commits}
-          heatLevel={selectedBranch.data.heatLevel}
-          isCollapsed={selectedBranch.data.isCollapsed}
-          tags={selectedBranch.data.tags}
-          fileChanges={selectedBranch.data.fileChanges}
-          contributors={selectedBranch.data.contributors}
-          isFullscreen={isFullscreen}
-        />
-      )}
-    </div>
-  );
-};
-
 const Index = () => {
+  const navigate = useNavigate();
   const [repoUrl, setRepoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [branches, setBranches] = useState<string[]>([]);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { toast } = useToast();
+  const flowRef = useRef<HTMLDivElement>(null); // Ref for the flow container
 
-  useEffect(() => {
-    const savedState = getStateFromUrl();
-    if (savedState) {
-      setNodes(savedState.nodes);
-      setEdges(savedState.edges);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<Node | null>(null);
+
+  const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
+    setNodes((nds) => applyNodeChanges(changes, nds));
+  };
+
+  const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
+    setSelectedNode(node);
+    if (node.type === 'branch') {
+      setSelectedBranch(node);
+    }
+    if (node.type === 'language') {
+      const data = node.data as LanguageNodeData;
+      const percentage = data.percentage.toFixed(1);
       toast({
-        title: "Shared View Loaded",
-        description: "Viewing a shared repository visualization",
+        title: "Node Selected",
+        description: `Selected language: ${data.language} (${percentage}%)`,
       });
     }
-  }, []);
+  };
+
+  const handleHomeClick = () => {
+    console.log("Attempting to navigate to landing page...");
+    navigate("/", { replace: true });
+  };
 
   const extractRepoInfo = (url: string) => {
     try {
@@ -167,37 +127,165 @@ const Index = () => {
     }
   };
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      flowRef.current?.requestFullscreen();
+      setIsFullscreen(true);
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
   return (
-    <ReactFlowProvider>
-      <div className="min-h-screen p-8 flex flex-col gap-8">
-        <div className="flex justify-between items-center">
-          <a href="/" className="flex items-center space-x-2">
-            <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
-              GitViz
-            </span>
-          </a>
-          <UserMenu />
-        </div>
-
-        <div className="max-w-2xl mx-auto w-full text-center">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-github-accent to-github-success bg-clip-text text-transparent">
-            GitHub Flow Visualizer
-          </h1>
-          <p className="text-gray-400 mb-8">
-            Enter a GitHub repository URL to visualize its workflow structure
-          </p>
-
-          <RepositoryForm
-            repoUrl={repoUrl}
-            setRepoUrl={setRepoUrl}
-            loading={loading}
-            onSubmit={handleSubmit}
-          />
-        </div>
-
-        <FlowContent />
+    <div className="min-h-screen p-8 flex flex-col gap-8">
+      <div className="flex justify-between items-center">
+        <a href="/" className="flex items-center space-x-2">
+          <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
+            GitViz
+          </span>
+        </a>
+        <UserMenu />
       </div>
-    </ReactFlowProvider>
+
+      <div className="max-w-2xl mx-auto w-full text-center">
+        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-github-accent to-github-success bg-clip-text text-transparent">
+          GitHub Flow Visualizer
+        </h1>
+        <p className="text-gray-400 mb-8">
+          Enter a GitHub repository URL to visualize its workflow structure
+        </p>
+
+        <form onSubmit={handleSubmit} className="flex gap-4 glass-card p-4 rounded-lg">
+          <Input
+            type="text"
+            placeholder="https://github.com/username/repo"
+            value={repoUrl}
+            onChange={(e) => setRepoUrl(e.target.value)}
+            className="bg-github-darker/50 border-white/10"
+          />
+          <Button
+            type="submit"
+            disabled={loading}
+            className={`
+              relative px-6 py-2.5
+              bg-black/40 backdrop-blur-md
+              border border-white/10
+              rounded-lg
+              text-white
+              font-medium
+              shadow-lg
+              transition-all duration-200
+              hover:bg-black/50
+              hover:shadow-xl
+              hover:scale-[1.02]
+              active:scale-[0.98]
+              disabled:opacity-50
+              disabled:cursor-not-allowed
+              disabled:hover:scale-100
+              disabled:hover:bg-black/40
+              before:absolute
+              before:inset-0
+              before:rounded-lg
+              before:bg-gradient-to-t
+              before:from-white/5
+              before:to-transparent
+              before:opacity-0
+              hover:before:opacity-100
+              before:transition-opacity
+              overflow-hidden
+            `}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Loading...
+              </span>
+            ) : (
+              "Visualize"
+            )}
+          </Button>
+        </form>
+      </div>
+
+      <div ref={flowRef} className="flow-container relative">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+          onNodeClick={onNodeClick}
+          fitView
+        >
+          <Background color="#58A6FF" className="opacity-9" />
+          <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
+          <Panel position="top-right" className="p-2">
+            <Button onClick={toggleFullscreen} className="bg-gray-700 text-white px-4 py-2 rounded-md">
+              {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            </Button>
+          </Panel>
+          <Panel position="top-left" className="glass-card p-4 rounded-lg max-w-72">
+            <h3 className="text-sm font-medium mb-2">Repository Structure</h3>
+            <p className="text-xs text-gray-400 mb-2">
+              Visualizing repository languages, workflow, commits, and deployments
+            </p>
+            {selectedNode?.type === 'language' && (
+              <div className="mt-2 p-2 bg-github-darker/30 rounded">
+                <p className="text-xs">Selected: {(selectedNode.data as LanguageNodeData).language}</p>
+                <p className="text-xs text-gray-400">
+                  Usage: {(selectedNode.data as LanguageNodeData).percentage.toFixed(1)}%
+                </p>
+              </div>
+            )}
+            {selectedNode?.type === 'branch' && (
+              <BranchDetailsPanel branch={selectedNode.data} />
+            )}
+            {selectedNode?.type === 'deployment' && (
+              <DeploymentDetailsPanel deployment={selectedNode.data} />
+            )}
+            {branches.length > 0 && (
+              <div>
+                <h4 className="text-xs font-medium mb-1">Branches ({branches.length}):</h4>
+                <ul className="text-xs text-gray-400 list-disc list-inside max-h-32 overflow-y-auto">
+                  {branches.map((branch, index) => (
+                    <li key={index}>{branch}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </Panel>
+        </ReactFlow>
+      </div>
+
+      {selectedBranch && (
+        <BranchDetailsPanel
+          isOpen={!!selectedBranch}
+          onClose={() => setSelectedBranch(null)}
+          branchName={selectedBranch.data.label}
+          commits={selectedBranch.data.commits}
+          heatLevel={selectedBranch.data.heatLevel}
+          isCollapsed={selectedBranch.data.isCollapsed}
+          tags={selectedBranch.data.tags}
+          fileChanges={selectedBranch.data.fileChanges}
+          isFullscreen={isFullscreen}
+        />
+      )}
+    </div>
   );
 };
 
