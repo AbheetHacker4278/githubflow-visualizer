@@ -1,103 +1,111 @@
-import React, { useState, useEffect } from 'react'
-import { Menu, X, Github, Twitter, Mail, ExternalLink } from 'lucide-react'
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { useNavigate } from "react-router-dom"
-import { Hero } from '@/components/landing/Hero'
-import { VisitorCounter } from '@/components/VisitorCounter'
-import ElectricityAnimation from './ElectricityAnimation'
-import ContributorsSection from '@/components/ContributorsSection'
-import SparkAnimation from './SparkAnimation'
-import { useInView } from 'react-intersection-observer'
-
-const useAnimateInView = () => {
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
-  return { ref, controls: inView ? "visible" : "hidden" };
-};
-
-const features = [
-  {
-    title: "Real-time Visualization",
-    description: "See your GitHub repository structure and activity in real-time with interactive visualizations.",
-    icon: Github
-  },
-  {
-    title: "Collaboration Insights",
-    description: "Track team contributions and project progress with detailed analytics.",
-    icon: ExternalLink
-  },
-  {
-    title: "Custom Workflows",
-    description: "Visualize and optimize your development workflow with customizable views.",
-    icon: Mail
-  }
-];
-
-const aboutContent = {
-  mainHeading: "Powerful GitHub Visualization",
-  description: "Transform your GitHub workflow with intuitive visualizations and powerful analytics tools.",
-  benefits: [
-    {
-      title: "Interactive Graphs",
-      description: "Visualize repository structure and relationships with interactive graph layouts."
-    },
-    {
-      title: "Real-time Updates",
-      description: "See changes and updates to your repository in real-time as they happen."
-    },
-    {
-      title: "Team Collaboration",
-      description: "Track team contributions and project progress with detailed analytics."
-    }
-  ]
-};
-
-const footerLinks = [
-  {
-    title: "Product",
-    links: [
-      { label: "Features", href: "#features" },
-      { label: "Documentation", href: "#docs" },
-      { label: "About", href: "#about" }
-    ]
-  },
-  {
-    title: "Resources",
-    links: [
-      { label: "Blog", href: "#" },
-      { label: "Support", href: "#" },
-      { label: "Contact", href: "#" }
-    ]
-  }
-];
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/components/AuthProvider";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, BarChart2, Code2, GitBranch, Github, Twitter, Mail, ExternalLink, Menu, X } from 'lucide-react';
+import { motion } from "framer-motion";
+import { useAnimateInView } from '@/hooks/useAnimateInView';
+import GitHubReleaseBadge from '@/components/GitHubReleaseBadge';
+import ElectricityAnimation from './ElectricityAnimation';
+import SparkAnimation from './SparkAnimation';
+import NavAnimation from './NavAnimation';
+import ContributorsSection from '@/components/ContributorsSection';
 
 const Landing = () => {
-  const navigate = useNavigate()
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const navigate = useNavigate();
+  const { session } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navLinks = [
     { label: "Features", href: "#features" },
     { label: "Documentation", href: "#docs" },
     { label: "About Us", href: "#about" },
-  ]
+  ];
+
+  const features = [
+    {
+      title: "Repository Analysis",
+      description: "Get deep insights into your repositories with advanced analytics and metrics visualization.",
+      icon: BarChart2,
+    },
+    {
+      title: "Language Breakdown",
+      description: "Comprehensive analysis of programming languages across your entire codebase.",
+      icon: Code2,
+    },
+    {
+      title: "Workflow Visualization",
+      description: "Interactive visualization of your CI/CD pipelines and GitHub Actions workflows.",
+      icon: GitBranch,
+    },
+  ];
+
+  const aboutContent = {
+    mainHeading: "Revolutionizing GitHub Analytics",
+    description: "We're on a mission to transform how developers understand and interact with their GitHub data. Our platform combines powerful analytics with intuitive visualizations to help you make better decisions.",
+    benefits: [
+      {
+        title: "Real-time Insights",
+        description: "Get instant updates on your repository metrics and team performance."
+      },
+      {
+        title: "AI-Powered Analysis",
+        description: "Advanced algorithms help identify patterns and optimization opportunities."
+      },
+      {
+        title: "Team Collaboration",
+        description: "Foster better collaboration with shared dashboards and insights."
+      }
+    ]
+  };
+
+  const footerLinks = [
+    {
+      title: "Product",
+      links: [
+        { label: "Features", href: "#features" },
+        { label: "Integrations", href: "#integrations" },
+        { label: "Documentation", href: "#docs" },
+        { label: "API", href: "#api" },
+      ]
+    },
+    {
+      title: "Resources",
+      links: [
+        { label: "Community", href: "#community" },
+        { label: "Help Center", href: "#help" },
+        { label: "Security", href: "#security" },
+        { label: "Roadmap", href: "#roadmap" },
+      ]
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "About", href: "#about" },
+        { label: "Blog", href: "#blog" },
+        { label: "Careers", href: "#careers" },
+        { label: "Contact", href: "#contact" },
+      ]
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 to-black overflow-hidden">
       {/* Navbar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-black/30 backdrop-blur-sm border-b border-white/10' : ''}`}>
+        <div className="absolute inset-0 overflow-hidden">
+          <NavAnimation />
+        </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
@@ -119,8 +127,7 @@ const Landing = () => {
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-400 transition-all duration-200 group-hover:w-full" />
                 </a>
               ))}
-              <VisitorCounter />
-            </div>  
+            </div>
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center space-x-4">
@@ -148,9 +155,10 @@ const Landing = () => {
 
           {/* Mobile Navigation */}
           <div
-            className={`md:hidden transition-all duration-300 ease-in-out ${
-              isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
-            }`}
+            className={`md:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen
+              ? 'max-h-96 opacity-100'
+              : 'max-h-0 opacity-0 pointer-events-none'
+              }`}
           >
             <div className="py-4 space-y-4 bg-gray-900 text-white">
               {navLinks.map((link, index) => (
@@ -163,9 +171,6 @@ const Landing = () => {
                   {link.label}
                 </a>
               ))}
-              <div className="px-4">
-                <VisitorCounter />
-              </div>
               <div className="pt-4 border-t border-white/10 space-y-4 px-4">
                 <Button
                   onClick={() => navigate("/auth")}
@@ -186,9 +191,104 @@ const Landing = () => {
         {/* Electricity Animation */}
         <ElectricityAnimation />
 
-        <div className="container mx-auto px-4 relative">
+        <div className="container mx-auto px-4 py-16 relative">
           {/* Hero Section */}
-          <Hero />
+          <motion.div
+            className="flex flex-col lg:flex-row items-center justify-between gap-16 mb-32 pt-16"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="flex-1 text-center lg:text-left">
+              <div className="inline-block">
+                <div className="inline-block">
+                  <GitHubReleaseBadge />
+                </div>
+              </div>
+              <motion.h1
+                className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
+                initial={{ backgroundPosition: "0% 50%" }}
+                animate={{ backgroundPosition: "100% 50%" }}
+                transition={{ duration: 5, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+                style={{
+                  backgroundImage: "linear-gradient(to right, #10B981, #3B82F6, #10B981)",
+                  backgroundSize: "200% auto",
+                  color: "transparent",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                }}
+              >
+                Visualize Your
+                <br />
+                GitHub Universe
+              </motion.h1>
+              <p className="text-zinc-400 text-lg md:text-xl mb-8 max-w-xl">
+                Transform your development insights with powerful visualization tools. Make data-driven decisions faster than ever before.
+              </p>
+              <motion.div
+                className="flex flex-wrap gap-4 justify-center lg:justify-start"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.8 }}
+              >
+                <Button
+                  onClick={() => navigate("/app")}
+                  className="border rounded border-purple-500 group px-6 py-6 text-lg bg-transparent hover:bg-white/10 text-white transition-colors duration-300"
+                >
+                  Get Started For Free
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </motion.div>
+            </div>
+            <motion.div
+              className="flex-1"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+            >
+              <div className="relative w-full aspect-square max-w-lg mx-auto">
+                {/* Multiple layered background effects */}
+                <div className="absolute -inset-4">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/30 via-blue-500/30 to-emerald-500/30 blur-3xl opacity-60 animate-pulse" />
+                  <div className="absolute inset-0 bg-gradient-to-bl from-purple-600/20 via-indigo-500/20 to-purple-500/20 blur-2xl" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 via-blue-500/20 to-purple-500/20 blur-xl opacity-80" />
+                </div>
+
+                {/* Content container with glass effect */}
+                <div className="relative bg-zinc-900/40 backdrop-blur-xl rounded-2xl p-4 shadow-2xl border border-white/10">
+                  {/* Subtle inner glow */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/5 to-transparent" />
+
+                  {/* Image */}
+                  <motion.div
+                    className="relative rounded-xl overflow-hidden"
+                    initial={{ y: 0 }}
+                    animate={{ y: [-10, 10, -10] }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 6,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg to-transparent"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 1 }}
+                    />
+                    <motion.img
+                      src="https://metaversus-web3.vercel.app/get-started.png"
+                      alt="GitHub Flow Visualization"
+                      className="w-full h-full object-cover"
+                      initial={{ scale: 1 }}
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
 
           {/* Features Section */}
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
@@ -452,7 +552,7 @@ const Landing = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Landing
+export default Landing;
