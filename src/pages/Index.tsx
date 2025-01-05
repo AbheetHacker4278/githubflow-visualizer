@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   Controls,
   Edge,
@@ -38,7 +39,7 @@ const nodeTypes = {
   branch: BranchNode,
 };
 
-const Index = () => {
+const FlowContent = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { setViewport } = useReactFlow();
@@ -50,7 +51,6 @@ const Index = () => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { toast } = useToast();
   const flowRef = useRef<HTMLDivElement>(null);
-
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Node | null>(null);
 
@@ -166,6 +166,65 @@ const Index = () => {
   const { getViewport } = useReactFlow();
 
   return (
+    <div ref={flowRef} className="flow-container relative">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        onNodesChange={onNodesChange}
+        onNodeClick={onNodeClick}
+        fitView
+      >
+        <Background color="#58A6FF" className="opacity-9" />
+        <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
+        <Panel position="top-right" className="flex gap-2 p-2">
+          <ShareButton
+            state={{
+              repoUrl,
+              selectedNodeId: selectedNode?.id,
+              ...getViewport(),
+            }}
+          />
+          <Button onClick={toggleFullscreen} className="bg-gray-700 text-white px-4 py-2 rounded-md">
+            {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          </Button>
+        </Panel>
+        <Panel position="top-left" className="glass-card p-4 rounded-lg max-w-72">
+          <h3 className="text-sm font-medium mb-2">Repository Structure</h3>
+          <p className="text-xs text-gray-400 mb-2">
+            Visualizing repository languages, workflow, commits, and deployments
+          </p>
+          {selectedNode?.type === 'language' && (
+            <div className="mt-2 p-2 bg-github-darker/30 rounded">
+              <p className="text-xs">Selected: {(selectedNode.data as LanguageNodeData).language}</p>
+              <p className="text-xs text-gray-400">
+                Usage: {(selectedNode.data as LanguageNodeData).percentage.toFixed(1)}%
+              </p>
+            </div>
+          )}
+        </Panel>
+      </ReactFlow>
+
+      {selectedBranch && (
+        <BranchDetailsPanel
+          isOpen={!!selectedBranch}
+          onClose={() => setSelectedBranch(null)}
+          branchName={selectedBranch.data.label || ""}
+          commits={selectedBranch.data.commits || []}
+          heatLevel={selectedBranch.data.heatLevel || 0}
+          isCollapsed={selectedBranch.data.isCollapsed || false}
+          tags={selectedBranch.data.tags || []}
+          fileChanges={selectedBranch.data.fileChanges || []}
+          contributors={selectedBranch.data.contributors || []}
+          isFullscreen={isFullscreen}
+        />
+      )}
+    </div>
+  );
+};
+
+const Index = () => {
+  return (
     <div className="min-h-screen p-8 flex flex-col gap-8">
       <div className="flex justify-between items-center">
         <a href="/" className="flex items-center space-x-2">
@@ -184,78 +243,10 @@ const Index = () => {
           Enter a GitHub repository URL to visualize its workflow structure
         </p>
 
-        <form onSubmit={(e) => handleSubmit(e)} className="flex gap-4 glass-card p-4 rounded-lg">
-          <Input
-            type="text"
-            placeholder="https://github.com/username/repo"
-            value={repoUrl}
-            onChange={(e) => setRepoUrl(e.target.value)}
-            className="bg-github-darker/50 border-white/10"
-          />
-          <Button
-            type="submit"
-            disabled={loading}
-            className="relative px-6 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 rounded-lg"
-          >
-            {loading ? "Loading..." : "Visualize"}
-          </Button>
-        </form>
+        <ReactFlowProvider>
+          <FlowContent />
+        </ReactFlowProvider>
       </div>
-
-      <div ref={flowRef} className="flow-container relative">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          onNodesChange={onNodesChange}
-          onNodeClick={onNodeClick}
-          fitView
-        >
-          <Background color="#58A6FF" className="opacity-9" />
-          <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
-          <Panel position="top-right" className="flex gap-2 p-2">
-            <ShareButton
-              state={{
-                repoUrl,
-                selectedNodeId: selectedNode?.id,
-                ...getViewport(),
-              }}
-            />
-            <Button onClick={toggleFullscreen} className="bg-gray-700 text-white px-4 py-2 rounded-md">
-              {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-            </Button>
-          </Panel>
-          <Panel position="top-left" className="glass-card p-4 rounded-lg max-w-72">
-            <h3 className="text-sm font-medium mb-2">Repository Structure</h3>
-            <p className="text-xs text-gray-400 mb-2">
-              Visualizing repository languages, workflow, commits, and deployments
-            </p>
-            {selectedNode?.type === 'language' && (
-              <div className="mt-2 p-2 bg-github-darker/30 rounded">
-                <p className="text-xs">Selected: {(selectedNode.data as LanguageNodeData).language}</p>
-                <p className="text-xs text-gray-400">
-                  Usage: {(selectedNode.data as LanguageNodeData).percentage.toFixed(1)}%
-                </p>
-              </div>
-            )}
-          </Panel>
-        </ReactFlow>
-      </div>
-
-      {selectedBranch && (
-        <BranchDetailsPanel
-          isOpen={!!selectedBranch}
-          onClose={() => setSelectedBranch(null)}
-          branchName={selectedBranch.data.label}
-          commits={selectedBranch.data.commits || []}
-          heatLevel={selectedBranch.data.heatLevel || 0}
-          isCollapsed={selectedBranch.data.isCollapsed || false}
-          tags={selectedBranch.data.tags || []}
-          fileChanges={selectedBranch.data.fileChanges || []}
-          contributors={selectedBranch.data.contributors || []}
-          isFullscreen={isFullscreen}
-        />
-      )}
     </div>
   );
 };
