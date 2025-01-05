@@ -62,7 +62,7 @@ const getValidToken = async (): Promise<string | null> => {
   );
   
   if (!token) {
-    throw new Error('GitHub token is required to fetch repository data');
+    throw new Error('GitHub token is required to fetch repository Data');
   }
 
   if (await validateToken(token)) {
