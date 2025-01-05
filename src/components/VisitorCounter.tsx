@@ -15,9 +15,30 @@ export const VisitorCounter = () => {
   const { toast } = useToast()
 
   useEffect(() => {
-    const incrementVisitorCount = async () => {
+    const checkAndIncrementVisitorCount = async () => {
       try {
-        console.log('Fetching current visitor count...')
+        // Check if user has already visited
+        const hasVisited = localStorage.getItem('has_visited')
+        
+        if (hasVisited) {
+          console.log('User has already visited, fetching current count...')
+          // Just fetch and display the current count without incrementing
+          const { data: currentData, error: fetchError } = await supabase
+            .from('visitor_counts')
+            .select('*')
+            .single()
+
+          if (fetchError) {
+            console.error('Error fetching visitor count:', fetchError)
+            return
+          }
+
+          console.log('Current visitor count:', currentData?.count)
+          setVisitorCount(currentData?.count || 0)
+          return
+        }
+
+        console.log('New visitor detected, incrementing count...')
         
         // First, get the current count
         const { data: currentData, error: fetchError } = await supabase
@@ -47,6 +68,9 @@ export const VisitorCounter = () => {
         console.log('Visitor count updated to:', newCount)
         setVisitorCount(newCount)
 
+        // Mark user as having visited
+        localStorage.setItem('has_visited', 'true')
+
       } catch (error) {
         console.error('Error in visitor counter:', error)
         toast({
@@ -57,7 +81,7 @@ export const VisitorCounter = () => {
       }
     }
 
-    incrementVisitorCount()
+    checkAndIncrementVisitorCount()
   }, []) // Run once on component mount
 
   return (
