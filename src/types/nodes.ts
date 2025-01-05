@@ -1,9 +1,30 @@
-import { Node, Edge } from "@xyflow/react";
+import { Contributor } from "./collaboration";
 
 export interface LanguageNodeData {
   language: string;
   percentage: number;
   repoName: string;
+  [key: string]: unknown;
+}
+
+export interface BranchNodeData {
+  name: string;
+  lastCommit: string;
+  author: string;
+  protected: boolean;
+  heatLevel?: number;
+  isCollapsed?: boolean;
+  tags?: Array<{
+    name: string;
+    type: "lightweight" | "annotated";
+    message?: string;
+  }>;
+  fileChanges?: Array<{
+    path: string;
+    changes: number;
+  }>;
+  contributors?: Contributor[];
+  [key: string]: unknown;
 }
 
 export interface DeploymentNodeData {
@@ -11,17 +32,5 @@ export interface DeploymentNodeData {
   environment: string;
   status: string;
   date: string;
-}
-
-export interface ViewState {
-  nodes: Node[];
-  edges: Edge[];
-  zoom: number;
-  position: [number, number];
-}
-
-export interface Contributor {
-  name: string;
-  commits: number;
-  lastActive: string;
+  [key: string]: unknown;
 }

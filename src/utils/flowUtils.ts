@@ -1,20 +1,7 @@
 import { Node, Edge } from "@xyflow/react";
 import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
-import { LanguageNodeData } from "../types/nodes";
+import { LanguageNodeData, BranchNodeData } from "../types/nodes";
 import { Contributor } from "@/types/collaboration";
-import GitHubNode from "@/components/GitHubNode";
-import CommitNode from "@/components/CommitNode";
-import DeploymentNode from "@/components/DeploymentNode";
-import LanguageNode from "@/components/LanguageNode";
-import BranchNode from "@/components/BranchNode";
-
-export const nodeTypes = {
-  github: GitHubNode,
-  commit: CommitNode,
-  deployment: DeploymentNode,
-  language: LanguageNode,
-  branch: BranchNode,
-};
 
 const calculateBranchHeatLevel = (commits: GitHubCommit[] = [], branch: GitHubBranch): number => {
   if (!commits.length) return 0;
