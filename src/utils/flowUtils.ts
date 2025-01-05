@@ -1,6 +1,6 @@
 import { Node, Edge } from "@xyflow/react";
 import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
-import { LanguageNodeData, BranchNodeData } from "../types/nodes";
+import { LanguageNodeData } from "../types/nodes";
 import { Contributor } from "@/types/collaboration";
 
 const calculateBranchHeatLevel = (commits: GitHubCommit[] = [], branch: GitHubBranch): number => {
@@ -20,13 +20,14 @@ const getContributors = (commits: GitHubCommit[]): Contributor[] => {
   
   commits.forEach(commit => {
     const name = commit.commit.author.name;
-    const existing = contributorMap.get(name) || { commits: 0, lastActive: commit.commit.author.date };
+    const date = commit.commit.author.date;
+    const existing = contributorMap.get(name) || { commits: 0, lastActive: date };
     
     contributorMap.set(name, {
       commits: existing.commits + 1,
-      lastActive: new Date(existing.lastActive) > new Date(commit.commit.author.date) 
+      lastActive: new Date(existing.lastActive) > new Date(date) 
         ? existing.lastActive 
-        : commit.commit.author.date
+        : date
     });
   });
 
@@ -74,16 +75,14 @@ export const createNodesAndEdges = (
         }));
 
       const heatLevel = calculateBranchHeatLevel(commits, branch);
-      const isCollapsed = heatLevel < 25; // Collapse inactive branches by default
+      const isCollapsed = heatLevel < 25;
       const contributors = getContributors(commits);
 
-      // Mock tags for demonstration - replace with actual tags data
       const tags = branch.name === "main" ? [
         { name: "v1.0.0", type: "annotated" as const, message: "Major release" },
         { name: "latest", type: "lightweight" as const }
       ] : [];
 
-      // Mock file changes - replace with actual file changes data
       const fileChanges = [
         { path: "src/main.ts", changes: 15 },
         { path: "package.json", changes: 3 }
