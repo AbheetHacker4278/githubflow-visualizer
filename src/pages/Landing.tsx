@@ -10,9 +10,13 @@ import ElectricityAnimation from './ElectricityAnimation';
 import SparkAnimation from './SparkAnimation';
 import NavAnimation from './NavAnimation';
 import ContributorsSection from '@/components/ContributorsSection';
+import { useAnimationControls } from 'framer-motion';
+import ActiveUsersCounter from '@/components/ActiveUsersCounter';
+import DeveloperChallenges from '@/components/DeveloperChallenges';
 
 const Landing = () => {
   const navigate = useNavigate();
+  const controls = useAnimationControls();
   const { session } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -290,6 +294,8 @@ const Landing = () => {
             </motion.div>
           </motion.div>
 
+
+
           {/* Features Section */}
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
             How GitViz works
@@ -395,6 +401,15 @@ const Landing = () => {
             </div>
           </motion.div>
 
+          <motion.div
+            className="mt-32"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.8 }}
+          >
+            <ActiveUsersCounter />
+          </motion.div>
+
           <motion.section
             id='features'
             className="mt-32 relative"
@@ -450,6 +465,8 @@ const Landing = () => {
               </div>
             </div>
           </motion.section>
+
+          <DeveloperChallenges />
 
           <div id='about'>
             <ContributorsSection />
