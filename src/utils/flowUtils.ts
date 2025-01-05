@@ -1,13 +1,25 @@
 import { Node, Edge } from '@xyflow/react';
-import { GitHubBranch, GitHubDeployment, Deployment } from '@/types/github';
+import { DeploymentNodeData } from '@/types/nodes';
+
+interface Branch {
+  name: string;
+  date: string;
+}
+
+interface Deployment {
+  label: string;
+  environment: string;
+  status: string;
+  date: string;
+}
 
 export const createNodesAndEdges = (
   repoData: any,
   workflows: any[],
   commits: any[],
-  deployments: GitHubDeployment[],
+  deployments: Deployment[],
   languages: Record<string, number>,
-  branches: GitHubBranch[]
+  branches: Branch[]
 ) => {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
@@ -17,39 +29,24 @@ export const createNodesAndEdges = (
     nodes.push({
       id: `branch-${index}`,
       type: 'branch',
-      data: { 
-        label: branch.name,
-        commits: [],
-        heatLevel: 0,
-        isCollapsed: false,
-        tags: [],
-        fileChanges: []
-      },
+      data: { label: branch.name, date: branch.date },
       position: { x: index * 100, y: 0 },
     });
   });
 
-  // Transform GitHubDeployment to Deployment
-  const transformedDeployments: Deployment[] = deployments.map(deployment => ({
-    label: `Deployment ${deployment.id}`,
-    environment: deployment.environment,
-    status: deployment.state,
-    date: deployment.created_at
-  }));
-
   // Create nodes for each deployment
-  transformedDeployments.forEach((deployment, index) => {
+  deployments.forEach((deployment, index) => {
     nodes.push({
       id: `deployment-${index}`,
       type: 'deployment',
-      data: deployment,
+      data: { ...deployment },
       position: { x: index * 100, y: 100 },
     });
   });
 
   // Create edges between branches and deployments
   branches.forEach((branch, branchIndex) => {
-    transformedDeployments.forEach((deployment, deploymentIndex) => {
+    deployments.forEach((deployment, deploymentIndex) => {
       edges.push({
         id: `edge-${branchIndex}-${deploymentIndex}`,
         source: `branch-${branchIndex}`,
