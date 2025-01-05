@@ -1,17 +1,20 @@
-import { Contributor } from "./collaboration";
+import { Node } from "@xyflow/react";
+import { Contributor } from "@/types/collaboration";
 
-export interface LanguageNodeData {
-  language: string;
-  percentage: number;
-  repoName: string;
-  [key: string]: unknown;
+export interface ShareableState {
+  nodes: Node[];
+  edges: Edge[];
+  zoom: number;
+  position: [number, number];
 }
 
 export interface BranchNodeData {
-  name: string;
-  lastCommit: string;
-  author: string;
-  protected: boolean;
+  label: string;
+  commits?: Array<{
+    sha: string;
+    message: string;
+    date: string;
+  }>;
   heatLevel?: number;
   isCollapsed?: boolean;
   tags?: Array<{
@@ -24,13 +27,4 @@ export interface BranchNodeData {
     changes: number;
   }>;
   contributors?: Contributor[];
-  [key: string]: unknown;
-}
-
-export interface DeploymentNodeData {
-  label: string;
-  environment: string;
-  status: string;
-  date: string;
-  [key: string]: unknown;
 }
