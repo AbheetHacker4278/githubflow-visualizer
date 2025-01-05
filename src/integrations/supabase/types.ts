@@ -45,24 +45,6 @@ export type Database = {
         }
         Relationships: []
       }
-      visitor_counts: {
-        Row: {
-          count: number | null
-          id: string
-          last_updated: string | null
-        }
-        Insert: {
-          count?: number | null
-          id?: string
-          last_updated?: string | null
-        }
-        Update: {
-          count?: number | null
-          id?: string
-          last_updated?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never

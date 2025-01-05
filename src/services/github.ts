@@ -88,6 +88,7 @@ export const fetchRepoData = async (owner: string, repo: string) => {
       
       if (response.status === 404) {
         if (url.includes('workflows')) {
+          // This is normal for repos without GitHub Actions
           console.log("No workflows found (this is normal for repositories without GitHub Actions)");
           return response;
         }
@@ -149,15 +150,10 @@ export const fetchRepoData = async (owner: string, repo: string) => {
       const workflowsResponse = await fetchWithRetry(
         `https://api.github.com/repos/${owner}/${repo}/contents/.github/workflows`
       );
-      if (workflowsResponse.ok) {
-        workflows = await workflowsResponse.json();
-      } else {
-        console.log("No workflows found or access denied");
-        workflows = [];
-      }
+      workflows = await workflowsResponse.json();
+      console.log("Workflows found:", workflows);
     } catch (error) {
       console.log("Error fetching workflows (this is normal if the repository doesn't use GitHub Actions):", error);
-      workflows = [];
     }
 
     // Fetch recent commits

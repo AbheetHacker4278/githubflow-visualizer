@@ -17,24 +17,4 @@ export interface GitHubDeployment {
 
 export interface GitHubBranch {
   name: string;
-  commit: {
-    sha: string;
-    url: string;
-  };
-}
-
-export interface BranchData {
-  label: string;
-  commits: Array<{ sha: string; message: string; date: string; }>;
-  heatLevel: number;
-  isCollapsed: boolean;
-  tags: Array<{ name: string; type: "lightweight" | "annotated"; message?: string; }>;
-  fileChanges: Array<{ path: string; changes: number; }>;
-}
-
-export interface Deployment {
-  label: string;
-  environment: string;
-  status: string;
-  date: string;
 }
