@@ -19,7 +19,7 @@ const getContributors = (commits: GitHubCommit[]): Contributor[] => {
   const contributorMap = new Map<string, { commits: number; lastActive: string }>();
   
   commits.forEach(commit => {
-    const name = commit.commit.author.name;
+    const name = commit.commit.author.name || 'Unknown';
     const existing = contributorMap.get(name) || { commits: 0, lastActive: commit.commit.author.date };
     
     contributorMap.set(name, {

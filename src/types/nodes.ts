@@ -1,11 +1,24 @@
-import { Node } from "@xyflow/react";
+import { Edge as ReactFlowEdge, Node } from "@xyflow/react";
 import { Contributor } from "@/types/collaboration";
 
 export interface ShareableState {
   nodes: Node[];
-  edges: Edge[];
+  edges: ReactFlowEdge[];
   zoom: number;
   position: [number, number];
+}
+
+export interface DeploymentNodeData {
+  label: string;
+  environment: string;
+  status: string;
+  date: string;
+}
+
+export interface LanguageNodeData {
+  language: string;
+  percentage: number;
+  repoName: string;
 }
 
 export interface BranchNodeData {

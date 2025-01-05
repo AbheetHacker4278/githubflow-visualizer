@@ -23,8 +23,20 @@ const GitHubReleaseBadge = () => {
           'https://api.github.com/repos/AbheetHacker4278/githubflow-visualizer/releases/latest'
         )
 
+        if (response.status === 404) {
+          console.log("No releases found for repository, using default values");
+          setReleaseInfo({
+            tag_name: 'v1.0.0',
+            name: 'Initial Release',
+            published_at: new Date().toISOString(),
+            body: 'No releases found for this repository. Using default version.',
+            html_url: 'https://github.com/AbheetHacker4278/githubflow-visualizer/releases',
+          })
+          return;
+        }
+
         if (!response.ok) {
-          throw new Error('No release found')
+          throw new Error(`Failed to fetch release info: ${response.statusText}`)
         }
 
         const data = await response.json()
