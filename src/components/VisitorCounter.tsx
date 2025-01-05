@@ -4,6 +4,12 @@ import { useEffect, useState } from 'react'
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 
+interface VisitorCount {
+  id: string;
+  count: number;
+  last_updated: string;
+}
+
 export const VisitorCounter = () => {
   const [visitorCount, setVisitorCount] = useState<number>(0)
   const { toast } = useToast()
@@ -16,7 +22,7 @@ export const VisitorCounter = () => {
         // First, get the current count
         const { data: currentData, error: fetchError } = await supabase
           .from('visitor_counts')
-          .select('count')
+          .select('*')
           .single()
 
         if (fetchError) {

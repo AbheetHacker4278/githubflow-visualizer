@@ -1,11 +1,78 @@
 import React, { useState, useEffect } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Github, Twitter, Mail, ExternalLink } from 'lucide-react'
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 import { Hero } from '@/components/landing/Hero'
 import { VisitorCounter } from '@/components/VisitorCounter'
 import ElectricityAnimation from './ElectricityAnimation'
 import ContributorsSection from '@/components/ContributorsSection'
+import SparkAnimation from './SparkAnimation'
+import { useInView } from 'react-intersection-observer'
+
+const useAnimateInView = () => {
+  const [ref, inView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+  return { ref, controls: inView ? "visible" : "hidden" };
+};
+
+const features = [
+  {
+    title: "Real-time Visualization",
+    description: "See your GitHub repository structure and activity in real-time with interactive visualizations.",
+    icon: Github
+  },
+  {
+    title: "Collaboration Insights",
+    description: "Track team contributions and project progress with detailed analytics.",
+    icon: ExternalLink
+  },
+  {
+    title: "Custom Workflows",
+    description: "Visualize and optimize your development workflow with customizable views.",
+    icon: Mail
+  }
+];
+
+const aboutContent = {
+  mainHeading: "Powerful GitHub Visualization",
+  description: "Transform your GitHub workflow with intuitive visualizations and powerful analytics tools.",
+  benefits: [
+    {
+      title: "Interactive Graphs",
+      description: "Visualize repository structure and relationships with interactive graph layouts."
+    },
+    {
+      title: "Real-time Updates",
+      description: "See changes and updates to your repository in real-time as they happen."
+    },
+    {
+      title: "Team Collaboration",
+      description: "Track team contributions and project progress with detailed analytics."
+    }
+  ]
+};
+
+const footerLinks = [
+  {
+    title: "Product",
+    links: [
+      { label: "Features", href: "#features" },
+      { label: "Documentation", href: "#docs" },
+      { label: "About", href: "#about" }
+    ]
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Blog", href: "#" },
+      { label: "Support", href: "#" },
+      { label: "Contact", href: "#" }
+    ]
+  }
+];
 
 const Landing = () => {
   const navigate = useNavigate()

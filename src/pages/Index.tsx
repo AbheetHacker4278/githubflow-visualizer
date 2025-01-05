@@ -22,10 +22,19 @@ import BranchNode from "@/components/BranchNode";
 import { UserMenu } from "@/components/UserMenu";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
-import { LanguageNodeData } from "@/types/nodes";
+import { LanguageNodeData, DeploymentNodeData } from "@/types/nodes";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import "@xyflow/react/dist/style.css";
+
+interface BranchData {
+  label: string;
+  commits: Array<{ sha: string; message: string; date: string; }>;
+  heatLevel: number;
+  isCollapsed: boolean;
+  tags: Array<{ name: string; type: "lightweight" | "annotated"; message?: string; }>;
+  fileChanges: Array<{ path: string; changes: number; }>;
+}
 
 const nodeTypes = {
   github: GitHubNode,
@@ -47,7 +56,7 @@ const Index = () => {
   const flowRef = useRef<HTMLDivElement>(null); // Ref for the flow container
 
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState<Node | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<BranchData | null>(null);
 
   const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
@@ -56,7 +65,7 @@ const Index = () => {
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
     if (node.type === 'branch') {
-      setSelectedBranch(node);
+      setSelectedBranch(node.data as BranchData);
     }
     if (node.type === 'language') {
       const data = node.data as LanguageNodeData;
@@ -276,12 +285,12 @@ const Index = () => {
         <BranchDetailsPanel
           isOpen={!!selectedBranch}
           onClose={() => setSelectedBranch(null)}
-          branchName={selectedBranch.data.label}
-          commits={selectedBranch.data.commits}
-          heatLevel={selectedBranch.data.heatLevel}
-          isCollapsed={selectedBranch.data.isCollapsed}
-          tags={selectedBranch.data.tags}
-          fileChanges={selectedBranch.data.fileChanges}
+          branchName={selectedBranch.label}
+          commits={selectedBranch.commits || []}
+          heatLevel={selectedBranch.heatLevel || 0}
+          isCollapsed={selectedBranch.isCollapsed || false}
+          tags={selectedBranch.tags || []}
+          fileChanges={selectedBranch.fileChanges || []}
           isFullscreen={isFullscreen}
         />
       )}

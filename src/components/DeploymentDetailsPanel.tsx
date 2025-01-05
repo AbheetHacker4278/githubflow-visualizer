@@ -1,18 +1,16 @@
-import { DeploymentNodeData } from "@/types/nodes";
+import { DeploymentNodeData } from '@/types/nodes';
 
-export interface DeploymentDetailsPanelProps {
+interface DeploymentDetailsPanelProps {
   deployment: DeploymentNodeData;
 }
 
-const DeploymentDetailsPanel = ({ deployment }: DeploymentDetailsPanelProps) => {
+export default function DeploymentDetailsPanel({ deployment }: DeploymentDetailsPanelProps) {
   return (
-    <div className="mt-2 p-2 bg-github-darker/30 rounded">
-      <p className="text-xs">Deployment: {deployment.label}</p>
-      <p className="text-xs text-gray-400">Environment: {deployment.environment}</p>
-      <p className="text-xs text-gray-400">Status: {deployment.status}</p>
-      <p className="text-xs text-gray-400">Date: {deployment.date}</p>
+    <div className="p-4 bg-white rounded-lg shadow-md">
+      <h3 className="text-lg font-semibold">{deployment.label}</h3>
+      <p className="text-sm text-gray-500">Environment: {deployment.environment}</p>
+      <p className="text-sm text-gray-500">Status: {deployment.status}</p>
+      <p className="text-sm text-gray-500">Date: {deployment.date}</p>
     </div>
   );
-};
-
-export default DeploymentDetailsPanel;
+}
