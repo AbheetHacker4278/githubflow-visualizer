@@ -1,4 +1,4 @@
-import { useState , useRef } from "react";
+import { useState, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -253,7 +253,7 @@ const Index = () => {
                 </p>
               </div>
             )}
-            {selectedNode?.type === 'branch' && (
+            {selectedBranch && selectedBranch.data && (
               <BranchDetailsPanel
                 isOpen={!!selectedBranch}
                 onClose={() => setSelectedBranch(null)}
@@ -266,6 +266,7 @@ const Index = () => {
                 isFullscreen={isFullscreen}
               />
             )}
+
             {selectedNode?.type === 'deployment' && (
               <DeploymentDetailsPanel deployment={selectedNode.data} />
             )}
@@ -283,7 +284,7 @@ const Index = () => {
         </ReactFlow>
       </div>
 
-      {selectedBranch && (
+      {selectedBranch && selectedBranch.data && (
         <BranchDetailsPanel
           isOpen={!!selectedBranch}
           onClose={() => setSelectedBranch(null)}
@@ -296,6 +297,7 @@ const Index = () => {
           isFullscreen={isFullscreen}
         />
       )}
+
       <ChatBot repoUrl={repoUrl} />
     </div>
   );
