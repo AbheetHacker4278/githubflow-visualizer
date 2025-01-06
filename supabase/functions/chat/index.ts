@@ -17,21 +17,32 @@ serve(async (req) => {
 
   try {
     const { message, repoUrl, context } = await req.json();
+    console.log("Received request with:", { message, repoUrl, context });
 
     // Create a context-aware system message
     const systemContext = `You are GitViz Assistant, an AI helper for the GitViz application that visualizes GitHub repositories.
-    ${repoUrl ? `The user is currently visualizing this repository: ${repoUrl}` : ''}
-    Your role is to help users understand:
-    1. How to use GitViz features
-    2. Git concepts shown in the visualization
-    3. Repository-specific insights
-    Keep responses concise and focused on GitViz and Git concepts.`;
+    ${repoUrl ? `
+    You are currently analyzing this repository: ${repoUrl}
+    
+    When answering questions about this repository, focus on:
+    1. Repository structure and organization
+    2. Branch management and commit patterns
+    3. Code languages and their distribution
+    4. Development activity and collaboration insights
+    5. Deployment patterns if available
+    
+    Always try to reference specific data points from the visualization when possible.
+    ` : 'No repository is currently being visualized.'}
+    
+    Keep responses concise, technical but approachable, and focused on helping users understand their repository structure.`;
 
     // Convert chat history to Gemini format
     const chatHistory = context.map((msg: { role: string; content: string }) => ({
       role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content }],
     }));
+
+    console.log("Prepared chat history:", chatHistory);
 
     // Start a new chat
     const chat = model.startChat({
@@ -42,9 +53,11 @@ serve(async (req) => {
     });
 
     // Send message and get response
-    const result = await chat.sendMessage(message);
+    const result = await chat.sendMessage(systemContext + "\n\n" + message);
     const response = result.response;
     const text = response.text();
+
+    console.log("Generated response:", text);
 
     return new Response(
       JSON.stringify({ response: text }),
