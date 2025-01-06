@@ -12,6 +12,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  id: string;
 }
 
 interface ChatBotProps {
@@ -20,7 +21,7 @@ interface ChatBotProps {
 }
 
 const AnimatedLogo = () => (
-  <div className="relative w-6 h-6 animate-pulse">
+  <div className="relative w-8 h-8 transition-transform hover:scale-110">
     <svg
       viewBox="0 0 24 24"
       className="w-full h-full fill-current"
@@ -30,42 +31,58 @@ const AnimatedLogo = () => (
         className="animate-dash"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1"
         strokeLinecap="round"
         d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"
-        style={{
-          strokeDasharray: 56,
-          strokeDashoffset: 56,
-          animation: "dash 1.5s ease-in-out infinite"
-        }}
       />
       <path
-        className="animate-bubble"
+        className="animate-pulse-slow"
         d="M8 12h8M12 16V8"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
-        style={{
-          animation: "bubble 1s ease-in-out infinite"
-        }}
       />
     </svg>
   </div>
 );
 
 const TypingIndicator = () => (
-  <div className="flex items-center gap-1 px-4 py-2 bg-secondary rounded-2xl max-w-[80%]">
-    <span className="w-2 h-2 bg-secondary-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-    <span className="w-2 h-2 bg-secondary-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-    <span className="w-2 h-2 bg-secondary-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+  <div className="flex items-center gap-1 px-4 py-2 bg-secondary rounded-2xl max-w-[80%] animate-fade-in">
+    <span className="w-2 h-2 bg-secondary-foreground/60 rounded-full animate-bounce-slow" style={{ animationDelay: "0ms" }} />
+    <span className="w-2 h-2 bg-secondary-foreground/60 rounded-full animate-bounce-slow" style={{ animationDelay: "150ms" }} />
+    <span className="w-2 h-2 bg-secondary-foreground/60 rounded-full animate-bounce-slow" style={{ animationDelay: "300ms" }} />
   </div>
 );
 
-// Add these styles to your global CSS or keep them inline
+const MessageBubble = ({ message, isLatest }: { message: Message; isLatest: boolean }) => (
+  <div
+    className={`flex flex-col ${
+      message.role === "assistant" ? "items-start" : "items-end"
+    } ${isLatest ? "animate-slide-in" : ""}`}
+  >
+    <div
+      className={`rounded-2xl px-4 py-2 max-w-[80%] transition-all duration-300 hover:scale-[1.02] ${
+        message.role === "assistant"
+          ? "bg-secondary text-secondary-foreground hover:shadow-md"
+          : "gradient-bg text-white hover:shadow-lg"
+      }`}
+    >
+      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+    </div>
+    <span className="text-xs text-muted-foreground mt-1 opacity-0 animate-fade-in">
+      {new Date(message.timestamp).toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit'
+      })}
+    </span>
+  </div>
+);
+
 const styles = `
   @keyframes dash {
     0% {
+      stroke-dasharray: 56;
       stroke-dashoffset: 56;
     }
     50% {
@@ -75,24 +92,74 @@ const styles = `
       stroke-dashoffset: -56;
     }
   }
-  
-  @keyframes bubble {
-    0%, 100% {
-      transform: scale(1);
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
       opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes bounce-slow {
+    0%, 100% {
+      transform: translateY(0);
     }
     50% {
-      transform: scale(0.95);
-      opacity: 0.8;
+      transform: translateY(-4px);
     }
   }
-  
+
   .gradient-bg {
     background: linear-gradient(120deg, #4f46e5, #06b6d4);
+    transition: all 0.3s ease;
   }
-  
+
+  .gradient-bg:hover {
+    background: linear-gradient(120deg, #4338ca, #0891b2);
+  }
+
   .logo-shadow {
     filter: drop-shadow(0 0 8px rgba(79, 70, 229, 0.45));
+    transition: filter 0.3s ease;
+  }
+
+  .logo-shadow:hover {
+    filter: drop-shadow(0 0 12px rgba(79, 70, 229, 0.6));
+  }
+
+  .animate-dash {
+    animation: dash 2s ease-in-out infinite;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+  }
+
+  .animate-slide-in {
+    animation: slide-in 0.4s ease-out forwards;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce-slow 1.4s infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 2s infinite;
   }
 `;
 
@@ -113,7 +180,7 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading, input]);
+  }, [messages, isLoading]);
 
   useEffect(() => {
     if (isOpen) {
@@ -127,7 +194,8 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
     const userMessage = { 
       role: "user" as const, 
       content: input,
-      timestamp: new Date()
+      timestamp: new Date(),
+      id: Math.random().toString(36).substr(2, 9)
     };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
@@ -147,7 +215,8 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
       setMessages((prev) => [...prev, { 
         role: "assistant", 
         content: data.response,
-        timestamp: new Date()
+        timestamp: new Date(),
+        id: Math.random().toString(36).substr(2, 9)
       }]);
     } catch (error) {
       console.error("Chat error:", error);
@@ -159,13 +228,6 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit'
-    });
   };
 
   return (
@@ -183,15 +245,15 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
         </Button>
       </SheetTrigger>
       <SheetContent 
-        className="w-[400px] sm:w-[540px] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        className="w-[400px] sm:w-[540px] p-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300"
         side="right"
       >
         <SheetHeader className="p-6 border-b">
           <SheetTitle className="flex items-center gap-3">
-            <Avatar className="h-8 w-8 gradient-bg">
+            <Avatar className="h-8 w-8 gradient-bg transition-transform hover:scale-105">
               <AnimatedLogo />
             </Avatar>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-cyan-600 font-semibold">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-blue-600 font-semibold">
               {botName}
             </span>
           </SheetTitle>
@@ -203,7 +265,7 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
           >
             <div className="space-y-4 py-4">
               {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 gap-2">
+                <div className="flex flex-col items-center justify-center h-32 gap-2 animate-fade-in">
                   <AnimatedLogo />
                   <p className="text-center text-sm text-muted-foreground">
                     Ask me anything about GitViz or your repository!
@@ -212,25 +274,11 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
               ) : (
                 <>
                   {messages.map((message, index) => (
-                    <div
-                      key={index}
-                      className={`flex flex-col ${
-                        message.role === "assistant" ? "items-start" : "items-end"
-                      }`}
-                    >
-                      <div
-                        className={`rounded-2xl px-4 py-2 max-w-[80%] ${
-                          message.role === "assistant"
-                            ? "bg-secondary text-secondary-foreground"
-                            : "gradient-bg text-white"
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground mt-1">
-                        {formatTime(message.timestamp)}
-                      </span>
-                    </div>
+                    <MessageBubble
+                      key={message.id}
+                      message={message}
+                      isLatest={index === messages.length - 1}
+                    />
                   ))}
                   {isLoading && (
                     <div className="flex flex-col items-start">
@@ -250,13 +298,13 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
                 disabled={isLoading}
-                className="rounded-full"
+                className="rounded-full transition-all duration-300 focus:scale-[1.02]"
               />
               <Button 
                 onClick={handleSend} 
                 disabled={isLoading}
                 size="icon"
-                className="rounded-full gradient-bg hover:opacity-90"
+                className="rounded-full px-6 gradient-bg hover:opacity-90 transition-all duration-300 hover:scale-105"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin text-white" />

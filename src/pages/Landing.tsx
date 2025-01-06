@@ -14,6 +14,7 @@ import { useAnimationControls } from 'framer-motion';
 import ActiveUsersCounter from '@/components/ActiveUsersCounter';
 import DeveloperChallenges from '@/components/DeveloperChallenges';
 import ChatBot from '@/components/ChatBot';
+import ChatbotNotification from '@/components/ChatbotNotification';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -333,6 +334,8 @@ const Landing = () => {
               );
             })}
           </motion.div>
+
+          <ChatbotNotification />
 
           {/* Timeline Sections */}
           <motion.div

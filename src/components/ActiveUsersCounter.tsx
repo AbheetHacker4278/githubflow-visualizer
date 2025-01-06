@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const ActiveUsersCounter = () => {
-  const [count, setCount] = useState(65000000);
+  const [count, setCount] = useState(10000000);
   const [isIncrementing, setIsIncrementing] = useState(false);
 
   useEffect(() => {

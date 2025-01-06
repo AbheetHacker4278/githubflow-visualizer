@@ -19,13 +19,13 @@ const contributors: Contributor[] = [
     github: "https://github.com/AbheetHacker4278",
     linkedin: "https://www.linkedin.com/in/abheet-seth-58533a251/",
   },
-  {
-    name: "Abhishek Singhvi",
-    role: "Supporting Web Developer",
-    image: "https://avatars.githubusercontent.com/u/88542573?v=4",
-    github: "https://github.com/abhisheksinghvi09",
-    linkedin: "https://www.linkedin.com/in/abhishek--singhvi/"
-  },
+  // {
+  //   name: "Abhishek Singhvi",
+  //   role: "Supporting Web Developer",
+  //   image: "https://avatars.githubusercontent.com/u/88542573?v=4",
+  //   github: "https://github.com/abhisheksinghvi09",
+  //   linkedin: "https://www.linkedin.com/in/abhishek--singhvi/"
+  // },
 ];
 
 const ContributorsSection: React.FC = () => {
@@ -118,7 +118,7 @@ const ContributorsSection: React.FC = () => {
         </motion.h2>
 
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 "
           variants={containerVariants}
           initial="hidden"
           animate="visible"
