@@ -27,9 +27,9 @@ serve(async (req) => {
     3. Repository-specific insights
     Keep responses concise and focused on GitViz and Git concepts.`;
 
-    // Prepare conversation history
+    // Convert chat history to Gemini format
     const chatHistory = context.map((msg: { role: string; content: string }) => ({
-      role: msg.role,
+      role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content }],
     }));
 
