@@ -24,7 +24,7 @@ const ActiveUsersCounter = () => {
         className="transform transition-all duration-700 ease-out hover:scale-105 hover:rounded-2xl"
       >
         <div className="relative p-8 rounded-2xl bg-gradient-to-br from-emerald-700 to-transparent shadow-xl border border-slate-700 hover:rounded-2xl">
-          {/* Animated background glow effect */}
+          {/* Animated background glow effecT */}
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 animate-pulse rounded-2xl hover:rounded-2xl" />
           
           <div className="relative hover:rounded-2xl">
