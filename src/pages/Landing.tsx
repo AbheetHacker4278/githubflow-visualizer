@@ -472,8 +472,12 @@ const Landing = () => {
           </div>
 
           {/* Statistics Section */}
+
+          <h3 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
+              How GitViz is been Optimized
+          </h3>
           <motion.div
-            className="mt-32 grid md:grid-cols-3 gap-8"
+            className="mt-20 grid md:grid-cols-3 gap-8"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
