@@ -13,6 +13,7 @@ import ContributorsSection from '@/components/ContributorsSection';
 import { useAnimationControls } from 'framer-motion';
 import ActiveUsersCounter from '@/components/ActiveUsersCounter';
 import DeveloperChallenges from '@/components/DeveloperChallenges';
+import ChatBot from '@/components/ChatBot';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -294,8 +295,6 @@ const Landing = () => {
             </motion.div>
           </motion.div>
 
-
-
           {/* Features Section */}
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
             How GitViz works
@@ -566,6 +565,7 @@ const Landing = () => {
               </div>
             </div>
           </footer>
+          <ChatBot />
         </div>
       </div>
     </div>
