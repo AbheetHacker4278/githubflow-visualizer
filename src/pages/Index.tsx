@@ -25,6 +25,7 @@ import { createNodesAndEdges } from "@/utils/flowUtils";
 import { LanguageNodeData } from "@/types/nodes";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
+import ChatBot from "@/components/ChatBot";
 import "@xyflow/react/dist/style.css";
 
 const nodeTypes = {
@@ -285,6 +286,7 @@ const Index = () => {
           isFullscreen={isFullscreen}
         />
       )}
+      <ChatBot repoUrl={repoUrl} />
     </div>
   );
 };

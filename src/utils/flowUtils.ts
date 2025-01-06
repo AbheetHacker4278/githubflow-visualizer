@@ -3,6 +3,13 @@ import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
 import { LanguageNodeData, BranchNodeData } from "../types/nodes";
 import { Contributor } from "@/types/collaboration";
 
+interface Deployment {
+  id: string;
+  environment: string;
+  state: string;
+  created_at: string;
+}
+
 const calculateBranchHeatLevel = (commits: GitHubCommit[] = [], branch: GitHubBranch): number => {
   if (!commits.length) return 0;
   const now = new Date();
@@ -55,7 +62,7 @@ export const createNodesAndEdges = (
   newNodes.push({
     id: "repo",
     type: "github",
-    data: { label: data.name, type: "folder" },
+    data: { label: data.name, type: "folder" } as Record<string, unknown>,
     position: { x: 250, y: yOffset },
   });
 
@@ -183,9 +190,9 @@ export const createNodesAndEdges = (
     });
   }
 
-  // Add deployment nodes
+  // Add deployment nodes with proper typing
   if (deployments.length > 0) {
-    deployments.forEach((deployment, index) => {
+    deployments.forEach((deployment: Deployment, index) => {
       const id = `deployment-${index}`;
       newNodes.push({
         id,
@@ -195,7 +202,7 @@ export const createNodesAndEdges = (
           environment: deployment.environment,
           status: deployment.state,
           date: new Date(deployment.created_at).toLocaleDateString(),
-        },
+        } as Record<string, unknown>,
         position: { x: 0, y: 100 + index * 100 },
       });
       newEdges.push({
