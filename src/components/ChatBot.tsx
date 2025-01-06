@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   role: "user" | "assistant";
@@ -30,19 +31,18 @@ const ChatBot = ({ repoUrl }: ChatBotProps) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+      console.log("Calling chat function with input:", input);
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { 
           message: input,
           repoUrl,
           context: messages.slice(-5) // Send last 5 messages for context
-        }),
+        }
       });
 
-      if (!response.ok) throw new Error("Failed to get response");
+      if (error) throw error;
       
-      const data = await response.json();
+      console.log("Chat response:", data);
       setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
     } catch (error) {
       console.error("Chat error:", error);
