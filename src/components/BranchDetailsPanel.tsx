@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Users } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Contributor } from "@/types/collaboration";
+import { BranchNodeData } from "@/types/nodes";
 
 export interface BranchDetailsPanelProps {
   isOpen: boolean;
@@ -18,7 +18,6 @@ export interface BranchDetailsPanelProps {
   }>;
   heatLevel?: number;
   isCollapsed?: boolean;
-  onToggleCollapse?: () => void;
   tags?: Array<{
     name: string;
     type: "lightweight" | "annotated";
@@ -39,10 +38,10 @@ const BranchDetailsPanel = ({
   commits = [],
   heatLevel = 0,
   isCollapsed = false,
-  onToggleCollapse,
   tags = [],
   fileChanges = [],
   contributors = [],
+  isFullscreen = false,
 }: BranchDetailsPanelProps) => {
   const [showFileChanges, setShowFileChanges] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");

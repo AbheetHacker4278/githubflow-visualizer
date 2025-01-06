@@ -254,7 +254,17 @@ const Index = () => {
               </div>
             )}
             {selectedNode?.type === 'branch' && (
-              <BranchDetailsPanel branch={selectedNode.data} />
+              <BranchDetailsPanel
+                isOpen={!!selectedBranch}
+                onClose={() => setSelectedBranch(null)}
+                branchName={selectedBranch.data.label as string}
+                commits={selectedBranch.data.commits || []}
+                heatLevel={selectedBranch.data.heatLevel as number}
+                isCollapsed={selectedBranch.data.isCollapsed as boolean}
+                tags={selectedBranch.data.tags || []}
+                fileChanges={selectedBranch.data.fileChanges || []}
+                isFullscreen={isFullscreen}
+              />
             )}
             {selectedNode?.type === 'deployment' && (
               <DeploymentDetailsPanel deployment={selectedNode.data} />
@@ -277,12 +287,12 @@ const Index = () => {
         <BranchDetailsPanel
           isOpen={!!selectedBranch}
           onClose={() => setSelectedBranch(null)}
-          branchName={selectedBranch.data.label}
-          commits={selectedBranch.data.commits}
-          heatLevel={selectedBranch.data.heatLevel}
-          isCollapsed={selectedBranch.data.isCollapsed}
-          tags={selectedBranch.data.tags}
-          fileChanges={selectedBranch.data.fileChanges}
+          branchName={selectedBranch.data.label as string}
+          commits={selectedBranch.data.commits || []}
+          heatLevel={selectedBranch.data.heatLevel as number}
+          isCollapsed={selectedBranch.data.isCollapsed as boolean}
+          tags={selectedBranch.data.tags || []}
+          fileChanges={selectedBranch.data.fileChanges || []}
           isFullscreen={isFullscreen}
         />
       )}

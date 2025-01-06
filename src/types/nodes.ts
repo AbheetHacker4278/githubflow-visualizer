@@ -8,10 +8,12 @@ export interface LanguageNodeData {
 }
 
 export interface BranchNodeData {
-  name: string;
-  lastCommit: string;
-  author: string;
-  protected: boolean;
+  label: string;
+  commits?: Array<{
+    sha: string;
+    message: string;
+    date: string;
+  }>;
   heatLevel?: number;
   isCollapsed?: boolean;
   tags?: Array<{
@@ -33,4 +35,11 @@ export interface DeploymentNodeData {
   status: string;
   date: string;
   [key: string]: unknown;
+}
+
+export interface Deployment {
+  id: string;
+  environment: string;
+  state: string;
+  created_at: string;
 }
