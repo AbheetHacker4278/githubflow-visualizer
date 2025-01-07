@@ -91,13 +91,12 @@ const BranchNode = memo(({ data }: BranchNodeProps) => {
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         branchName={data.label}
-        commits={data.commits}
-        heatLevel={data.heatLevel}
+        commits={data.commits || []}
+        heatLevel={data.heatLevel || 0}
         isCollapsed={isCollapsed}
-        onToggleCollapse={handleToggleCollapse}
-        tags={data.tags}
-        fileChanges={data.fileChanges}
-        contributors={data.contributors}
+        tags={data.tags || []}
+        fileChanges={data.fileChanges || []}
+        contributors={data.contributors || []}
       />
     </>
   );
