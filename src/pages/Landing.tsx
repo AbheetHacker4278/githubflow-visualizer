@@ -275,9 +275,9 @@ const Landing = () => {
                 </div>
 
                 {/* Content container with glass effect */}
-                <div className="relative bg-zinc-900/40 backdrop-blur-xl rounded-2xl p-4 shadow-2xl border border-white/10">
+                <div className="relative rounded-2xl p-4">
                   {/* Subtle inner glow */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/5 to-transparent" />
+                  <div className="absolute inset-0 rounded-2xl" />
 
                   {/* Image */}
                   <motion.div

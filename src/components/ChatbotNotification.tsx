@@ -24,9 +24,9 @@ const ChatbotNotification = () => {
 
   return (
     <div className="fixed bottom-24 right-4 z-50 max-w-md animate-slide-up">
-      <Alert className="bg-zinc-900/90 border border-purple-500/50 backdrop-blur-sm text-white shadow-lg">
+      <Alert className="bg-transparent border border-purple-500/50 backdrop-blur-sm text-white shadow-lg">
         <AlertCircle className="h-4 w-4 text-purple-400" />
-        <AlertTitle className="text-purple-400">ChatBot Available!</AlertTitle>
+        <AlertTitle className="text-purple-400">ChatBot Available!!!</AlertTitle>
         <AlertDescription className="text-zinc-300">
           Need help? Our AI assistant is here to answer your questions about GitViz.
         </AlertDescription>
