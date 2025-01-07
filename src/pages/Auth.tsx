@@ -5,11 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { X, Menu } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthError, AuthApiError } from '@supabase/supabase-js';
 
 const AuthPage = () => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const checkUser = async () => {
@@ -21,9 +24,21 @@ const AuthPage = () => {
 
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
         navigate("/app");
+      }
+      if (event === 'USER_UPDATED') {
+        const handleError = async () => {
+          const { error } = await supabase.auth.getSession();
+          if (error) {
+            setErrorMessage(getErrorMessage(error));
+          }
+        };
+        handleError();
+      }
+      if (event === 'SIGNED_OUT') {
+        setErrorMessage(""); // Clear errors on sign out
       }
     });
 
@@ -38,6 +53,24 @@ const AuthPage = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [navigate]);
+
+  const getErrorMessage = (error: AuthError) => {
+    if (error instanceof AuthApiError) {
+      switch (error.code) {
+        case 'invalid_credentials':
+          return 'Invalid email or password. Please check your credentials and try again.';
+        case 'email_not_confirmed':
+          return 'Please verify your email address before signing in.';
+        case 'user_not_found':
+          return 'No user found with these credentials.';
+        case 'invalid_grant':
+          return 'Invalid login credentials.';
+        default:
+          return error.message;
+      }
+    }
+    return error.message;
+  };
 
   const navLinks = [
     { href: "#features", label: "Features" },
@@ -133,6 +166,11 @@ const AuthPage = () => {
           <h1 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
             Welcome to GitViz
           </h1>
+          {errorMessage && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
           <Auth
             supabaseClient={supabase}
             appearance={{
@@ -165,4 +203,3 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
-
