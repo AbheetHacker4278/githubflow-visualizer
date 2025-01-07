@@ -19,6 +19,33 @@ serve(async (req) => {
     const { message, repoUrl, context } = await req.json();
     console.log("Received request with:", { message, repoUrl, context });
 
+    // Check if the message is asking about the creator
+    const creatorKeywords = [
+      'who created',
+      'who made',
+      'who built',
+      'creator',
+      'author',
+      'developer',
+      'who developed',
+      'who is behind',
+      'who owns'
+    ];
+
+    const isAskingAboutCreator = creatorKeywords.some(keyword => 
+      message.toLowerCase().includes(keyword) && 
+      message.toLowerCase().includes('gitviz')
+    );
+
+    if (isAskingAboutCreator) {
+      const creatorResponse = `GitViz was created by Abheet Seth, who serves as the Lead Web Developer. He is a talented developer who built this platform to help visualize and understand GitHub repositories better. You can find more about him and his work on GitHub (https://github.com/AbheetHacker4278) and LinkedIn (https://www.linkedin.com/in/abheet-seth-58533a251/).`;
+      
+      return new Response(
+        JSON.stringify({ response: creatorResponse }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Create a context-aware system message
     const systemContext = `You are GitViz Assistant, an AI helper for the GitViz application that visualizes GitHub repositories.
     ${repoUrl ? `
@@ -34,7 +61,9 @@ serve(async (req) => {
     Always try to reference specific data points from the visualization when possible.
     ` : 'No repository is currently being visualized.'}
     
-    Keep responses concise, technical but approachable, and focused on helping users understand their repository structure.`;
+    Keep responses concise, technical but approachable, and focused on helping users understand their repository structure.
+    
+    If users ask about who created GitViz, always mention that it was created by Abheet Seth, the Lead Web Developer.`;
 
     // Convert chat history to Gemini format
     const chatHistory = context.map((msg: { role: string; content: string }) => ({
