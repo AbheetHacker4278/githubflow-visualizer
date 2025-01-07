@@ -3,13 +3,14 @@ export interface GitHubCommit {
   commit: {
     message: string;
     author: {
+      name: string;
       date: string;
     };
   };
 }
 
 export interface GitHubDeployment {
-  id: number;
+  id: string;
   environment: string;
   state: string;
   created_at: string;

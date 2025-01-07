@@ -109,6 +109,15 @@ const Index = () => {
         branches
       );
 
+      // Store the visualization data in the window object for the chatbot
+      (window as any).__GITVIZ_DATA__ = {
+        branches,
+        commits,
+        deployments,
+        languages,
+        workflows
+      };
+
       setNodes(newNodes);
       setEdges(newEdges);
       setBranches(branches.map(branch => branch.name));

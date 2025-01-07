@@ -202,11 +202,15 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
     setIsLoading(true);
 
     try {
+      // Get the current visualization data from the window object
+      const visualizationData = (window as any).__GITVIZ_DATA__ || {};
+
       const { data, error } = await supabase.functions.invoke('chat', {
         body: { 
           message: input,
           repoUrl,
-          context: messages.slice(-5)
+          context: messages.slice(-5),
+          visualizationData
         }
       });
 
