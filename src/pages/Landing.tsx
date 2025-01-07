@@ -15,6 +15,7 @@ import ActiveUsersCounter from '@/components/ActiveUsersCounter';
 import DeveloperChallenges from '@/components/DeveloperChallenges';
 import ChatBot from '@/components/ChatBot';
 import ChatbotNotification from '@/components/ChatbotNotification';
+import { UserMenu } from '@/components/UserMenu';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -137,13 +138,17 @@ const Landing = () => {
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center space-x-4">
-              <Button
-                onClick={() => navigate("/auth")}
-                variant="ghost"
-                className="text-zinc-400 hover:text-white hover:bg-white/10 border rounded-full border-purple-400"
-              >
-                Sign In
-              </Button>
+              {session ? (
+                <UserMenu />
+              ) : (
+                <Button
+                  onClick={() => navigate("/auth")}
+                  variant="ghost"
+                  className="text-zinc-400 hover:text-white hover:bg-white/10 border rounded-full border-purple-400"
+                >
+                  Sign In
+                </Button>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -161,10 +166,9 @@ const Landing = () => {
 
           {/* Mobile Navigation */}
           <div
-            className={`md:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen
-              ? 'max-h-96 opacity-100'
-              : 'max-h-0 opacity-0 pointer-events-none'
-              }`}
+            className={`md:hidden transition-all duration-300 ease-in-out ${
+              isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+            }`}
           >
             <div className="py-4 space-y-4 bg-gray-900 text-white">
               {navLinks.map((link, index) => (
@@ -178,13 +182,23 @@ const Landing = () => {
                 </a>
               ))}
               <div className="pt-4 border-t border-white/10 space-y-4 px-4">
-                <Button
-                  onClick={() => navigate("/auth")}
-                  variant="ghost"
-                  className="w-full text-zinc-400 hover:text-white hover:bg-white/10"
-                >
-                  Sign In
-                </Button>
+                {session ? (
+                  <Button
+                    onClick={() => navigate("/app")}
+                    variant="ghost"
+                    className="w-full text-zinc-400 hover:text-white hover:bg-white/10"
+                  >
+                    Go to App
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => navigate("/auth")}
+                    variant="ghost"
+                    className="w-full text-zinc-400 hover:text-white hover:bg-white/10"
+                  >
+                    Sign In
+                  </Button>
+                )}
               </div>
             </div>
           </div>
