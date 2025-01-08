@@ -1,7 +1,10 @@
-export interface Contributor {
-  name: string;
-  commits: number;
-  lastActive: string;
+import { Contributor } from "./collaboration";
+
+export interface LanguageNodeData {
+  language: string;
+  percentage: number;
+  repoName: string;
+  [key: string]: unknown;
 }
 
 export interface BranchNodeData {
@@ -23,7 +26,7 @@ export interface BranchNodeData {
     changes: number;
   }>;
   contributors?: Contributor[];
-  [key: string]: unknown; // Add index signature
+  [key: string]: unknown;
 }
 
 export interface DeploymentNodeData {
@@ -31,17 +34,12 @@ export interface DeploymentNodeData {
   environment: string;
   status: string;
   date: string;
-  commits?: Array<{
-    sha: string;
-    message: string;
-    date: string;
-  }>;
-  [key: string]: unknown; // Add index signature
+  [key: string]: unknown;
 }
 
-export interface LanguageNodeData {
-  language: string;
-  percentage: number;
-  repoName: string;
-  [key: string]: unknown;
+export interface Deployment {
+  id: string;
+  environment: string;
+  state: string;
+  created_at: string;
 }

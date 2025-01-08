@@ -18,7 +18,6 @@ export interface BranchDetailsPanelProps {
   }>;
   heatLevel?: number;
   isCollapsed?: boolean;
-  onToggleCollapse?: () => void;
   tags?: Array<{
     name: string;
     type: "lightweight" | "annotated";

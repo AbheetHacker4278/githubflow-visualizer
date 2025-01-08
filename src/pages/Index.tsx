@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -13,7 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
@@ -22,10 +22,9 @@ import BranchNode from "@/components/BranchNode";
 import { UserMenu } from "@/components/UserMenu";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
-import { BranchNodeData, DeploymentNodeData } from "@/types/nodes";
+import { LanguageNodeData } from "@/types/nodes";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
-import ShareDialog from "@/components/ShareDialog";
 import ChatBot from "@/components/ChatBot";
 import "@xyflow/react/dist/style.css";
 
@@ -39,7 +38,6 @@ const nodeTypes = {
 
 const Index = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [repoUrl, setRepoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -47,39 +45,27 @@ const Index = () => {
   const [branches, setBranches] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { toast } = useToast();
-  const flowRef = useRef<HTMLDivElement>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState<Node<BranchNodeData> | null>(null);
-  const [selectedDeployment, setSelectedDeployment] = useState<Node<DeploymentNodeData> | null>(null);
-  const [isReadOnly, setIsReadOnly] = useState(false);
-  const [hasAttemptedInitialLoad, setHasAttemptedInitialLoad] = useState(false);
+  const flowRef = useRef<HTMLDivElement>(null); // Ref for the flow container
 
-  useEffect(() => {
-    const sharedRepo = searchParams.get("repo");
-    const mode = searchParams.get("mode");
-    
-    if (sharedRepo && !hasAttemptedInitialLoad) {
-      const decodedUrl = decodeURIComponent(sharedRepo);
-      console.log("Loading shared repository:", decodedUrl);
-      setRepoUrl(decodedUrl);
-      setIsReadOnly(mode === "view");
-      handleSubmit(null, decodedUrl);
-      setHasAttemptedInitialLoad(true);
-    }
-  }, [searchParams, hasAttemptedInitialLoad]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<Node | null>(null);
 
   const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
-    if (!isReadOnly) {
-      setNodes((nds) => applyNodeChanges(changes, nds));
-    }
+    setNodes((nds) => applyNodeChanges(changes, nds));
   };
 
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
     if (node.type === 'branch') {
-      setSelectedBranch(node as Node<BranchNodeData>);
-    } else if (node.type === 'deployment') {
-      setSelectedDeployment(node as Node<DeploymentNodeData>);
+      setSelectedBranch(node);
+    }
+    if (node.type === 'language') {
+      const data = node.data as LanguageNodeData;
+      const percentage = data.percentage.toFixed(1);
+      toast({
+        title: "Node Selected",
+        description: `Selected language: ${data.language} (${percentage}%)`,
+      });
     }
   };
 
@@ -99,11 +85,9 @@ const Index = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent | null, sharedRepoUrl?: string) => {
-    if (e) e.preventDefault();
-    const urlToUse = sharedRepoUrl || repoUrl;
-    
-    if (!urlToUse) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!repoUrl) {
       toast({
         title: "Error",
         description: "Please enter a GitHub repository URL",
@@ -114,8 +98,7 @@ const Index = () => {
 
     setLoading(true);
     try {
-      const { owner, repo } = extractRepoInfo(urlToUse);
-      console.log("Fetching repository data for:", owner, repo);
+      const { owner, repo } = extractRepoInfo(repoUrl);
       const { repoData, workflows, commits, deployments, languages, branches } = await fetchRepoData(owner, repo);
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
         repoData,
@@ -126,6 +109,15 @@ const Index = () => {
         branches
       );
 
+      // Store the visualization data in the window object for the chatbot
+      (window as any).__GITVIZ_DATA__ = {
+        branches,
+        commits,
+        deployments,
+        languages,
+        workflows
+      };
+
       setNodes(newNodes);
       setEdges(newEdges);
       setBranches(branches.map(branch => branch.name));
@@ -135,7 +127,6 @@ const Index = () => {
         description: `Repository visualization created with ${Object.keys(languages).length} languages${workflows.length > 0 ? ', workflows' : ''}, commits, deployments, and ${branches.length} branches!`,
       });
     } catch (error: any) {
-      console.error("Error loading repository:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to fetch repository data",
@@ -164,10 +155,7 @@ const Index = () => {
             GitViz
           </span>
         </a>
-        <div className="flex items-center gap-4">
-          {repoUrl && <ShareDialog repoUrl={repoUrl} />}
-          <UserMenu />
-        </div>
+        <UserMenu />
       </div>
 
       <div className="max-w-2xl mx-auto w-full text-center">
@@ -175,49 +163,74 @@ const Index = () => {
           GitHub Flow Visualizer
         </h1>
         <p className="text-gray-400 mb-8">
-          {isReadOnly ? "Viewing shared repository visualization" : "Enter a GitHub repository URL to visualize its workflow structure"}
+          Enter a GitHub repository URL to visualize its workflow structure
         </p>
 
-        {!isReadOnly && (
-          <form onSubmit={handleSubmit} className="flex gap-4 glass-card p-4 rounded-lg">
-            <Input
-              type="text"
-              placeholder="https://github.com/username/repo"
-              value={repoUrl}
-              onChange={(e) => setRepoUrl(e.target.value)}
-              className="bg-github-darker/50 border-white/10"
-            />
-            <Button
-              type="submit"
-              disabled={loading}
-              className="relative px-6 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 rounded-lg text-white font-medium shadow-lg transition-all duration-200 hover:bg-black/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-black/40 before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-t before:from-white/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity overflow-hidden"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Loading...
-                </span>
-              ) : (
-                "Visualize"
-              )}
-            </Button>
-          </form>
-        )}
+        <form onSubmit={handleSubmit} className="flex gap-4 glass-card p-4 rounded-lg">
+          <Input
+            type="text"
+            placeholder="https://github.com/username/repo"
+            value={repoUrl}
+            onChange={(e) => setRepoUrl(e.target.value)}
+            className="bg-github-darker/50 border-white/10"
+          />
+          <Button
+            type="submit"
+            disabled={loading}
+            className={`
+              relative px-6 py-2.5
+              bg-black/40 backdrop-blur-md
+              border border-white/10
+              rounded-lg
+              text-white
+              font-medium
+              shadow-lg
+              transition-all duration-200
+              hover:bg-black/50
+              hover:shadow-xl
+              hover:scale-[1.02]
+              active:scale-[0.98]
+              disabled:opacity-50
+              disabled:cursor-not-allowed
+              disabled:hover:scale-100
+              disabled:hover:bg-black/40
+              before:absolute
+              before:inset-0
+              before:rounded-lg
+              before:bg-gradient-to-t
+              before:from-white/5
+              before:to-transparent
+              before:opacity-0
+              hover:before:opacity-100
+              before:transition-opacity
+              overflow-hidden
+            `}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Loading...
+              </span>
+            ) : (
+              "Visualize"
+            )}
+          </Button>
+        </form>
       </div>
 
       <div ref={flowRef} className="flow-container relative">
@@ -228,8 +241,6 @@ const Index = () => {
           onNodesChange={onNodesChange}
           onNodeClick={onNodeClick}
           fitView
-          nodesDraggable={!isReadOnly}
-          nodesConnectable={!isReadOnly}
         >
           <Background color="#58A6FF" className="opacity-9" />
           <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
@@ -243,6 +254,31 @@ const Index = () => {
             <p className="text-xs text-gray-400 mb-2">
               Visualizing repository languages, workflow, commits, and deployments
             </p>
+            {selectedNode?.type === 'language' && (
+              <div className="mt-2 p-2 bg-github-darker/30 rounded">
+                <p className="text-xs">Selected: {(selectedNode.data as LanguageNodeData).language}</p>
+                <p className="text-xs text-gray-400">
+                  Usage: {(selectedNode.data as LanguageNodeData).percentage.toFixed(1)}%
+                </p>
+              </div>
+            )}
+            {selectedBranch && selectedBranch.data && (
+              <BranchDetailsPanel
+                isOpen={!!selectedBranch}
+                onClose={() => setSelectedBranch(null)}
+                branchName={selectedBranch.data.label as string}
+                commits={selectedBranch.data.commits || []}
+                heatLevel={selectedBranch.data.heatLevel as number}
+                isCollapsed={selectedBranch.data.isCollapsed as boolean}
+                tags={selectedBranch.data.tags || []}
+                fileChanges={selectedBranch.data.fileChanges || []}
+                isFullscreen={isFullscreen}
+              />
+            )}
+
+            {selectedNode?.type === 'deployment' && (
+              <DeploymentDetailsPanel deployment={selectedNode.data} />
+            )}
             {branches.length > 0 && (
               <div>
                 <h4 className="text-xs font-medium mb-1">Branches ({branches.length}):</h4>
@@ -257,25 +293,17 @@ const Index = () => {
         </ReactFlow>
       </div>
 
-      {selectedBranch && (
+      {selectedBranch && selectedBranch.data && (
         <BranchDetailsPanel
           isOpen={!!selectedBranch}
           onClose={() => setSelectedBranch(null)}
-          branchName={selectedBranch.data.label}
+          branchName={selectedBranch.data.label as string}
           commits={selectedBranch.data.commits || []}
-          heatLevel={selectedBranch.data.heatLevel}
-          isCollapsed={selectedBranch.data.isCollapsed}
+          heatLevel={selectedBranch.data.heatLevel as number}
+          isCollapsed={selectedBranch.data.isCollapsed as boolean}
           tags={selectedBranch.data.tags || []}
           fileChanges={selectedBranch.data.fileChanges || []}
-          contributors={selectedBranch.data.contributors || []}
           isFullscreen={isFullscreen}
-        />
-      )}
-
-      {selectedDeployment && (
-        <DeploymentDetailsPanel
-          deployment={selectedDeployment.data}
-          onClose={() => setSelectedDeployment(null)}
         />
       )}
 

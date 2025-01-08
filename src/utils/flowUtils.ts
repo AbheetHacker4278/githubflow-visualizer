@@ -68,7 +68,7 @@ export const createNodesAndEdges = (
 
   yOffset += 100;
 
-  // Add branches nodes
+  // Add branches nodes with commit data, heat levels, and contributors
   if (branches.length > 0) {
     branches.forEach((branch, index) => {
       const id = `branch-${index}`;
@@ -81,14 +81,16 @@ export const createNodesAndEdges = (
         }));
 
       const heatLevel = calculateBranchHeatLevel(commits, branch);
-      const isCollapsed = heatLevel < 25;
+      const isCollapsed = heatLevel < 25; // Collapse inactive branches by default
       const contributors = getContributors(commits);
 
+      // Mock tags for demonstration - replace with actual tags data
       const tags = branch.name === "main" ? [
         { name: "v1.0.0", type: "annotated" as const, message: "Major release" },
         { name: "latest", type: "lightweight" as const }
       ] : [];
 
+      // Mock file changes - replace with actual file changes data
       const fileChanges = [
         { path: "src/main.ts", changes: 15 },
         { path: "package.json", changes: 3 }
@@ -97,7 +99,7 @@ export const createNodesAndEdges = (
       newNodes.push({
         id,
         type: "branch",
-        data: {
+        data: { 
           label: branch.name,
           commits: branchCommits,
           heatLevel,
@@ -105,7 +107,7 @@ export const createNodesAndEdges = (
           tags,
           fileChanges,
           contributors
-        } as BranchNodeData,
+        },
         position: { x: -200 + (index * 150), y: yOffset },
       });
       newEdges.push({
@@ -144,9 +146,53 @@ export const createNodesAndEdges = (
     });
   }
 
-  // Add deployment nodes
+  // Add workflow files
+  if (workflows.length > 0) {
+    yOffset += 100;
+    workflows.forEach((workflow: any, index: number) => {
+      const id = `workflow-${index}`;
+      newNodes.push({
+        id,
+        type: "github",
+        data: { label: workflow.name || workflow.path, type: "file" },
+        position: { x: 250, y: yOffset },
+      });
+      newEdges.push({
+        id: `e-branch-${id}`,
+        source: branches.length > 0 ? `branch-0` : "branch",
+        target: id,
+        animated: true,
+      });
+      yOffset += 100;
+    });
+  }
+
+  // Add commit nodes
+  if (commits.length > 0) {
+    commits.forEach((commit, index) => {
+      const id = `commit-${index}`;
+      newNodes.push({
+        id,
+        type: "commit",
+        data: {
+          label: commit.sha.substring(0, 7),
+          message: commit.commit.message.split("\n")[0],
+          date: new Date(commit.commit.author.date).toLocaleDateString(),
+        },
+        position: { x: 500, y: 100 + index * 100 },
+      });
+      newEdges.push({
+        id: `e-branch-${id}`,
+        source: branches.length > 0 ? `branch-0` : "branch",
+        target: id,
+        animated: true,
+      });
+    });
+  }
+
+  // Add deployment nodes with proper typing
   if (deployments.length > 0) {
-    deployments.forEach((deployment: any, index: number) => {
+    deployments.forEach((deployment: Deployment, index) => {
       const id = `deployment-${index}`;
       newNodes.push({
         id,
@@ -156,7 +202,7 @@ export const createNodesAndEdges = (
           environment: deployment.environment,
           status: deployment.state,
           date: new Date(deployment.created_at).toLocaleDateString(),
-        } as DeploymentNodeData,
+        } as Record<string, unknown>,
         position: { x: 0, y: 100 + index * 100 },
       });
       newEdges.push({
