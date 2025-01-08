@@ -63,6 +63,33 @@ export type Database = {
         }
         Relationships: []
       }
+      visualization_history: {
+        Row: {
+          id: string
+          repo_name: string
+          repo_owner: string
+          repo_url: string
+          user_id: string
+          visualized_at: string | null
+        }
+        Insert: {
+          id?: string
+          repo_name: string
+          repo_owner: string
+          repo_url: string
+          user_id: string
+          visualized_at?: string | null
+        }
+        Update: {
+          id?: string
+          repo_name?: string
+          repo_owner?: string
+          repo_url?: string
+          user_id?: string
+          visualized_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -20,12 +20,15 @@ import DeploymentNode from "@/components/DeploymentNode";
 import LanguageNode from "@/components/LanguageNode";
 import BranchNode from "@/components/BranchNode";
 import { UserMenu } from "@/components/UserMenu";
+import { VisualizationHistory } from "@/components/VisualizationHistory";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
 import { LanguageNodeData } from "@/types/nodes";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import ChatBot from "@/components/ChatBot";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
 import "@xyflow/react/dist/style.css";
 
 const nodeTypes = {
@@ -49,6 +52,7 @@ const Index = () => {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Node | null>(null);
+  const { session } = useAuth();
 
   const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
@@ -99,7 +103,8 @@ const Index = () => {
     setLoading(true);
     try {
       const { owner, repo } = extractRepoInfo(repoUrl);
-      const { repoData, workflows, commits, deployments, languages, branches } = await fetchRepoData(owner, repo);
+      const { repoData, workflows, commits, deployments, languages, branches } =
+        await fetchRepoData(owner, repo);
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
         repoData,
         workflows,
@@ -109,22 +114,40 @@ const Index = () => {
         branches
       );
 
+      // Store visualization history if user is logged in
+      if (session?.user) {
+        const { error } = await supabase.from("visualization_history").insert({
+          user_id: session.user.id,
+          repo_url: repoUrl,
+          repo_owner: owner,
+          repo_name: repo,
+        });
+
+        if (error) {
+          console.error("Error saving visualization history:", error);
+        }
+      }
+
       // Store the visualization data in the window object for the chatbot
       (window as any).__GITVIZ_DATA__ = {
         branches,
         commits,
         deployments,
         languages,
-        workflows
+        workflows,
       };
 
       setNodes(newNodes);
       setEdges(newEdges);
-      setBranches(branches.map(branch => branch.name));
+      setBranches(branches.map((branch) => branch.name));
 
       toast({
         title: "Success",
-        description: `Repository visualization created with ${Object.keys(languages).length} languages${workflows.length > 0 ? ', workflows' : ''}, commits, deployments, and ${branches.length} branches!`,
+        description: `Repository visualization created with ${
+          Object.keys(languages).length
+        } languages${
+          workflows.length > 0 ? ", workflows" : ""
+        }, commits, deployments, and ${branches.length} branches!`,
       });
     } catch (error: any) {
       toast({
@@ -155,7 +178,10 @@ const Index = () => {
             GitViz
           </span>
         </a>
-        <UserMenu />
+        <div className="flex items-center gap-2">
+          <VisualizationHistory />
+          <UserMenu />
+        </div>
       </div>
 
       <div className="max-w-2xl mx-auto w-full text-center">
