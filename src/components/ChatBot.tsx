@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Image as ImageIcon, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ interface Message {
   content: string;
   timestamp: Date;
   id: string;
+  image?: string; // Base64 string for images
 }
 
 interface ChatBotProps {
@@ -20,6 +21,7 @@ interface ChatBotProps {
   botName?: string;
 }
 
+// Previous AnimatedLogo and TypingIndicator components remain unchanged...
 const AnimatedLogo = () => (
   <div className="relative w-8 h-8 transition-transform hover:scale-110">
     <svg
@@ -68,6 +70,16 @@ const MessageBubble = ({ message, isLatest }: { message: Message; isLatest: bool
           : "gradient-bg text-white hover:shadow-lg"
       }`}
     >
+      {message.image && (
+        <div className="mb-2">
+          <img 
+            src={message.image} 
+            alt="Uploaded content"
+            className="max-w-full rounded-lg hover:scale-105 transition-transform cursor-pointer"
+            onClick={() => window.open(message.image, '_blank')}
+          />
+        </div>
+      )}
       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
     </div>
     <span className="text-xs text-muted-foreground mt-1 opacity-0 animate-fade-in">
@@ -79,6 +91,7 @@ const MessageBubble = ({ message, isLatest }: { message: Message; isLatest: bool
   </div>
 );
 
+// Previous styles remain unchanged...
 const styles = `
   @keyframes dash {
     0% {
@@ -161,6 +174,27 @@ const styles = `
   .animate-pulse-slow {
     animation: pulse 2s infinite;
   }
+
+  .image-preview-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .remove-image-button {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .remove-image-button:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
+  }
 `;
 
 const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
@@ -168,9 +202,11 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -188,29 +224,52 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
     }
   }, [isOpen]);
 
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "Error",
+          description: "Image size should be less than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSelectedImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && !selectedImage) return;
 
     const userMessage = { 
       role: "user" as const, 
       content: input,
       timestamp: new Date(),
-      id: Math.random().toString(36).substr(2, 9)
+      id: Math.random().toString(36).substr(2, 9),
+      image: selectedImage || undefined
     };
+    
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setSelectedImage(null);
     setIsLoading(true);
 
     try {
-      // Get the current visualization data from the window object
       const visualizationData = (window as any).__GITVIZ_DATA__ || {};
-
+      
       const { data, error } = await supabase.functions.invoke('chat', {
         body: { 
           message: input,
           repoUrl,
           context: messages.slice(-5),
-          visualizationData
+          visualizationData,
+          image: selectedImage
         }
       });
 
@@ -295,7 +354,38 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
             </div>
           </ScrollArea>
           <div className="p-4 border-t bg-background/95">
+            {selectedImage && (
+              <div className="mb-2 image-preview-container">
+                <img 
+                  src={selectedImage} 
+                  alt="Preview" 
+                  className="h-20 rounded-lg object-cover"
+                />
+                <button 
+                  onClick={() => setSelectedImage(null)}
+                  className="remove-image-button"
+                >
+                  <X className="h-4 w-4 text-white" />
+                </button>
+              </div>
+            )}
             <div className="flex gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageSelect}
+                ref={fileInputRef}
+              />
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-full"
+                type="button"
+              >
+                <ImageIcon className="h-4 w-4" />
+              </Button>
               <Input
                 placeholder="Type your message..."
                 value={input}
