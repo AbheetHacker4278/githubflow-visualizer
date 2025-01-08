@@ -22,7 +22,7 @@ import BranchNode from "@/components/BranchNode";
 import { UserMenu } from "@/components/UserMenu";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
-import { LanguageNodeData } from "@/types/nodes";
+import { BranchNodeData, DeploymentNodeData } from "@/types/nodes";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import ShareDialog from "@/components/ShareDialog";
@@ -49,7 +49,8 @@ const Index = () => {
   const { toast } = useToast();
   const flowRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState<Node | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<Node<BranchNodeData> | null>(null);
+  const [selectedDeployment, setSelectedDeployment] = useState<Node<DeploymentNodeData> | null>(null);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
   useEffect(() => {
@@ -57,9 +58,11 @@ const Index = () => {
     const mode = searchParams.get("mode");
     
     if (sharedRepo) {
-      setRepoUrl(decodeURIComponent(sharedRepo));
+      const decodedUrl = decodeURIComponent(sharedRepo);
+      console.log("Loading shared repository:", decodedUrl);
+      setRepoUrl(decodedUrl);
       setIsReadOnly(mode === "view");
-      handleSubmit(null, decodeURIComponent(sharedRepo));
+      handleSubmit(null, decodedUrl);
     }
   }, [searchParams]);
 
@@ -72,15 +75,9 @@ const Index = () => {
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
     if (node.type === 'branch') {
-      setSelectedBranch(node);
-    }
-    if (node.type === 'language') {
-      const data = node.data as LanguageNodeData;
-      const percentage = data.percentage.toFixed(1);
-      toast({
-        title: "Node Selected",
-        description: `Selected language: ${data.language} (${percentage}%)`,
-      });
+      setSelectedBranch(node as Node<BranchNodeData>);
+    } else if (node.type === 'deployment') {
+      setSelectedDeployment(node as Node<DeploymentNodeData>);
     }
   };
 
@@ -125,14 +122,6 @@ const Index = () => {
         languages,
         branches
       );
-
-      (window as any).__GITVIZ_DATA__ = {
-        branches,
-        commits,
-        deployments,
-        languages,
-        workflows
-      };
 
       setNodes(newNodes);
       setEdges(newEdges);
@@ -182,7 +171,7 @@ const Index = () => {
           GitHub Flow Visualizer
         </h1>
         <p className="text-gray-400 mb-8">
-          Enter a GitHub repository URL to visualize its workflow structure
+          {isReadOnly ? "Viewing shared repository visualization" : "Enter a GitHub repository URL to visualize its workflow structure"}
         </p>
 
         {!isReadOnly && (
@@ -250,31 +239,6 @@ const Index = () => {
             <p className="text-xs text-gray-400 mb-2">
               Visualizing repository languages, workflow, commits, and deployments
             </p>
-            {selectedNode?.type === 'language' && (
-              <div className="mt-2 p-2 bg-github-darker/30 rounded">
-                <p className="text-xs">Selected: {(selectedNode.data as LanguageNodeData).language}</p>
-                <p className="text-xs text-gray-400">
-                  Usage: {(selectedNode.data as LanguageNodeData).percentage.toFixed(1)}%
-                </p>
-              </div>
-            )}
-            {selectedBranch && selectedBranch.data && (
-              <BranchDetailsPanel
-                isOpen={!!selectedBranch}
-                onClose={() => setSelectedBranch(null)}
-                branchName={selectedBranch.data.label as string}
-                commits={selectedBranch.data.commits || []}
-                heatLevel={selectedBranch.data.heatLevel as number}
-                isCollapsed={selectedBranch.data.isCollapsed as boolean}
-                tags={selectedBranch.data.tags || []}
-                fileChanges={selectedBranch.data.fileChanges || []}
-                isFullscreen={isFullscreen}
-              />
-            )}
-
-            {selectedNode?.type === 'deployment' && (
-              <DeploymentDetailsPanel deployment={selectedNode.data} />
-            )}
             {branches.length > 0 && (
               <div>
                 <h4 className="text-xs font-medium mb-1">Branches ({branches.length}):</h4>
@@ -289,17 +253,26 @@ const Index = () => {
         </ReactFlow>
       </div>
 
-      {selectedBranch && selectedBranch.data && (
+      {selectedBranch && (
         <BranchDetailsPanel
           isOpen={!!selectedBranch}
           onClose={() => setSelectedBranch(null)}
-          branchName={selectedBranch.data.label as string}
+          branchName={selectedBranch.data.label}
           commits={selectedBranch.data.commits || []}
-          heatLevel={selectedBranch.data.heatLevel as number}
-          isCollapsed={selectedBranch.data.isCollapsed as boolean}
+          heatLevel={selectedBranch.data.heatLevel}
+          isCollapsed={selectedBranch.data.isCollapsed}
           tags={selectedBranch.data.tags || []}
           fileChanges={selectedBranch.data.fileChanges || []}
+          contributors={selectedBranch.data.contributors || []}
           isFullscreen={isFullscreen}
+        />
+      )}
+
+      {selectedDeployment && (
+        <DeploymentDetailsPanel
+          isOpen={!!selectedDeployment}
+          onClose={() => setSelectedDeployment(null)}
+          deployment={selectedDeployment.data}
         />
       )}
 

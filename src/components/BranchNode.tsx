@@ -4,28 +4,10 @@ import BranchDetailsPanel from "./BranchDetailsPanel";
 import { Badge } from "@/components/ui/badge";
 import { ChevronRight, ChevronDown, Users } from "lucide-react";
 import { Contributor } from "@/types/collaboration";
+import { BranchNodeData } from "@/types/nodes";
 
 interface BranchNodeProps {
-  data: {
-    label: string;
-    commits?: Array<{
-      sha: string;
-      message: string;
-      date: string;
-    }>;
-    heatLevel?: number;
-    isCollapsed?: boolean;
-    tags?: Array<{
-      name: string;
-      type: "lightweight" | "annotated";
-      message?: string;
-    }>;
-    fileChanges?: Array<{
-      path: string;
-      changes: number;
-    }>;
-    contributors?: Contributor[];
-  };
+  data: BranchNodeData;
 }
 
 const BranchNode = memo(({ data }: BranchNodeProps) => {
