@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -13,7 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
@@ -39,7 +39,7 @@ const nodeTypes = {
   branch: BranchNode,
 };
 
-const Index = () => {
+export default function Index() {
   const navigate = useNavigate();
   const [repoUrl, setRepoUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,11 +48,21 @@ const Index = () => {
   const [branches, setBranches] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { toast } = useToast();
-  const flowRef = useRef<HTMLDivElement>(null); // Ref for the flow container
+  const flowRef = useRef<HTMLDivElement>(null);
+  const [searchParams] = useSearchParams();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Node | null>(null);
   const { session } = useAuth();
+
+  useEffect(() => {
+    const repoParam = searchParams.get('repo');
+    if (repoParam) {
+      const decodedUrl = decodeURIComponent(repoParam);
+      setRepoUrl(decodedUrl);
+      handleVisualization(decodedUrl);
+    }
+  }, [searchParams]);
 
   const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
@@ -74,7 +84,6 @@ const Index = () => {
   };
 
   const handleHomeClick = () => {
-    console.log("Attempting to navigate to landing page...");
     navigate("/", { replace: true });
   };
 
@@ -89,9 +98,8 @@ const Index = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!repoUrl) {
+  const handleVisualization = async (url: string) => {
+    if (!url) {
       toast({
         title: "Error",
         description: "Please enter a GitHub repository URL",
@@ -102,7 +110,7 @@ const Index = () => {
 
     setLoading(true);
     try {
-      const { owner, repo } = extractRepoInfo(repoUrl);
+      const { owner, repo } = extractRepoInfo(url);
       const { repoData, workflows, commits, deployments, languages, branches } =
         await fetchRepoData(owner, repo);
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
@@ -114,11 +122,10 @@ const Index = () => {
         branches
       );
 
-      // Store visualization history if user is logged in
       if (session?.user) {
         const { error } = await supabase.from("visualization_history").insert({
           user_id: session.user.id,
-          repo_url: repoUrl,
+          repo_url: url,
           repo_owner: owner,
           repo_name: repo,
         });
@@ -128,7 +135,6 @@ const Index = () => {
         }
       }
 
-      // Store the visualization data in the window object for the chatbot
       (window as any).__GITVIZ_DATA__ = {
         branches,
         commits,
@@ -160,6 +166,11 @@ const Index = () => {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleVisualization(repoUrl);
+  };
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       flowRef.current?.requestFullscreen();
@@ -173,8 +184,8 @@ const Index = () => {
   return (
     <div className="min-h-screen p-8 flex flex-col gap-8">
       <div className="flex justify-between items-center">
-        <a href="/" className="flex items-center space-x-2">
-          <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
+        <a className="flex items-center space-x-2">
+          <span onClick={handleHomeClick} className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent cursor-pointer">
             GitViz
           </span>
         </a>
@@ -336,6 +347,4 @@ const Index = () => {
       <ChatBot repoUrl={repoUrl} />
     </div>
   );
-};
-
-export default Index;
+}

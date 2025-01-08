@@ -16,6 +16,7 @@ import DeveloperChallenges from '@/components/DeveloperChallenges';
 import ChatBot from '@/components/ChatBot';
 import ChatbotNotification from '@/components/ChatbotNotification';
 import { UserMenu } from '@/components/UserMenu';
+import { VisualizationHistory } from '@/components/VisualizationHistory';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -139,7 +140,10 @@ const Landing = () => {
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center space-x-4">
               {session ? (
-                <UserMenu />
+                [
+                  <UserMenu />,
+                  <VisualizationHistory />
+                ]
               ) : (
                 <Button
                   onClick={() => navigate("/auth")}
