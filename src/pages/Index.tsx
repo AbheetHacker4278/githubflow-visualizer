@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -13,7 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import GitHubNode from "@/components/GitHubNode";
 import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
@@ -25,6 +25,7 @@ import { createNodesAndEdges } from "@/utils/flowUtils";
 import { LanguageNodeData } from "@/types/nodes";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
+import ShareDialog from "@/components/ShareDialog";
 import ChatBot from "@/components/ChatBot";
 import "@xyflow/react/dist/style.css";
 
@@ -38,6 +39,7 @@ const nodeTypes = {
 
 const Index = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [repoUrl, setRepoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -45,13 +47,26 @@ const Index = () => {
   const [branches, setBranches] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const { toast } = useToast();
-  const flowRef = useRef<HTMLDivElement>(null); // Ref for the flow container
-
+  const flowRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Node | null>(null);
+  const [isReadOnly, setIsReadOnly] = useState(false);
+
+  useEffect(() => {
+    const sharedRepo = searchParams.get("repo");
+    const mode = searchParams.get("mode");
+    
+    if (sharedRepo) {
+      setRepoUrl(decodeURIComponent(sharedRepo));
+      setIsReadOnly(mode === "view");
+      handleSubmit(null, decodeURIComponent(sharedRepo));
+    }
+  }, [searchParams]);
 
   const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
-    setNodes((nds) => applyNodeChanges(changes, nds));
+    if (!isReadOnly) {
+      setNodes((nds) => applyNodeChanges(changes, nds));
+    }
   };
 
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
@@ -85,9 +100,11 @@ const Index = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!repoUrl) {
+  const handleSubmit = async (e: React.FormEvent | null, sharedRepoUrl?: string) => {
+    if (e) e.preventDefault();
+    const urlToUse = sharedRepoUrl || repoUrl;
+    
+    if (!urlToUse) {
       toast({
         title: "Error",
         description: "Please enter a GitHub repository URL",
@@ -98,7 +115,7 @@ const Index = () => {
 
     setLoading(true);
     try {
-      const { owner, repo } = extractRepoInfo(repoUrl);
+      const { owner, repo } = extractRepoInfo(urlToUse);
       const { repoData, workflows, commits, deployments, languages, branches } = await fetchRepoData(owner, repo);
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
         repoData,
@@ -109,7 +126,6 @@ const Index = () => {
         branches
       );
 
-      // Store the visualization data in the window object for the chatbot
       (window as any).__GITVIZ_DATA__ = {
         branches,
         commits,
@@ -155,7 +171,10 @@ const Index = () => {
             GitViz
           </span>
         </a>
-        <UserMenu />
+        <div className="flex items-center gap-4">
+          {repoUrl && <ShareDialog repoUrl={repoUrl} />}
+          <UserMenu />
+        </div>
       </div>
 
       <div className="max-w-2xl mx-auto w-full text-center">
@@ -166,71 +185,46 @@ const Index = () => {
           Enter a GitHub repository URL to visualize its workflow structure
         </p>
 
-        <form onSubmit={handleSubmit} className="flex gap-4 glass-card p-4 rounded-lg">
-          <Input
-            type="text"
-            placeholder="https://github.com/username/repo"
-            value={repoUrl}
-            onChange={(e) => setRepoUrl(e.target.value)}
-            className="bg-github-darker/50 border-white/10"
-          />
-          <Button
-            type="submit"
-            disabled={loading}
-            className={`
-              relative px-6 py-2.5
-              bg-black/40 backdrop-blur-md
-              border border-white/10
-              rounded-lg
-              text-white
-              font-medium
-              shadow-lg
-              transition-all duration-200
-              hover:bg-black/50
-              hover:shadow-xl
-              hover:scale-[1.02]
-              active:scale-[0.98]
-              disabled:opacity-50
-              disabled:cursor-not-allowed
-              disabled:hover:scale-100
-              disabled:hover:bg-black/40
-              before:absolute
-              before:inset-0
-              before:rounded-lg
-              before:bg-gradient-to-t
-              before:from-white/5
-              before:to-transparent
-              before:opacity-0
-              hover:before:opacity-100
-              before:transition-opacity
-              overflow-hidden
-            `}
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Loading...
-              </span>
-            ) : (
-              "Visualize"
-            )}
-          </Button>
-        </form>
+        {!isReadOnly && (
+          <form onSubmit={handleSubmit} className="flex gap-4 glass-card p-4 rounded-lg">
+            <Input
+              type="text"
+              placeholder="https://github.com/username/repo"
+              value={repoUrl}
+              onChange={(e) => setRepoUrl(e.target.value)}
+              className="bg-github-darker/50 border-white/10"
+            />
+            <Button
+              type="submit"
+              disabled={loading}
+              className="relative px-6 py-2.5 bg-black/40 backdrop-blur-md border border-white/10 rounded-lg text-white font-medium shadow-lg transition-all duration-200 hover:bg-black/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-black/40 before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-t before:from-white/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity overflow-hidden"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Loading...
+                </span>
+              ) : (
+                "Visualize"
+              )}
+            </Button>
+          </form>
+        )}
       </div>
 
       <div ref={flowRef} className="flow-container relative">
@@ -241,6 +235,8 @@ const Index = () => {
           onNodesChange={onNodesChange}
           onNodeClick={onNodeClick}
           fitView
+          nodesDraggable={!isReadOnly}
+          nodesConnectable={!isReadOnly}
         >
           <Background color="#58A6FF" className="opacity-9" />
           <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
