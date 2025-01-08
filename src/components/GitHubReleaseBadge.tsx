@@ -35,7 +35,7 @@ const GitHubReleaseBadge = () => {
           tag_name: 'v1.0.0',
           name: 'Latest Release',
           published_at: new Date().toISOString(),
-          body: 'Unable to fetch release information. Displaying default version.',
+          body: 'Unable to fetch release information. Displaying previous version.',
           html_url: 'https://github.com/AbheetHacker4278/githubflow-visualizer/releases',
         })
       } finally {
