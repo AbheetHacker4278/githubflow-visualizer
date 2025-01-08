@@ -1,6 +1,7 @@
 export interface Contributor {
   name: string;
   commits: number;
+  lastActive: string;
 }
 
 export interface BranchNodeData {
@@ -22,6 +23,7 @@ export interface BranchNodeData {
     changes: number;
   }>;
   contributors?: Contributor[];
+  [key: string]: unknown; // Add index signature
 }
 
 export interface DeploymentNodeData {
@@ -34,4 +36,12 @@ export interface DeploymentNodeData {
     message: string;
     date: string;
   }>;
+  [key: string]: unknown; // Add index signature
+}
+
+export interface LanguageNodeData {
+  language: string;
+  percentage: number;
+  repoName: string;
+  [key: string]: unknown;
 }

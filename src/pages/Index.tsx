@@ -52,19 +52,21 @@ const Index = () => {
   const [selectedBranch, setSelectedBranch] = useState<Node<BranchNodeData> | null>(null);
   const [selectedDeployment, setSelectedDeployment] = useState<Node<DeploymentNodeData> | null>(null);
   const [isReadOnly, setIsReadOnly] = useState(false);
+  const [hasAttemptedInitialLoad, setHasAttemptedInitialLoad] = useState(false);
 
   useEffect(() => {
     const sharedRepo = searchParams.get("repo");
     const mode = searchParams.get("mode");
     
-    if (sharedRepo) {
+    if (sharedRepo && !hasAttemptedInitialLoad) {
       const decodedUrl = decodeURIComponent(sharedRepo);
       console.log("Loading shared repository:", decodedUrl);
       setRepoUrl(decodedUrl);
       setIsReadOnly(mode === "view");
       handleSubmit(null, decodedUrl);
+      setHasAttemptedInitialLoad(true);
     }
-  }, [searchParams]);
+  }, [searchParams, hasAttemptedInitialLoad]);
 
   const onNodesChange: OnNodesChange = (changes: NodeChange[]) => {
     if (!isReadOnly) {
@@ -113,6 +115,7 @@ const Index = () => {
     setLoading(true);
     try {
       const { owner, repo } = extractRepoInfo(urlToUse);
+      console.log("Fetching repository data for:", owner, repo);
       const { repoData, workflows, commits, deployments, languages, branches } = await fetchRepoData(owner, repo);
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
         repoData,
@@ -132,6 +135,7 @@ const Index = () => {
         description: `Repository visualization created with ${Object.keys(languages).length} languages${workflows.length > 0 ? ', workflows' : ''}, commits, deployments, and ${branches.length} branches!`,
       });
     } catch (error: any) {
+      console.error("Error loading repository:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to fetch repository data",
@@ -270,9 +274,8 @@ const Index = () => {
 
       {selectedDeployment && (
         <DeploymentDetailsPanel
-          isOpen={!!selectedDeployment}
-          onClose={() => setSelectedDeployment(null)}
           deployment={selectedDeployment.data}
+          onClose={() => setSelectedDeployment(null)}
         />
       )}
 
