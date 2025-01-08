@@ -28,6 +28,9 @@ const AuthPage = () => {
       if (event === 'SIGNED_IN') {
         navigate("/app");
       }
+      if (event === 'PASSWORD_RECOVERY') {
+        setErrorMessage(""); // Clear any existing errors
+      }
       if (event === 'USER_UPDATED') {
         const handleError = async () => {
           const { error } = await supabase.auth.getSession();
@@ -195,6 +198,8 @@ const AuthPage = () => {
             }}
             providers={["github", "google"]}
             redirectTo={`${window.location.origin}/app`}
+            view="magic_link"
+            showLinks={true}
           />
         </div>
       </div>
