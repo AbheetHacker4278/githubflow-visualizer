@@ -5,7 +5,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, Users } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Contributor } from "@/types/collaboration";
-import { BranchNodeData } from "@/types/nodes";
 
 export interface BranchDetailsPanelProps {
   isOpen: boolean;

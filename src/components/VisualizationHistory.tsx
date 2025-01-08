@@ -13,11 +13,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { History, ExternalLink } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 export const VisualizationHistory = () => {
   const [open, setOpen] = useState(false);
   const { session } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { data: history, isLoading } = useQuery({
     queryKey: ["visualization-history"],
@@ -34,8 +36,18 @@ export const VisualizationHistory = () => {
   });
 
   const handleRepoClick = (repoUrl: string) => {
+    console.log("Visualizing repository:", repoUrl);
     setOpen(false);
+    
+    // Use URLSearchParams to update the URL without page reload
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set("repo", encodeURIComponent(repoUrl));
     navigate(`/app?repo=${encodeURIComponent(repoUrl)}`);
+
+    toast({
+      title: "Loading Repository",
+      description: "Fetching and visualizing repository data...",
+    });
   };
 
   if (!session) return null;
