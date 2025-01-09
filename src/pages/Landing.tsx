@@ -369,10 +369,10 @@ const Landing = () => {
               <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-px bg-gradient-to-b from-emerald-500/50 to-transparent" />
               {[
                 { year: "2025 - Phase 1", title: "Launch", description: "Initial platform release with core features" },
-                { year: "2025 - Phase 2", title: "Expansion", description: "AI powered Advanced analytics " },
-                { year: "2025 - Phase 3", title: "Feature - 1", description: "Integrated Development Enviorment" },
-                { year: "2025 - Phase 4", title: "Feature - 2", description: "Discussion Page for Developers" },
-                { year: "2025 - Phase 5", title: "Feature - 3", description: "More Features , Coming Soon..." },
+                { year: "2025 - Phase 2", title: "Feature - 1", description: "Discussion Page for Developers" },
+                { year: "2025 - Phase 3", title: "Feature - 2", description: "AI powered Advanced analytics " },
+                { year: "2025 - Phase 4", title: "Feature - 3", description: "Integrated Development Enviorment" },
+                { year: "2025 - Phase 5", title: "Expansion", description: "More Features , Coming Soon..." },
               ].map((item, index) => (
                 <motion.div
                   key={index}
