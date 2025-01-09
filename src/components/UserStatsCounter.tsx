@@ -11,48 +11,81 @@ const UserStatsCounter = () => {
   useEffect(() => {
     const fetchUserStats = async () => {
       try {
+        console.log('Fetching initial user stats...');
+        
         // Get total users count
-        const { data: totalData } = await supabase
+        const { data: totalData, error: totalError } = await supabase
           .from('visitor_counts')
-          .select('count')
+          .select('*')
+          .eq('is_verified', false)
           .single();
 
-        setTotalUsers(totalData?.count || 0);
+        if (totalError) {
+          console.error('Error fetching total users:', totalError);
+        } else {
+          console.log('Total users data:', totalData);
+          setTotalUsers(totalData?.count || 0);
+        }
 
         // Get verified users count
-        const { data: verifiedData } = await supabase
+        const { data: verifiedData, error: verifiedError } = await supabase
           .from('visitor_counts')
-          .select('count')
+          .select('*')
           .eq('is_verified', true)
           .single();
 
-        setVerifiedUsers(verifiedData?.count || 0);
+        if (verifiedError) {
+          console.error('Error fetching verified users:', verifiedError);
+        } else {
+          console.log('Verified users data:', verifiedData);
+          setVerifiedUsers(verifiedData?.count || 0);
+        }
 
         // Subscribe to realtime changes
         const channel = supabase
-          .channel('user-stats')
+          .channel('visitor-counts')
           .on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: 'visitor_counts' },
+            { 
+              event: '*', 
+              schema: 'public', 
+              table: 'visitor_counts',
+              filter: 'is_verified=false'
+            },
             (payload) => {
-              console.log('Realtime update:', payload);
+              console.log('Realtime update for total users:', payload);
               const newData = payload.new as VisitorCount;
               if (newData) {
-                if (newData.is_verified) {
-                  setVerifiedUsers(newData.count || 0);
-                } else {
-                  setTotalUsers(newData.count || 0);
-                }
+                setTotalUsers(newData.count || 0);
               }
             }
           )
-          .subscribe();
+          .on(
+            'postgres_changes',
+            { 
+              event: '*', 
+              schema: 'public', 
+              table: 'visitor_counts',
+              filter: 'is_verified=true'
+            },
+            (payload) => {
+              console.log('Realtime update for verified users:', payload);
+              const newData = payload.new as VisitorCount;
+              if (newData) {
+                setVerifiedUsers(newData.count || 0);
+              }
+            }
+          )
+          .subscribe((status) => {
+            console.log('Subscription status:', status);
+          });
 
         return () => {
+          console.log('Cleaning up subscription...');
           supabase.removeChannel(channel);
         };
       } catch (error) {
-        console.error('Error fetching user stats:', error);
+        console.error('Error in fetchUserStats:', error);
       }
     };
 
