@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      active_users: {
+        Row: {
+          count: number | null
+          id: string
+          last_updated: string | null
+        }
+        Insert: {
+          count?: number | null
+          id?: string
+          last_updated?: string | null
+        }
+        Update: {
+          count?: number | null
+          id?: string
+          last_updated?: string | null
+        }
+        Relationships: []
+      }
       asset_insights: {
         Row: {
           asset_id: string
