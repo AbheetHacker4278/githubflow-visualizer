@@ -17,6 +17,7 @@ import ChatBot from '@/components/ChatBot';
 import ChatbotNotification from '@/components/ChatbotNotification';
 import { UserMenu } from '@/components/UserMenu';
 import { VisualizationHistory } from '@/components/VisualizationHistory';
+import UserStatsCounter from '@/components/UserStatsCounter';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -125,6 +126,7 @@ const Landing = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
+              <UserStatsCounter />
               {navLinks.map((link, index) => (
                 <a
                   key={index}
