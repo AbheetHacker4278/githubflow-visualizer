@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from '@/integrations/supabase/types';
+
+type VisitorCount = Database['public']['Tables']['visitor_counts']['Row'];
 
 const UserStatsCounter = () => {
   const [totalUsers, setTotalUsers] = useState(0);
@@ -9,14 +12,14 @@ const UserStatsCounter = () => {
     const fetchUserStats = async () => {
       try {
         // Get total users count
-        const { count: totalCount } = await supabase
+        const { data: totalData } = await supabase
           .from('visitor_counts')
-          .select('count', { count: 'exact' })
+          .select('count')
           .single();
 
-        setTotalUsers(totalCount?.count || 0);
+        setTotalUsers(totalData?.count || 0);
 
-        // Get verified users count (users with email_confirmed_at not null)
+        // Get verified users count
         const { data: verifiedData } = await supabase
           .from('visitor_counts')
           .select('count')
@@ -33,8 +36,13 @@ const UserStatsCounter = () => {
             { event: '*', schema: 'public', table: 'visitor_counts' },
             (payload) => {
               console.log('Realtime update:', payload);
-              if (payload.new) {
-                setTotalUsers(payload.new.count || 0);
+              const newData = payload.new as VisitorCount;
+              if (newData) {
+                if (newData.is_verified) {
+                  setVerifiedUsers(newData.count || 0);
+                } else {
+                  setTotalUsers(newData.count || 0);
+                }
               }
             }
           )
