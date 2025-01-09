@@ -14,12 +14,6 @@ import { History, ExternalLink, Copy, Check } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { VisualizationHistoryItem } from "@/types/history";
-
-interface HistoryItemWithCount extends VisualizationHistoryItem {
-  visit_count: number;
-  last_visited: string;
-}
 
 export const VisualizationHistory = () => {
   const [open, setOpen] = useState(false);
@@ -39,23 +33,25 @@ export const VisualizationHistory = () => {
       if (error) throw error;
 
       // Process data to get unique repos with counts
-      const repoMap: Record<string, HistoryItemWithCount> = {};
-      
-      data?.forEach((item: VisualizationHistoryItem) => {
+      const repoMap = data.reduce((acc, item) => {
         const repoKey = `${item.repo_owner}/${item.repo_name}`;
-        if (!repoMap[repoKey]) {
-          repoMap[repoKey] = {
-            ...item,
-            visit_count: 1,
+        if (!acc[repoKey]) {
+          acc[repoKey] = {
+            id: item.id,
+            repo_owner: item.repo_owner,
+            repo_name: item.repo_name,
+            repo_url: item.repo_url,
             last_visited: item.visualized_at,
+            visit_count: 1
           };
         } else {
-          repoMap[repoKey].visit_count += 1;
-          if (new Date(item.visualized_at) > new Date(repoMap[repoKey].last_visited)) {
-            repoMap[repoKey].last_visited = item.visualized_at;
+          acc[repoKey].visit_count += 1;
+          if (new Date(item.visualized_at) > new Date(acc[repoKey].last_visited)) {
+            acc[repoKey].last_visited = item.visualized_at;
           }
         }
-      });
+        return acc;
+      }, {});
 
       return Object.values(repoMap);
     },

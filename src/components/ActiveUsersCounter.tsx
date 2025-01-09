@@ -1,30 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useActiveUsers } from '@/hooks/useActiveUsers';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ActiveUsersCounter = () => {
-  const [count, setCount] = useState(10000000);
-  const [isIncrementing, setIsIncrementing] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCount(prevCount => {
-        setIsIncrementing(true);
-        setTimeout(() => setIsIncrementing(false), 200);
-        return prevCount + Math.floor(Math.random() * 10);
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const formattedCount = count.toLocaleString();
+  const { count, isLoading } = useActiveUsers();
 
   return (
     <div className="relative overflow-hidden w-full max-w-md mx-auto hover:rounded-2xl">
-      <div 
-        className="transform transition-all duration-700 ease-out hover:scale-105 hover:rounded-2xl"
-      >
+      <div className="transform transition-all duration-700 ease-out hover:scale-105 hover:rounded-2xl">
         <div className="relative p-8 rounded-2xl bg-gradient-to-br from-emerald-700 to-transparent shadow-xl border border-slate-700 hover:rounded-2xl">
-          {/* Animated background glow effecT */}
+          {/* Animated background glow effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 animate-pulse rounded-2xl hover:rounded-2xl" />
           
           <div className="relative hover:rounded-2xl">
@@ -33,11 +18,13 @@ const ActiveUsersCounter = () => {
             </h3>
             
             <div className="relative">
-              <div className={`text-5xl font-bold text-white transition-all duration-300 ${
-                isIncrementing ? 'transform translate-y-1 scale-105' : ''
-              }`}>
-                {formattedCount}
-              </div>
+              {isLoading ? (
+                <Skeleton className="h-16 w-48" />
+              ) : (
+                <div className="text-5xl font-bold text-white transition-all duration-300">
+                  {count.toLocaleString()}
+                </div>
+              )}
               
               {/* Floating particles */}
               <div className="absolute -right-2 -top-2">
@@ -65,4 +52,4 @@ const ActiveUsersCounter = () => {
   );
 };
 
-export default ActiveUsersCounter;  
+export default ActiveUsersCounter;
