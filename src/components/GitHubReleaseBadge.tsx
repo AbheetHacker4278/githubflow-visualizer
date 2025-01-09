@@ -1,123 +1,64 @@
-'use client'
+import { useQuery } from "@tanstack/react-query";
 
-import React, { useState, useEffect } from 'react'
-import { Github, Clock, Tag } from 'lucide-react'
-
-interface ReleaseInfo {
-  tag_name: string
-  name: string
-  published_at: string
-  body: string
-  html_url: string
+interface Release {
+  tag_name: string;
+  html_url: string;
 }
+
+const fetchLatestRelease = async (): Promise<Release | null> => {
+  try {
+    const response = await fetch(
+      "https://api.github.com/repos/AbheetHacker4278/githubflow-visualizer/releases/latest"
+    );
+    
+    if (response.status === 404) {
+      console.log("No releases found for this repository");
+      return null;
+    }
+    
+    if (!response.ok) {
+      throw new Error(`GitHub API responded with status: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching release info:", error);
+    return null;
+  }
+};
 
 const GitHubReleaseBadge = () => {
-  const [releaseInfo, setReleaseInfo] = useState<ReleaseInfo | null>(null)
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const { data: release, isLoading } = useQuery({
+    queryKey: ["github-release"],
+    queryFn: fetchLatestRelease,
+  });
 
-  useEffect(() => {
-    const fetchLatestRelease = async () => {
-      try {
-        const response = await fetch(
-          'https://api.github.com/repos/AbheetHacker4278/githubflow-visualizer/releases/latest'
-        )
-
-        if (!response.ok) {
-          throw new Error('No release found')
-        }
-
-        const data = await response.json()
-        setReleaseInfo(data)
-      } catch (err) {
-        console.error('Error fetching release info:', err)
-        setReleaseInfo({
-          tag_name: 'v1.0.0',
-          name: 'Latest Release',
-          published_at: new Date().toISOString(),
-          body: 'Unable to fetch release information. Displaying previous version.',
-          html_url: 'https://github.com/AbheetHacker4278/githubflow-visualizer/releases',
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchLatestRelease()
-
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchLatestRelease, 300000)
-    return () => clearInterval(interval)
-  }, [])
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="inline-flex items-center bg-emerald-400/20 text-emerald-400 text-sm font-medium px-4 py-1 rounded-full">
-        <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mr-2" />
-        Loading release info...
+      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-github-darker text-github-accent animate-pulse">
+        Loading...
       </div>
-    )
+    );
   }
 
-  if (!releaseInfo) {
-    return null
+  if (!release) {
+    return (
+      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-github-darker text-github-accent">
+        Pre-release
+      </div>
+    );
   }
-
-  const formattedDate = new Date(releaseInfo.published_at).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
 
   return (
-    <div className="relative inline-block" onMouseLeave={() => setIsExpanded(false)}>
-      <div
-        className="bg-gradient-to-r from-emerald-400/20 to-emerald-400/0 hover:from-emerald-400/30 
-                   cursor-pointer transition-all duration-300 group rounded-full"
-        onMouseEnter={() => setIsExpanded(true)}
-      >
-        <div className="flex items-center space-x-2 px-4 py-1 rounded-full">
-          <Tag className="w-4 h-4 text-emerald-400" />
-          <span className="text-emerald-400 text-sm font-medium">
-            New Release {releaseInfo.tag_name}
-          </span>
-        </div>
-      </div>
+    <a
+      href={release.html_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-github-darker text-github-accent hover:bg-github-darker/80 transition-colors"
+    >
+      Latest Release: {release.tag_name}
+    </a>
+  );
+};
 
-      {isExpanded && (
-        <div className="absolute top-full left-0 mt-2 w-72 bg-zinc-900/95 backdrop-blur-lg 
-                      border border-emerald-500/20 rounded-lg shadow-xl z-50 p-4">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-white font-medium">{releaseInfo.name || releaseInfo.tag_name}</h3>
-            <a
-              href={releaseInfo.html_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-400 hover:text-emerald-300"
-            >
-              <Github className="w-4 h-4" />
-            </a>
-          </div>
-
-          <div className="flex items-center text-zinc-400 text-xs mb-3">
-            <Clock className="w-3 h-3 mr-1" />
-            <span>{formattedDate}</span>
-          </div>
-
-          {releaseInfo.body && (
-            <div className="text-zinc-300 text-sm max-h-32 overflow-y-auto custom-scrollbar">
-              {releaseInfo.body.split('\n').map((line, i) => (
-                <p key={i} className="mb-1">
-                  {line}
-                </p>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-export default GitHubReleaseBadge
-
+export default GitHubReleaseBadge;
