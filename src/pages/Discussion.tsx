@@ -18,6 +18,7 @@ interface Discussion {
   created_at: string;
   user_id: string;
   likes_count: number;
+  comments: { count: number }[];
   comments_count?: number;
 }
 
@@ -106,22 +107,22 @@ const Discussion = () => {
   const createDiscussion = useMutation({
     mutationFn: async () => {
       if (!session?.user) throw new Error("Must be logged in");
-      
+
       let image_url = null;
       if (image) {
         const fileExt = image.name.split(".").pop();
         const filePath = `${crypto.randomUUID()}.${fileExt}`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from("discussion_images")
           .upload(filePath, image);
-          
+
         if (uploadError) throw uploadError;
-        
+
         const { data: { publicUrl } } = supabase.storage
           .from("discussion_images")
           .getPublicUrl(filePath);
-          
+
         image_url = publicUrl;
       }
 
@@ -157,7 +158,7 @@ const Discussion = () => {
   const createComment = useMutation({
     mutationFn: async () => {
       if (!session?.user || !selectedDiscussion) throw new Error("Must be logged in");
-      
+
       const { error } = await supabase.from("comments").insert({
         content: comment,
         discussion_id: selectedDiscussion,
@@ -187,7 +188,7 @@ const Discussion = () => {
   const toggleLike = useMutation({
     mutationFn: async (discussionId: string) => {
       if (!session?.user) throw new Error("Must be logged in");
-      
+
       const { data: existingLike } = await supabase
         .from("likes")
         .select()
@@ -238,7 +239,7 @@ const Discussion = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Discussions</h1>
-      
+
       {/* Create Discussion Form */}
       <div className="mb-8 p-4 bg-card rounded-lg border">
         <h2 className="text-xl font-semibold mb-4">Create New Discussion</h2>
@@ -309,7 +310,7 @@ const Discussion = () => {
                   )}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  {comments?.length} Comments
+                  {discussion.comments_count || 0} Comments
                 </Button>
               </div>
 
