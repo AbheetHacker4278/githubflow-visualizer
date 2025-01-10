@@ -107,7 +107,7 @@ const ContributorsSection: React.FC = () => {
             duration: 0.8
           }}
         >
-          Meet Our Contributors
+          Meet Our Creator
         </motion.h2>
 
         <motion.div 
