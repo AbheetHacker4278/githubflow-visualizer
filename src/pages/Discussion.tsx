@@ -28,6 +28,12 @@ interface Comment {
   discussion_id: string;
 }
 
+interface Like {
+  id: string;
+  discussion_id: string;
+  user_id: string;
+}
+
 const Discussion = () => {
   const { session } = useAuth();
   const { toast } = useToast();
@@ -39,7 +45,7 @@ const Discussion = () => {
   const [comment, setComment] = useState("");
   const [selectedDiscussion, setSelectedDiscussion] = useState<string | null>(null);
 
-  // Fetch discussions
+  // Fetch discussions with likes count
   const { data: discussions, isLoading } = useQuery({
     queryKey: ["discussions"],
     queryFn: async () => {
@@ -51,6 +57,22 @@ const Discussion = () => {
       if (error) throw error;
       return data as Discussion[];
     },
+  });
+
+  // Fetch user's likes
+  const { data: userLikes } = useQuery({
+    queryKey: ["likes", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user) return [];
+      const { data, error } = await supabase
+        .from("likes")
+        .select("*")
+        .eq("user_id", session.user.id);
+
+      if (error) throw error;
+      return data as Like[];
+    },
+    enabled: !!session?.user,
   });
 
   // Fetch comments for a discussion
@@ -178,6 +200,7 @@ const Discussion = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      queryClient.invalidateQueries({ queryKey: ["likes", session?.user?.id] });
     },
     onError: (error: Error) => {
       toast({
@@ -187,6 +210,11 @@ const Discussion = () => {
       });
     },
   });
+
+  // Check if user has liked a discussion
+  const hasUserLikedDiscussion = (discussionId: string) => {
+    return userLikes?.some(like => like.discussion_id === discussionId);
+  };
 
   if (!session) {
     return (
@@ -258,8 +286,9 @@ const Discussion = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => toggleLike.mutate(discussion.id)}
+                  className={hasUserLikedDiscussion(discussion.id) ? "text-red-500" : ""}
                 >
-                  <Heart className="h-4 w-4 mr-2" />
+                  <Heart className={`h-4 w-4 mr-2 ${hasUserLikedDiscussion(discussion.id) ? "fill-current" : ""}`} />
                   {discussion.likes_count || 0}
                 </Button>
                 <Button
@@ -270,7 +299,7 @@ const Discussion = () => {
                   )}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  Comment
+                  {comments?.length || 0} Comments
                 </Button>
               </div>
 
