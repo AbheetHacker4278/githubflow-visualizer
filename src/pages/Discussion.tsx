@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Heart, Image, Loader2, Send } from "lucide-react";
+import { MessageCircle, Heart, Image, Loader2, Send, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
@@ -67,6 +67,51 @@ const Discussion = () => {
         comments_count: discussion.comments?.[0]?.count || 0,
         likes_count: discussion.likes?.[0]?.count || 0
       })) as Discussion[];
+    },
+  });
+
+  const deleteDiscussion = useMutation({
+    mutationFn: async (discussionId: string) => {
+      if (!session?.user) throw new Error("Must be logged in");
+
+      // First, delete all comments for this discussion
+      const { error: commentsError } = await supabase
+        .from("comments")
+        .delete()
+        .eq("discussion_id", discussionId);
+
+      if (commentsError) throw commentsError;
+
+      // Then, delete all likes for this discussion
+      const { error: likesError } = await supabase
+        .from("likes")
+        .delete()
+        .eq("discussion_id", discussionId);
+
+      if (likesError) throw likesError;
+
+      // Finally, delete the discussion itself
+      const { error } = await supabase
+        .from("discussions")
+        .delete()
+        .eq("id", discussionId)
+        .eq("user_id", session.user.id); // Ensure user can only delete their own discussions
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      toast({
+        title: "Success",
+        description: "Discussion deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -283,7 +328,23 @@ const Discussion = () => {
         <div className="space-y-6">
           {discussions?.map((discussion) => (
             <div key={discussion.id} className="p-4 bg-card rounded-lg border">
-              <h3 className="text-xl font-semibold mb-2">{discussion.title}</h3>
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-xl font-semibold">{discussion.title}</h3>
+                {discussion.user_id === session?.user?.id && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to delete this discussion?")) {
+                        deleteDiscussion.mutate(discussion.id);
+                      }
+                    }}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
               <p className="text-muted-foreground mb-4">{discussion.content}</p>
               {discussion.image_url && (
                 <img
