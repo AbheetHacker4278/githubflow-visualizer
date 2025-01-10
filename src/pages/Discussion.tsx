@@ -74,16 +74,7 @@ const Discussion = () => {
     mutationFn: async (discussionId: string) => {
       if (!session?.user) throw new Error("Must be logged in");
 
-      // Fetch the discussion to get the image URL
-      const { data: discussion, error: fetchError } = await supabase
-        .from("discussions")
-        .select("image_url")
-        .eq("id", discussionId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Delete all comments for this discussion
+      // First, delete all comments for this discussion
       const { error: commentsError } = await supabase
         .from("comments")
         .delete()
@@ -91,7 +82,7 @@ const Discussion = () => {
 
       if (commentsError) throw commentsError;
 
-      // Delete all likes for this discussion
+      // Then, delete all likes for this discussion
       const { error: likesError } = await supabase
         .from("likes")
         .delete()
@@ -99,22 +90,12 @@ const Discussion = () => {
 
       if (likesError) throw likesError;
 
-      // Delete the discussion image if it exists
-      if (discussion?.image_url) {
-        const filePath = discussion.image_url.split("/").pop(); // Extract the file name from the URL
-        const { error: imageError } = await supabase.storage
-          .from("discussion_images")
-          .remove([filePath]);
-
-        if (imageError) throw imageError;
-      }
-
-      // Delete the discussion itself
+      // Finally, delete the discussion itself
       const { error } = await supabase
         .from("discussions")
         .delete()
         .eq("id", discussionId)
-        .eq("user_id", session.user.id); // Ensure the user can only delete their own discussions
+        .eq("user_id", session.user.id); // Ensure user can only delete their own discussions
 
       if (error) throw error;
     },
@@ -133,7 +114,6 @@ const Discussion = () => {
       });
     },
   });
-
 
   // Fetch user's likes
   const { data: userLikes } = useQuery({
