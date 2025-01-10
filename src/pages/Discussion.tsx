@@ -18,6 +18,7 @@ interface Discussion {
   created_at: string;
   user_id: string;
   likes_count: number;
+  comments_count?: number;
 }
 
 interface Comment {
@@ -45,17 +46,26 @@ const Discussion = () => {
   const [comment, setComment] = useState("");
   const [selectedDiscussion, setSelectedDiscussion] = useState<string | null>(null);
 
-  // Fetch discussions with likes count
+  // Fetch discussions with likes and comments count
   const { data: discussions, isLoading } = useQuery({
     queryKey: ["discussions"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: discussionsData, error: discussionsError } = await supabase
         .from("discussions")
-        .select("*")
+        .select(`
+          *,
+          comments:comments(count),
+          likes:likes(count)
+        `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data as Discussion[];
+      if (discussionsError) throw discussionsError;
+
+      return discussionsData.map(discussion => ({
+        ...discussion,
+        comments_count: discussion.comments?.[0]?.count || 0,
+        likes_count: discussion.likes?.[0]?.count || 0
+      })) as Discussion[];
     },
   });
 
@@ -289,7 +299,7 @@ const Discussion = () => {
                   className={hasUserLikedDiscussion(discussion.id) ? "text-red-500" : ""}
                 >
                   <Heart className={`h-4 w-4 mr-2 ${hasUserLikedDiscussion(discussion.id) ? "fill-current" : ""}`} />
-                  {discussion.likes_count || 0}
+                  {discussion.likes_count}
                 </Button>
                 <Button
                   variant="ghost"
@@ -299,7 +309,7 @@ const Discussion = () => {
                   )}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  {comments?.length || 0} Comments
+                  {comments?.length} Comments
                 </Button>
               </div>
 
