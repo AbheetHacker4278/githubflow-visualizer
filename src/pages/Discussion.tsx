@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,12 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Heart, Image, Loader2, Send, Calendar, User } from "lucide-react";
+import { MessageCircle, Heart, Image, Loader2, Send } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface Discussion {
   id: string;
@@ -21,7 +18,6 @@ interface Discussion {
   created_at: string;
   user_id: string;
   likes_count: number;
-  comments_count?: number;
 }
 
 interface Comment {
@@ -30,10 +26,6 @@ interface Comment {
   created_at: string;
   user_id: string;
   discussion_id: string;
-  user?: {
-    name?: string;
-    avatar_url?: string;
-  };
 }
 
 interface Like {
@@ -50,84 +42,24 @@ const Discussion = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>({});
-  const [expandedDiscussions, setExpandedDiscussions] = useState<Set<string>>(new Set());
+  const [comment, setComment] = useState("");
+  const [selectedDiscussion, setSelectedDiscussion] = useState<string | null>(null);
 
-  // Fetch discussions with likes and comments count
+  // Fetch discussions with likes count
   const { data: discussions, isLoading } = useQuery({
     queryKey: ["discussions"],
     queryFn: async () => {
-      const { data: discussionsData, error: discussionsError } = await supabase
+      const { data, error } = await supabase
         .from("discussions")
-        .select(`
-          *,
-          comments:comments(count),
-          likes:likes(count)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (discussionsError) throw discussionsError;
-
-      return discussionsData.map(discussion => ({
-        ...discussion,
-        comments_count: discussion.comments?.[0]?.count || 0,
-        likes_count: discussion.likes?.[0]?.count || 0
-      })) as Discussion[];
-    },
-  });
-
-  // Fetch comments for all expanded discussions
-  const { data: commentsMap = {} } = useQuery({
-    queryKey: ["comments", Array.from(expandedDiscussions)],
-    queryFn: async () => {
-      const expandedDiscussionsArray = Array.from(expandedDiscussions);
-      if (expandedDiscussionsArray.length === 0) return {};
-
-      const { data, error } = await supabase
-        .from("comments")
-        .select(`
-          *,
-          user:profiles(name, avatar_url)
-        `)
-        .in("discussion_id", expandedDiscussionsArray)
-        .order("created_at", { ascending: true });
-
       if (error) throw error;
-
-      // Group comments by discussion_id
-      return (data as Comment[]).reduce((acc, comment) => {
-        if (!acc[comment.discussion_id]) {
-          acc[comment.discussion_id] = [];
-        }
-        acc[comment.discussion_id].push(comment);
-        return acc;
-      }, {} as { [key: string]: Comment[] });
+      return data as Discussion[];
     },
-    enabled: expandedDiscussions.size > 0,
   });
 
-  const toggleComments = (discussionId: string) => {
-    setExpandedDiscussions(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(discussionId)) {
-        newSet.delete(discussionId);
-      } else {
-        newSet.add(discussionId);
-      }
-      return newSet;
-    });
-  };
-
-  // // Auto-expand discussions with comments
-  // useEffect(() => {
-  //   if (discussions) {
-  //     const discussionsWithComments = discussions
-  //       .filter(d => d.comments_count > 0)
-  //       .map(d => d.id);
-  //     setExpandedDiscussions(new Set(discussionsWithComments));
-  //   }
-  // }, [discussions]);
-
+  // Fetch user's likes
   const { data: userLikes } = useQuery({
     queryKey: ["likes", session?.user?.id],
     queryFn: async () => {
@@ -143,25 +75,43 @@ const Discussion = () => {
     enabled: !!session?.user,
   });
 
+  // Fetch comments for a discussion
+  const { data: comments } = useQuery({
+    queryKey: ["comments", selectedDiscussion],
+    queryFn: async () => {
+      if (!selectedDiscussion) return [];
+      const { data, error } = await supabase
+        .from("comments")
+        .select("*")
+        .eq("discussion_id", selectedDiscussion)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      return data as Comment[];
+    },
+    enabled: !!selectedDiscussion,
+  });
+
+  // Create discussion mutation
   const createDiscussion = useMutation({
     mutationFn: async () => {
       if (!session?.user) throw new Error("Must be logged in");
-
+      
       let image_url = null;
       if (image) {
         const fileExt = image.name.split(".").pop();
         const filePath = `${crypto.randomUUID()}.${fileExt}`;
-
+        
         const { error: uploadError } = await supabase.storage
           .from("discussion_images")
           .upload(filePath, image);
-
+          
         if (uploadError) throw uploadError;
-
+        
         const { data: { publicUrl } } = supabase.storage
           .from("discussion_images")
           .getPublicUrl(filePath);
-
+          
         image_url = publicUrl;
       }
 
@@ -193,28 +143,22 @@ const Discussion = () => {
     },
   });
 
+  // Create comment mutation
   const createComment = useMutation({
-    mutationFn: async (discussionId: string) => {
-      if (!session?.user) throw new Error("Must be logged in");
-
-      const commentContent = commentInputs[discussionId];
-      if (!commentContent) return;
-
+    mutationFn: async () => {
+      if (!session?.user || !selectedDiscussion) throw new Error("Must be logged in");
+      
       const { error } = await supabase.from("comments").insert({
-        content: commentContent,
-        discussion_id: discussionId,
+        content: comment,
+        discussion_id: selectedDiscussion,
         user_id: session.user.id,
       });
 
       if (error) throw error;
     },
-    onSuccess: (_, discussionId) => {
-      queryClient.invalidateQueries({ queryKey: ["comments", Array.from(expandedDiscussions)] });
-      queryClient.invalidateQueries({ queryKey: ["discussions"] });
-      setCommentInputs(prev => ({
-        ...prev,
-        [discussionId]: "",
-      }));
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", selectedDiscussion] });
+      setComment("");
       toast({
         title: "Success",
         description: "Comment added successfully",
@@ -229,10 +173,11 @@ const Discussion = () => {
     },
   });
 
+  // Toggle like mutation
   const toggleLike = useMutation({
     mutationFn: async (discussionId: string) => {
       if (!session?.user) throw new Error("Must be logged in");
-
+      
       const { data: existingLike } = await supabase
         .from("likes")
         .select()
@@ -257,8 +202,16 @@ const Discussion = () => {
       queryClient.invalidateQueries({ queryKey: ["discussions"] });
       queryClient.invalidateQueries({ queryKey: ["likes", session?.user?.id] });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
+  // Check if user has liked a discussion
   const hasUserLikedDiscussion = (discussionId: string) => {
     return userLikes?.some(like => like.discussion_id === discussionId);
   };
@@ -273,155 +226,110 @@ const Discussion = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Discussions</h1>
-
+      
       {/* Create Discussion Form */}
-      <Card className="mb-8">
-        <CardHeader>
-          <h2 className="text-xl font-semibold">Create New Discussion</h2>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="mb-8 p-4 bg-card rounded-lg border">
+        <h2 className="text-xl font-semibold mb-4">Create New Discussion</h2>
+        <Input
+          placeholder="Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="mb-4"
+        />
+        <Textarea
+          placeholder="Content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          className="mb-4"
+        />
+        <div className="flex gap-4 mb-4">
           <Input
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files?.[0] || null)}
           />
-          <Textarea
-            placeholder="Share your thoughts..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="min-h-[100px]"
-          />
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImage(e.target.files?.[0] || null)}
-              />
-              {image && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Selected: {image.name}
-                </p>
-              )}
-            </div>
-            <Button
-              onClick={() => createDiscussion.mutate()}
-              disabled={createDiscussion.isPending || !title || !content}
-              className="min-w-[120px]"
-            >
-              {createDiscussion.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Post"
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          <Button
+            onClick={() => createDiscussion.mutate()}
+            disabled={createDiscussion.isPending || !title || !content}
+          >
+            {createDiscussion.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Post Discussion"
+            )}
+          </Button>
+        </div>
+      </div>
 
       {/* Discussions List */}
       {isLoading ? (
-        <div className="flex justify-center p-12">
+        <div className="flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       ) : (
         <div className="space-y-6">
           {discussions?.map((discussion) => (
-            <Card key={discussion.id} className="overflow-hidden">
-              <CardHeader>
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-semibold">{discussion.title}</h3>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span className="text-sm text-muted-foreground">
-                      {format(new Date(discussion.created_at), "MMM d, yyyy")}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-muted-foreground">{discussion.content}</p>
-              </CardHeader>
-
+            <div key={discussion.id} className="p-4 bg-card rounded-lg border">
+              <h3 className="text-xl font-semibold mb-2">{discussion.title}</h3>
+              <p className="text-muted-foreground mb-4">{discussion.content}</p>
               {discussion.image_url && (
-                <div className="px-6">
-                  <img
-                    src={discussion.image_url}
-                    alt="Discussion"
-                    className="w-full rounded-lg"
-                  />
+                <img
+                  src={discussion.image_url}
+                  alt="Discussion"
+                  className="max-w-md rounded-lg mb-4"
+                />
+              )}
+              <div className="flex items-center gap-4 mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleLike.mutate(discussion.id)}
+                  className={hasUserLikedDiscussion(discussion.id) ? "text-red-500" : ""}
+                >
+                  <Heart className={`h-4 w-4 mr-2 ${hasUserLikedDiscussion(discussion.id) ? "fill-current" : ""}`} />
+                  {discussion.likes_count || 0}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedDiscussion(
+                    selectedDiscussion === discussion.id ? null : discussion.id
+                  )}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  {comments?.length || 0} Comments
+                </Button>
+              </div>
+
+              {/* Comments Section */}
+              {selectedDiscussion === discussion.id && (
+                <div className="mt-4 space-y-4">
+                  {comments?.map((comment) => (
+                    <div key={comment.id} className="p-3 bg-muted rounded">
+                      <p>{comment.content}</p>
+                      <small className="text-muted-foreground">
+                        {format(new Date(comment.created_at), "PPp")}
+                      </small>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add a comment..."
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => createComment.mutate()}
+                      disabled={createComment.isPending || !comment}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
-
-              <CardFooter className="flex flex-col gap-4 pt-4">
-                <div className="flex items-center gap-4 w-full">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleLike.mutate(discussion.id)}
-                    className={`gap-2 ${hasUserLikedDiscussion(discussion.id) ? "text-red-500" : ""}`}
-                  >
-                    <Heart
-                      className={`h-4 w-4 ${hasUserLikedDiscussion(discussion.id) ? "fill-current" : ""}`}
-                    />
-                    <span>{discussion.likes_count || 0}</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleComments(discussion.id)}
-                    className="gap-2"
-                  >
-                    <Badge variant="secondary" className="gap-2">
-                      <MessageCircle className="h-4 w-4" />
-                      {discussion.comments_count || 0} Comments
-                    </Badge>
-                  </Button>
-                </div>
-
-                {/* Comments Section */}
-                {expandedDiscussions.has(discussion.id) && (
-                  <div className="w-full space-y-4 pt-4 border-t">
-                    {/* Comment input */}
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Add a comment..."
-                        value={commentInputs[discussion.id] || ""}
-                        onChange={(e) => setCommentInputs(prev => ({
-                          ...prev,
-                          [discussion.id]: e.target.value
-                        }))}
-                      />
-                      <Button
-                        onClick={() => createComment.mutate(discussion.id)}
-                        disabled={!commentInputs[discussion.id]}
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    {/* Comments list */}
-                    <div className="space-y-3">
-                      {commentsMap[discussion.id]?.map((comment) => (
-                        <div key={comment.id} className="flex gap-3 p-3 bg-muted rounded-lg">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>
-                              <User className="h-4 w-4" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <p className="text-sm">{comment.content}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(comment.created_at), "MMM d, yyyy 'at' h:mm a")}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardFooter>
-            </Card>
+            </div>
           ))}
         </div>
       )}
