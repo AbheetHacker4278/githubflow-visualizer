@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Heart, Image, Loader2, Send, Trash2, XCircle } from "lucide-react";
+import { MessageCircle, Heart, Image, Loader2, Send, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
@@ -74,29 +74,7 @@ const Discussion = () => {
     mutationFn: async (discussionId: string) => {
       if (!session?.user) throw new Error("Must be logged in");
 
-      // Get the discussion to find the image URL
-      const { data: discussion, error: fetchError } = await supabase
-        .from("discussions")
-        .select("image_url")
-        .eq("id", discussionId)
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // If there's an image, delete it from storage
-      if (discussion?.image_url) {
-        const filename = discussion.image_url.split("/").pop();
-        if (filename) {
-          const { error: storageError } = await supabase.storage
-            .from("discussion_images")
-            .remove([filename]);
-
-          if (storageError) throw storageError;
-        }
-      }
-
-      // Delete comments
+      // First, delete all comments for this discussion
       const { error: commentsError } = await supabase
         .from("comments")
         .delete()
@@ -104,7 +82,7 @@ const Discussion = () => {
 
       if (commentsError) throw commentsError;
 
-      // Delete likes
+      // Then, delete all likes for this discussion
       const { error: likesError } = await supabase
         .from("likes")
         .delete()
@@ -112,12 +90,12 @@ const Discussion = () => {
 
       if (likesError) throw likesError;
 
-      // Delete the discussion
+      // Finally, delete the discussion itself
       const { error } = await supabase
         .from("discussions")
         .delete()
         .eq("id", discussionId)
-        .eq("user_id", session.user.id);
+        .eq("user_id", session.user.id); // Ensure user can only delete their own discussions
 
       if (error) throw error;
     },
@@ -126,58 +104,6 @@ const Discussion = () => {
       toast({
         title: "Success",
         description: "Discussion deleted successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  //image deleted
-  const deleteImage = useMutation({
-    mutationFn: async (discussionId: string) => {
-      if (!session?.user) throw new Error("Must be logged in");
-
-      // Get the discussion to find the image URL
-      const { data: discussion, error: fetchError } = await supabase
-        .from("discussions")
-        .select("image_url")
-        .eq("id", discussionId)
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (fetchError) throw fetchError;
-      if (!discussion?.image_url) return;
-
-      // Extract filename from URL
-      const filename = discussion.image_url.split("/").pop();
-      if (!filename) throw new Error("Invalid image URL");
-
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from("discussion_images")
-        .remove([filename]);
-
-      if (storageError) throw storageError;
-
-      // Update discussion to remove image_url
-      const { error: updateError } = await supabase
-        .from("discussions")
-        .update({ image_url: null })
-        .eq("id", discussionId)
-        .eq("user_id", session.user.id);
-
-      if (updateError) throw updateError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["discussions"] });
-      toast({
-        title: "Success",
-        description: "Image deleted successfully",
       });
     },
     onError: (error: Error) => {
@@ -421,29 +347,60 @@ const Discussion = () => {
               </div>
               <p className="text-muted-foreground mb-4">{discussion.content}</p>
               {discussion.image_url && (
-                <div className="relative max-w-md mb-4">
-                  <img
-                    src={discussion.image_url}
-                    alt="Discussion"
-                    className="rounded-lg"
-                  />
-                  {discussion.user_id === session?.user?.id && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => {
-                        if (window.confirm("Are you sure you want to delete this image?")) {
-                          deleteImage.mutate(discussion.id);
-                        }
-                      }}
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </Button>
+                <img
+                  src={discussion.image_url}
+                  alt="Discussion"
+                  className="max-w-md rounded-lg mb-4"
+                />
+              )}
+              <div className="flex items-center gap-4 mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleLike.mutate(discussion.id)}
+                  className={hasUserLikedDiscussion(discussion.id) ? "text-red-500" : ""}
+                >
+                  <Heart className={`h-4 w-4 mr-2 ${hasUserLikedDiscussion(discussion.id) ? "fill-current" : ""}`} />
+                  {discussion.likes_count}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedDiscussion(
+                    selectedDiscussion === discussion.id ? null : discussion.id
                   )}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  {discussion.comments_count || 0} Comments
+                </Button>
+              </div>
+
+              {/* Comments Section */}
+              {selectedDiscussion === discussion.id && (
+                <div className="mt-4 space-y-4">
+                  {comments?.map((comment) => (
+                    <div key={comment.id} className="p-3 bg-muted rounded">
+                      <p>{comment.content}</p>
+                      <small className="text-muted-foreground">
+                        {format(new Date(comment.created_at), "PPp")}
+                      </small>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add a comment..."
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => createComment.mutate()}
+                      disabled={createComment.isPending || !comment}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
-              {/* ... (keep existing like/comment buttons and comments section) */}
             </div>
           ))}
         </div>
