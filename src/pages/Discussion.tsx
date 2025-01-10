@@ -106,15 +106,27 @@ const Discussion = () => {
     enabled: expandedDiscussions.size > 0,
   });
 
-  // Auto-expand discussions with comments
-  useEffect(() => {
-    if (discussions) {
-      const discussionsWithComments = discussions
-        .filter(d => d.comments_count > 0)
-        .map(d => d.id);
-      setExpandedDiscussions(new Set(discussionsWithComments));
-    }
-  }, [discussions]);
+  const toggleComments = (discussionId: string) => {
+    setExpandedDiscussions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(discussionId)) {
+        newSet.delete(discussionId);
+      } else {
+        newSet.add(discussionId);
+      }
+      return newSet;
+    });
+  };
+
+  // // Auto-expand discussions with comments
+  // useEffect(() => {
+  //   if (discussions) {
+  //     const discussionsWithComments = discussions
+  //       .filter(d => d.comments_count > 0)
+  //       .map(d => d.id);
+  //     setExpandedDiscussions(new Set(discussionsWithComments));
+  //   }
+  // }, [discussions]);
 
   const { data: userLikes } = useQuery({
     queryKey: ["likes", session?.user?.id],
@@ -134,22 +146,22 @@ const Discussion = () => {
   const createDiscussion = useMutation({
     mutationFn: async () => {
       if (!session?.user) throw new Error("Must be logged in");
-      
+
       let image_url = null;
       if (image) {
         const fileExt = image.name.split(".").pop();
         const filePath = `${crypto.randomUUID()}.${fileExt}`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from("discussion_images")
           .upload(filePath, image);
-          
+
         if (uploadError) throw uploadError;
-        
+
         const { data: { publicUrl } } = supabase.storage
           .from("discussion_images")
           .getPublicUrl(filePath);
-          
+
         image_url = publicUrl;
       }
 
@@ -184,7 +196,7 @@ const Discussion = () => {
   const createComment = useMutation({
     mutationFn: async (discussionId: string) => {
       if (!session?.user) throw new Error("Must be logged in");
-      
+
       const commentContent = commentInputs[discussionId];
       if (!commentContent) return;
 
@@ -220,7 +232,7 @@ const Discussion = () => {
   const toggleLike = useMutation({
     mutationFn: async (discussionId: string) => {
       if (!session?.user) throw new Error("Must be logged in");
-      
+
       const { data: existingLike } = await supabase
         .from("likes")
         .select()
@@ -263,7 +275,7 @@ const Discussion = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <h1 className="text-3xl font-bold mb-8">Discussions</h1>
-      
+
       {/* Create Discussion Form */}
       <Card className="mb-8">
         <CardHeader>
@@ -330,7 +342,7 @@ const Discussion = () => {
                 </div>
                 <p className="text-muted-foreground">{discussion.content}</p>
               </CardHeader>
-              
+
               {discussion.image_url && (
                 <div className="px-6">
                   <img
@@ -340,7 +352,7 @@ const Discussion = () => {
                   />
                 </div>
               )}
-              
+
               <CardFooter className="flex flex-col gap-4 pt-4">
                 <div className="flex items-center gap-4 w-full">
                   <Button
@@ -349,16 +361,22 @@ const Discussion = () => {
                     onClick={() => toggleLike.mutate(discussion.id)}
                     className={`gap-2 ${hasUserLikedDiscussion(discussion.id) ? "text-red-500" : ""}`}
                   >
-                    <Heart 
+                    <Heart
                       className={`h-4 w-4 ${hasUserLikedDiscussion(discussion.id) ? "fill-current" : ""}`}
                     />
                     <span>{discussion.likes_count || 0}</span>
                   </Button>
-                  
-                  <Badge variant="secondary" className="gap-2">
-                    <MessageCircle className="h-4 w-4" />
-                    {discussion.comments_count || 0} Comments
-                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleComments(discussion.id)}
+                    className="gap-2"
+                  >
+                    <Badge variant="secondary" className="gap-2">
+                      <MessageCircle className="h-4 w-4" />
+                      {discussion.comments_count || 0} Comments
+                    </Badge>
+                  </Button>
                 </div>
 
                 {/* Comments Section */}
@@ -381,7 +399,7 @@ const Discussion = () => {
                         <Send className="h-4 w-4" />
                       </Button>
                     </div>
-                    
+
                     {/* Comments list */}
                     <div className="space-y-3">
                       {commentsMap[discussion.id]?.map((comment) => (
