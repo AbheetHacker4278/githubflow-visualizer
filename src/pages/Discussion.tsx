@@ -50,7 +50,7 @@ const Discussion = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [comment, setComment] = useState("");
+  const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>({});
   const [expandedDiscussions, setExpandedDiscussions] = useState<Set<string>>(new Set());
 
   // Fetch discussions with likes and comments count
@@ -68,13 +68,42 @@ const Discussion = () => {
 
       if (discussionsError) throw discussionsError;
 
-      // Transform the data to include comments_count
       return discussionsData.map(discussion => ({
         ...discussion,
         comments_count: discussion.comments?.[0]?.count || 0,
         likes_count: discussion.likes?.[0]?.count || 0
       })) as Discussion[];
     },
+  });
+
+  // Fetch comments for all expanded discussions
+  const { data: commentsMap = {} } = useQuery({
+    queryKey: ["comments", Array.from(expandedDiscussions)],
+    queryFn: async () => {
+      const expandedDiscussionsArray = Array.from(expandedDiscussions);
+      if (expandedDiscussionsArray.length === 0) return {};
+
+      const { data, error } = await supabase
+        .from("comments")
+        .select(`
+          *,
+          user:profiles(name, avatar_url)
+        `)
+        .in("discussion_id", expandedDiscussionsArray)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      // Group comments by discussion_id
+      return (data as Comment[]).reduce((acc, comment) => {
+        if (!acc[comment.discussion_id]) {
+          acc[comment.discussion_id] = [];
+        }
+        acc[comment.discussion_id].push(comment);
+        return acc;
+      }, {} as { [key: string]: Comment[] });
+    },
+    enabled: expandedDiscussions.size > 0,
   });
 
   // Auto-expand discussions with comments
@@ -87,7 +116,6 @@ const Discussion = () => {
     }
   }, [discussions]);
 
-  // Rest of the queries remain the same...
   const { data: userLikes } = useQuery({
     queryKey: ["likes", session?.user?.id],
     queryFn: async () => {
@@ -103,25 +131,36 @@ const Discussion = () => {
     enabled: !!session?.user,
   });
 
-  // Enhanced comments query with user information
-  const getCommentsForDiscussion = async (discussionId: string) => {
-    const { data, error } = await supabase
-      .from("comments")
-      .select(`
-        *,
-        user:profiles(name, avatar_url)
-      `)
-      .eq("discussion_id", discussionId)
-      .order("created_at", { ascending: true });
-
-    if (error) throw error;
-    return data as Comment[];
-  };
-
-  // Mutations remain largely the same, but with UI feedback improvements...
   const createDiscussion = useMutation({
     mutationFn: async () => {
-      // ... (same implementation)
+      if (!session?.user) throw new Error("Must be logged in");
+      
+      let image_url = null;
+      if (image) {
+        const fileExt = image.name.split(".").pop();
+        const filePath = `${crypto.randomUUID()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("discussion_images")
+          .upload(filePath, image);
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from("discussion_images")
+          .getPublicUrl(filePath);
+          
+        image_url = publicUrl;
+      }
+
+      const { error } = await supabase.from("discussions").insert({
+        title,
+        content,
+        image_url,
+        user_id: session.user.id,
+      });
+
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discussions"] });
@@ -131,6 +170,49 @@ const Discussion = () => {
       toast({
         title: "Success",
         description: "Discussion created successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createComment = useMutation({
+    mutationFn: async (discussionId: string) => {
+      if (!session?.user) throw new Error("Must be logged in");
+      
+      const commentContent = commentInputs[discussionId];
+      if (!commentContent) return;
+
+      const { error } = await supabase.from("comments").insert({
+        content: commentContent,
+        discussion_id: discussionId,
+        user_id: session.user.id,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: (_, discussionId) => {
+      queryClient.invalidateQueries({ queryKey: ["comments", Array.from(expandedDiscussions)] });
+      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      setCommentInputs(prev => ({
+        ...prev,
+        [discussionId]: "",
+      }));
+      toast({
+        title: "Success",
+        description: "Comment added successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });
@@ -286,14 +368,15 @@ const Discussion = () => {
                     <div className="flex gap-2">
                       <Input
                         placeholder="Add a comment..."
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
+                        value={commentInputs[discussion.id] || ""}
+                        onChange={(e) => setCommentInputs(prev => ({
+                          ...prev,
+                          [discussion.id]: e.target.value
+                        }))}
                       />
                       <Button
-                        onClick={() => {
-                          createComment.mutate(discussion.id);
-                        }}
-                        disabled={!comment}
+                        onClick={() => createComment.mutate(discussion.id)}
+                        disabled={!commentInputs[discussion.id]}
                       >
                         <Send className="h-4 w-4" />
                       </Button>
@@ -301,7 +384,7 @@ const Discussion = () => {
                     
                     {/* Comments list */}
                     <div className="space-y-3">
-                      {comments?.map((comment) => (
+                      {commentsMap[discussion.id]?.map((comment) => (
                         <div key={comment.id} className="flex gap-3 p-3 bg-muted rounded-lg">
                           <Avatar className="h-8 w-8">
                             <AvatarFallback>
