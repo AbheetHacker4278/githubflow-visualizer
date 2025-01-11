@@ -38,7 +38,7 @@ const Landing = () => {
     { label: "Features", href: "#features" },
     { label: "Documentation", href: "#docs" },
     { label: "About Us", href: "#about" },
-    // { label: "Discussion", href: "/discussion" },
+    { label: "Discussion", href: "/discussion" },
   ];
 
   const features = [
