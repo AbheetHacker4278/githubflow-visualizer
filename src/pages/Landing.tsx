@@ -302,7 +302,8 @@ const Landing = () => {
                       transition={{ duration: 1 }}
                     />
                     <motion.img
-                      src="https://metaversus-web3.vercel.app/get-started.png"
+                      // src="https://metaversus-web3.vercel.app/get-started.png"
+                      src="https://img.freepik.com/premium-photo/happy-makar-sankranti-kite-festival-greeting-card_948873-17467.jpg?semt=ais_hybrid"
                       alt="GitHub Flow Visualization"
                       className="w-full h-full object-cover"
                       initial={{ scale: 1 }}
