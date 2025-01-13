@@ -120,7 +120,7 @@ const Landing = () => {
             {/* Logo */}
             <a href="/" className="flex items-center space-x-2">
               <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
-                GitViz
+                GitViz🪁
               </span>
             </a>
 
@@ -243,9 +243,9 @@ const Landing = () => {
                   backgroundClip: "text",
                 }}
               >
-                Visualize Your
+                Visualize Your 🪁
                 <br />
-                GitHub Universe
+                🪁GitHub Universe
               </motion.h1>
               <p className="text-zinc-400 text-lg md:text-xl mb-8 max-w-xl">
                 Transform your development insights with powerful visualization tools. Make data-driven decisions faster than ever before.
