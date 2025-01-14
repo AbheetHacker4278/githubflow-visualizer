@@ -9,6 +9,7 @@ import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Discussion from "./pages/Discussion";
+import Documentation from "./components/Documentation";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/discussion" element={<Discussion />} />
+            <Route path="/Documentation" element={<Documentation />} />
             <Route
               path="/app"
               element={

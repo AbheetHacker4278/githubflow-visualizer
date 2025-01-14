@@ -17,6 +17,7 @@ import ChatBot from '@/components/ChatBot';
 import ChatbotNotification from '@/components/ChatbotNotification';
 import { UserMenu } from '@/components/UserMenu';
 import { VisualizationHistory } from '@/components/VisualizationHistory';
+import Documentation from '../components/Documentation';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ const Landing = () => {
 
   const navLinks = [
     { label: "Features", href: "#features" },
-    { label: "Documentation", href: "#docs" },
+    { label: "Documentation", href: "/Documentation" },
     { label: "About Us", href: "#about" },
     // { label: "Discussion", href: "/discussion" },
   ];
