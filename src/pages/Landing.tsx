@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
+import { FaCheck, FaClock } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BarChart2, Code2, GitBranch, Github, Twitter, Mail, ExternalLink, Menu, X } from 'lucide-react';
+import { ArrowRight, BarChart2, Code2, GitBranch, Github, Twitter, Mail, ExternalLink, Menu, X, Check } from 'lucide-react';
 import { motion } from "framer-motion";
 import { useAnimateInView } from '@/hooks/useAnimateInView';
 import GitHubReleaseBadge from '@/components/GitHubReleaseBadge';
@@ -121,7 +122,7 @@ const Landing = () => {
             {/* Logo */}
             <a href="/" className="flex items-center space-x-2">
               <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
-                GitViz🪁
+                GitViz
               </span>
             </a>
 
@@ -172,9 +173,8 @@ const Landing = () => {
 
           {/* Mobile Navigation */}
           <div
-            className={`md:hidden transition-all duration-300 ease-in-out ${
-              isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
-            }`}
+            className={`md:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+              }`}
           >
             <div className="py-4 space-y-4 bg-gray-900 text-white">
               {navLinks.map((link, index) => (
@@ -244,9 +244,9 @@ const Landing = () => {
                   backgroundClip: "text",
                 }}
               >
-                Visualize Your 🪁
+                Visualize Your
                 <br />
-                🪁GitHub Universe
+                GitHub Universe
               </motion.h1>
               <p className="text-zinc-400 text-lg md:text-xl mb-8 max-w-xl">
                 Transform your development insights with powerful visualization tools. Make data-driven decisions faster than ever before.
@@ -303,8 +303,7 @@ const Landing = () => {
                       transition={{ duration: 1 }}
                     />
                     <motion.img
-                      // src="https://metaversus-web3.vercel.app/get-started.png"
-                      src="https://img.freepik.com/premium-photo/happy-makar-sankranti-kite-festival-greeting-card_948873-17467.jpg?semt=ais_hybrid"
+                      src="https://metaversus-web3.vercel.app/get-started.png"
                       alt="GitHub Flow Visualization"
                       className="w-full h-full object-cover"
                       initial={{ scale: 1 }}
@@ -371,11 +370,36 @@ const Landing = () => {
             <div className="relative">
               <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-px bg-gradient-to-b from-emerald-500/50 to-transparent" />
               {[
-                { year: "2025 - Phase 1", title: "Launch", description: "Initial platform release with core features" },
-                { year: "2025 - Phase 2", title: "Feature - 1", description: "Discussion Page for Developers" },
-                { year: "2025 - Phase 3", title: "Feature - 2", description: "AI powered Advanced analytics " },
-                { year: "2025 - Phase 4", title: "Feature - 3", description: "Integrated Development Enviorment" },
-                { year: "2025 - Phase 5", title: "Expansion", description: "More Features , Coming Soon..." },
+                {
+                  year: "2025 - Phase 1",
+                  title: "Launch",
+                  description: "Initial platform release with core features",
+                  isCompleted: true,
+                },
+                {
+                  year: "2025 - Phase 2",
+                  title: "Feature - 1",
+                  description: "Discussion Page for Developers",
+                  isCompleted: false,
+                },
+                {
+                  year: "2025 - Phase 3",
+                  title: "Feature - 2",
+                  description: "AI powered Advanced analytics",
+                  isCompleted: false,
+                },
+                {
+                  year: "2025 - Phase 4",
+                  title: "Feature - 3",
+                  description: "Integrated Development Environment",
+                  isCompleted: false,
+                },
+                {
+                  year: "2025 - Phase 5",
+                  title: "Expansion",
+                  description: "More Features, Coming Soon...",
+                  isCompleted: false,
+                },
               ].map((item, index) => (
                 <motion.div
                   key={index}
@@ -388,37 +412,28 @@ const Landing = () => {
                 >
                   <div className="flex-1 text-right">
                     <motion.div
-                      className={`space-y-2 ${index % 2 === 0 ? "text-right" : "text-left"} relative`}
+                      className={`space-y-2 ${index % 2 === 0 ? "text-right" : "text-left"
+                        } relative`}
                       whileHover="hover"
                     >
                       <motion.div
                         className="absolute inset-0 bg-emerald-500/10 rounded-lg -z-10"
                         initial={{ opacity: 0 }}
                         variants={{
-                          hover: { opacity: 1 }
+                          hover: { opacity: 1 },
                         }}
                       />
-                      <ElectricityAnimation />
                       <div className="text-emerald-400 font-mono">{item.year}</div>
                       <h3 className="text-xl font-semibold text-white">{item.title}</h3>
                       <p className="text-zinc-400">{item.description}</p>
                     </motion.div>
                   </div>
-                  <div className="relative z-10">
-                    <motion.div
-                      className="w-4 h-4 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 relative"
-                      whileHover="hover"
-                    >
-                      <motion.div
-                        className="absolute inset-0"
-                        variants={{
-                          hover: { scale: 1.5, opacity: 0 }
-                        }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <SparkAnimation />
-                      </motion.div>
-                    </motion.div>
+                  <div className="relative z-10 flex items-center justify-center">
+                    {item.isCompleted ? (
+                      <FaCheck className="w-6 h-6 text-zinc-900 border border-green-600 rounded-full p-1 bg-emerald-400" />
+                    ) : (
+                      <FaClock className="w-6 h-6 text-zinc-900 border border-green-600 rounded-full p-1 bg-yellow-400" />
+                    )}
                   </div>
                   <div className="flex-1" />
                 </motion.div>
@@ -500,7 +515,7 @@ const Landing = () => {
           {/* Statistics Section */}
 
           <h3 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
-              How GitViz is been Optimized
+            How GitViz is been Optimized
           </h3>
           <motion.div
             className="mt-20 grid md:grid-cols-3 gap-8"
