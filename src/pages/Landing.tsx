@@ -248,22 +248,34 @@ const Landing = () => {
                 <br />
                 GitHub Universe
               </motion.h1>
-              <p className="text-zinc-400 text-lg md:text-xl mb-8 max-w-xl">
-                Transform your development insights with powerful visualization tools. Make data-driven decisions faster than ever before.
-              </p>
+              <div className="relative overflow-hidden">
+                <p className="text-lg md:text-xl mb-8 max-w-xl opacity-0 animate-fade-in">
+                  <span className="inline-block animate-slide-up bg-gradient-to-r from-emerald-400 via-yellow-300 to-purple-400 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
+                    Transform your development insights with powerful visualization tools. Make data-driven decisions faster than ever before.
+                  </span>
+                </p>
+              </div>
               <motion.div
                 className="flex flex-wrap gap-4 justify-center lg:justify-start"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.8 }}
               >
-                <Button
+                <button
                   onClick={() => navigate("/app")}
-                  className="border rounded border-purple-500 group px-6 py-6 text-lg bg-transparent hover:bg-white/10 text-white transition-colors duration-300"
+                  className="relative group px-6 py-4 text-lg overflow-hidden rounded border border-purple-500 transition-all duration-300"
                 >
-                  Get Started For Free
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                </Button>
+                  {/* Gradient background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-green-500 to-yellow-500 opacity-0 group-hover:opacity-20 bg-[length:200%_auto] animate-gradient transition-opacity duration-300" />
+
+                  {/* Button content */}
+                  <div className="relative flex items-center justify-center">
+                    <span className="bg-gradient-to-r from-yellow-400 to-emerald-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                      Get Started For Free
+                    </span>
+                    <ArrowRight className="ml-2 h-5 w-5 text-purple-400 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </button>
               </motion.div>
             </div>
             <motion.div
@@ -317,8 +329,14 @@ const Landing = () => {
           </motion.div>
 
           {/* Features Section */}
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
-            How GitViz works
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 relative">
+            <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-blue-500 to-emerald-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+              How GitViz works
+            </span>
+            {/* Create a subtle text shadow effect for depth */}
+            <span className="opacity-0">
+              How GitViz works
+            </span>
           </h2>
           <motion.div
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
@@ -364,8 +382,14 @@ const Landing = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.8 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
-              Development Timeline
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 relative">
+              <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-blue-500 to-emerald-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                Development Timeline
+              </span>
+              {/* Create a subtle text shadow effect for depth */}
+              <span className="opacity-0">
+                Development Timeline
+              </span>
             </h2>
             <div className="relative">
               <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-px bg-gradient-to-b from-emerald-500/50 to-transparent" />
@@ -430,9 +454,15 @@ const Landing = () => {
                   </div>
                   <div className="relative z-10 flex items-center justify-center">
                     {item.isCompleted ? (
-                      <FaCheck className="w-6 h-6 text-zinc-900 border border-green-600 rounded-full p-1 bg-emerald-400" />
+                      <div className='group'>
+                        <FaCheck className="w-6 h-6 text-zinc-900 border border-green-600 rounded-full p-1 bg-emerald-400" />
+                        <span className="absolute invisible group-hover:visible bg-gray-800 text-white px-2 py-1 rounded text-sm -top-8 left-1/2 transform -translate-x-1/2">Completed</span>
+                      </div>
                     ) : (
-                      <FaClock className="w-6 h-6 text-zinc-900 border border-green-600 rounded-full p-1 bg-yellow-400" />
+                      <div className='group'>
+                        <FaClock className="w-6 h-6 text-zinc-900 border border-green-600 rounded-full p-1 bg-yellow-400" />
+                        <span className="absolute invisible group-hover:visible bg-gray-800 text-white px-2 py-1 rounded text-sm -top-8 left-1/2 transform -translate-x-1/2">Pending</span>
+                      </div>
                     )}
                   </div>
                   <div className="flex-1" />
@@ -472,11 +502,19 @@ const Landing = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
               >
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
-                  {aboutContent.mainHeading}
+                <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 relative">
+                  <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-blue-500 to-emerald-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                    {aboutContent.mainHeading}
+                  </span>
+                  {/* Create a subtle text shadow effect for depth */}
+                  <span className="opacity-0">
+                    {aboutContent.mainHeading}
+                  </span>
                 </h2>
-                <p className="text-zinc-400 text-lg leading-relaxed">
-                  {aboutContent.description}
+                <p className="text-lg leading-relaxed overflow-hidden">
+                  <span className="inline-block bg-gradient-to-r from-emerald-400 via-yellow-300 to-purple-400 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
+                    {aboutContent.description}
+                  </span>
                 </p>
               </motion.div>
 
@@ -513,9 +551,14 @@ const Landing = () => {
           </div>
 
           {/* Statistics Section */}
-
-          <h3 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
-            How GitViz is been Optimized
+          <h3 className="text-3xl md:text-4xl font-bold text-center mb-12 relative">
+            <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-blue-500 to-emerald-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+              How GitViz is been Optimized
+            </span>
+            {/* Create a subtle text shadow effect for depth */}
+            <span className="opacity-0">
+              How GitViz is been Optimized
+            </span>
           </h3>
           <motion.div
             className="mt-20 grid md:grid-cols-3 gap-8"
@@ -616,5 +659,39 @@ const Landing = () => {
     </div>
   );
 };
+
+const keyframes = {
+  '@keyframes gradient': {
+    '0%': { backgroundPosition: '0% center' },
+    '100%': { backgroundPosition: '-200% center' },
+  },
+};
+
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes gradient {
+    0% { background-position: 0% center; }
+    100% { background-position: -200% center; }
+  }
+  .animate-gradient {
+    animation: gradient 3s linear infinite;
+  }
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+  @keyframes slideUp {
+    0% { transform: translateY(20px); }
+    100% { transform: translateY(0); }
+  }
+  .animate-slide-up {
+    animation: slideUp 0.8s ease-out forwards;
+  }
+`;
+document.head.appendChild(style);
+
 
 export default Landing;

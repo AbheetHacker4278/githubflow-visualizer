@@ -33,12 +33,12 @@ const ContributorsSection: React.FC = () => {
   };
 
   const cardVariants = {
-    hidden: { 
+    hidden: {
       opacity: 0,
       y: 20,
       scale: 0.95
     },
-    visible: { 
+    visible: {
       opacity: 1,
       y: 0,
       scale: 1,
@@ -61,7 +61,7 @@ const ContributorsSection: React.FC = () => {
 
   const imageVariants = {
     hidden: { scale: 0.8, rotate: -10 },
-    visible: { 
+    visible: {
       scale: 1,
       rotate: 0,
       transition: {
@@ -96,21 +96,17 @@ const ContributorsSection: React.FC = () => {
   return (
     <section className="py-16 bg-transparent overflow-hidden">
       <div className="container mx-auto px-4">
-        <motion.h2
-          className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent"
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            type: "spring",
-            stiffness: 200,
-            damping: 20,
-            duration: 0.8
-          }}
-        >
-          Meet Our Creator
-        </motion.h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 relative">
+          <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-blue-500 to-emerald-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+            Meet Our Creator
+          </span>
+          {/* Create a subtle text shadow effect for depth */}
+          <span className="opacity-0">
+            Meet Our Creator
+          </span>
+        </h2>
 
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 "
           variants={containerVariants}
           initial="hidden"
@@ -148,7 +144,7 @@ const ContributorsSection: React.FC = () => {
                   />
                 </motion.div>
                 <div>
-                  <motion.h3 
+                  <motion.h3
                     className="text-xl font-semibold text-white"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -156,7 +152,7 @@ const ContributorsSection: React.FC = () => {
                   >
                     {contributor.name}
                   </motion.h3>
-                  <motion.p 
+                  <motion.p
                     className="text-emerald-400"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -166,7 +162,7 @@ const ContributorsSection: React.FC = () => {
                   </motion.p>
                 </div>
               </div>
-              <motion.div 
+              <motion.div
                 className="mt-4 flex space-x-3"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}

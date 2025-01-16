@@ -2,24 +2,24 @@ import React, { useState } from 'react';
 import { AlertTriangle, GitBranch, GitCommit, GitMerge } from 'lucide-react';
 
 const challenges = [
-  { 
-    icon: GitBranch, 
-    title: "Branch Management", 
+  {
+    icon: GitBranch,
+    title: "Branch Management",
     description: "Struggling with creating, switching, and managing multiple branches."
   },
-  { 
-    icon: GitCommit, 
-    title: "Commit Best Practices", 
+  {
+    icon: GitCommit,
+    title: "Commit Best Practices",
     description: "Unsure about how to write meaningful commit messages and when to commit."
   },
-  { 
-    icon: GitMerge, 
-    title: "Merge Conflicts", 
+  {
+    icon: GitMerge,
+    title: "Merge Conflicts",
     description: "Difficulty in resolving merge conflicts and understanding their causes."
   },
-  { 
-    icon: AlertTriangle, 
-    title: "GitHub Workflow", 
+  {
+    icon: AlertTriangle,
+    title: "GitHub Workflow",
     description: "Confusion about the overall GitHub workflow and collaboration process."
   },
 ];
@@ -29,10 +29,16 @@ const DeveloperChallenges = () => {
 
   return (
     <div className="mt-16">
-      <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent animate-fade-in">
-        Common Challenges for New Developers
+      <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 relative">
+        <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-blue-500 to-emerald-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+          Common Challenges for New Developers
+        </span>
+        {/* Create a subtle text shadow effect for depth */}
+        <span className="opacity-0">
+          Common Challenges for New Developers
+        </span>
       </h2>
-      
+
       <div className="grid md:grid-cols-2 gap-8">
         {challenges.map((challenge, index) => (
           <div
@@ -52,12 +58,12 @@ const DeveloperChallenges = () => {
             onMouseLeave={() => setHoveredIndex(null)}
           >
             <div className="relative">
-              <challenge.icon 
+              <challenge.icon
                 className={`
                   w-10 h-10 mb-4
                   transition-all duration-300
                   ${hoveredIndex === index ? 'text-emerald-300 scale-110' : 'text-emerald-400'}
-                `} 
+                `}
               />
               <div className={`
                 absolute inset-0 bg-emerald-400 opacity-20 rounded-full w-10 h-10
