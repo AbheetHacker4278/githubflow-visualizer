@@ -6,9 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Heart, Image, Loader2, Send, Trash2 } from "lucide-react";
+import { MessageCircle, Heart, Image, Loader2, Send, Trash2, Menu, X } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import NavAnimation from "./NavAnimation";
+import { UserMenu } from "@/components/UserMenu";
+import VisualizationHistory from "@/components/VisualizationHistory";
 
 interface Discussion {
   id: string;
@@ -46,6 +49,16 @@ const Discussion = () => {
   const [image, setImage] = useState<File | null>(null);
   const [comment, setComment] = useState("");
   const [selectedDiscussion, setSelectedDiscussion] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+
+  const navLinks = [
+    { label: "Features", href: "#features" },
+    { label: "Documentation", href: "/Documentation" },
+    { label: "About Us", href: "#about" },
+    // { label: "Discussion", href: "/discussion" },
+  ];
 
   // Fetch discussions with likes and comments count
   const { data: discussions, isLoading } = useQuery({
@@ -283,6 +296,104 @@ const Discussion = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+
+<nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-black/30 backdrop-blur-sm border-b border-white/10' : ''}`}>
+        <div className="absolute inset-0 overflow-hidden">
+          <NavAnimation />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex items-center justify-between h-16 md:h-20">
+            {/* Logo */}
+            <a href="/" className="flex items-center space-x-2">
+              <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
+                GitViz
+              </span>
+            </a>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              {navLinks.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.href}
+                  className="text-zinc-400 hover:text-white transition-colors duration-200 text-sm relative group"
+                >
+                  {link.label}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-400 transition-all duration-200 group-hover:w-full" />
+                </a>
+              ))}
+            </div>
+
+            {/* Desktop CTA */}
+            <div className="hidden md:flex items-center space-x-4">
+              {session ? (
+                [
+                  <UserMenu />,
+                  <VisualizationHistory />
+                ]
+              ) : (
+                <Button
+                  onClick={() => navigate("/auth")}
+                  variant="ghost"
+                  className="text-zinc-400 hover:text-white hover:bg-white/10 border rounded-full border-purple-400"
+                >
+                  Sign In
+                </Button>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </div>
+
+          {/* Mobile Navigation */}
+          <div
+            className={`md:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+              }`}
+          >
+            <div className="py-4 space-y-4 bg-gray-900 text-white">
+              {navLinks.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.href}
+                  className="block px-4 py-2 text-zinc-400 hover:text-white transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </a>
+              ))}
+              <div className="pt-4 border-t border-white/10 space-y-4 px-4">
+                {session ? (
+                  <Button
+                    onClick={() => navigate("/app")}
+                    variant="ghost"
+                    className="w-full text-zinc-400 hover:text-white hover:bg-white/10"
+                  >
+                    Go to App
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => navigate("/auth")}
+                    variant="ghost"
+                    className="w-full text-zinc-400 hover:text-white hover:bg-white/10"
+                  >
+                    Sign In
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
       <h1 className="text-3xl font-bold mb-8">Discussions</h1>
 
       {/* Create Discussion Form */}
