@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Heart, Image as ImageIcon, Loader2, Send, Trash2 } from "lucide-react";
+import { MessageCircle, Heart, Image, Loader2, Send, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
@@ -47,6 +47,7 @@ const Discussion = () => {
   const [comment, setComment] = useState("");
   const [selectedDiscussion, setSelectedDiscussion] = useState<string | null>(null);
 
+  // Fetch discussions with likes and comments count
   const { data: discussions, isLoading } = useQuery({
     queryKey: ["discussions"],
     queryFn: async () => {
@@ -73,6 +74,7 @@ const Discussion = () => {
     mutationFn: async (discussionId: string) => {
       if (!session?.user) throw new Error("Must be logged in");
 
+      // First, delete all comments for this discussion
       const { error: commentsError } = await supabase
         .from("comments")
         .delete()
@@ -80,6 +82,7 @@ const Discussion = () => {
 
       if (commentsError) throw commentsError;
 
+      // Then, delete all likes for this discussion
       const { error: likesError } = await supabase
         .from("likes")
         .delete()
@@ -87,11 +90,12 @@ const Discussion = () => {
 
       if (likesError) throw likesError;
 
+      // Finally, delete the discussion itself
       const { error } = await supabase
         .from("discussions")
         .delete()
         .eq("id", discussionId)
-        .eq("user_id", session.user.id);
+        .eq("user_id", session.user.id); // Ensure user can only delete their own discussions
 
       if (error) throw error;
     },
@@ -111,6 +115,7 @@ const Discussion = () => {
     },
   });
 
+  // Fetch user's likes
   const { data: userLikes } = useQuery({
     queryKey: ["likes", session?.user?.id],
     queryFn: async () => {
@@ -126,6 +131,7 @@ const Discussion = () => {
     enabled: !!session?.user,
   });
 
+  // Fetch comments for a discussion
   const { data: comments } = useQuery({
     queryKey: ["comments", selectedDiscussion],
     queryFn: async () => {
@@ -142,6 +148,7 @@ const Discussion = () => {
     enabled: !!selectedDiscussion,
   });
 
+  // Create discussion mutation
   const createDiscussion = useMutation({
     mutationFn: async () => {
       if (!session?.user) throw new Error("Must be logged in");
@@ -192,6 +199,7 @@ const Discussion = () => {
     },
   });
 
+  // Create comment mutation
   const createComment = useMutation({
     mutationFn: async () => {
       if (!session?.user || !selectedDiscussion) throw new Error("Must be logged in");
@@ -221,6 +229,7 @@ const Discussion = () => {
     },
   });
 
+  // Toggle like mutation
   const toggleLike = useMutation({
     mutationFn: async (discussionId: string) => {
       if (!session?.user) throw new Error("Must be logged in");
@@ -258,6 +267,7 @@ const Discussion = () => {
     },
   });
 
+  // Check if user has liked a discussion
   const hasUserLikedDiscussion = (discussionId: string) => {
     return userLikes?.some(like => like.discussion_id === discussionId);
   };
@@ -275,7 +285,8 @@ const Discussion = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Discussions</h1>
 
-      <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
+      {/* Create Discussion Form */}
+      <div className="mb-8 p-4 bg-card rounded-lg border">
         <h2 className="text-xl font-semibold mb-4">Create New Discussion</h2>
         <Input
           placeholder="Title"
@@ -308,6 +319,7 @@ const Discussion = () => {
         </div>
       </div>
 
+      {/* Discussions List */}
       {isLoading ? (
         <div className="flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
@@ -315,7 +327,7 @@ const Discussion = () => {
       ) : (
         <div className="space-y-6">
           {discussions?.map((discussion) => (
-            <div key={discussion.id} className="p-6 bg-white rounded-lg shadow-md">
+            <div key={discussion.id} className="p-4 bg-card rounded-lg border">
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-xl font-semibold">{discussion.title}</h3>
                 {discussion.user_id === session?.user?.id && (
@@ -363,10 +375,11 @@ const Discussion = () => {
                 </Button>
               </div>
 
+              {/* Comments Section */}
               {selectedDiscussion === discussion.id && (
                 <div className="mt-4 space-y-4">
                   {comments?.map((comment) => (
-                    <div key={comment.id} className="p-3 bg-gray-100 rounded">
+                    <div key={comment.id} className="p-3 bg-muted rounded">
                       <p>{comment.content}</p>
                       <small className="text-muted-foreground">
                         {format(new Date(comment.created_at), "PPp")}
