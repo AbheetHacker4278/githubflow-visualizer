@@ -306,7 +306,7 @@ const Discussion = () => {
             {/* Logo */}
             <a href="/" className="flex items-center space-x-2">
               <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
-                GitViz
+                GitViz Discussion Forum
               </span>
             </a>
 
@@ -394,7 +394,7 @@ const Discussion = () => {
           </div>
         </div>
       </nav>
-      <h1 className="text-3xl font-bold mt-8">Discussions</h1>
+      {/* <h1 className="text-3xl font-bold mt-8">Discussions</h1> */}
 
       {/* Create Discussion Form */}
       <div className="mb-2 p-4 pt-10 bg-card rounded-lg border">
