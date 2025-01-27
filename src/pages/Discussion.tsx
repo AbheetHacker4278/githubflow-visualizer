@@ -394,7 +394,7 @@ const Discussion = () => {
           </div>
         </div>
       </nav>
-      <h1 className="text-3xl font-bold mb-8">Discussions</h1>
+      <h1 className="text-3xl font-bold mt-8">Discussions</h1>
 
       {/* Create Discussion Form */}
       <div className="mb-8 p-4 bg-card rounded-lg border">
