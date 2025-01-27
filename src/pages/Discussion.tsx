@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MessageCircle, Heart, Image, Loader2, Send, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Discussion {
   id: string;
@@ -286,7 +287,12 @@ const Discussion = () => {
       <h1 className="text-3xl font-bold mb-8">Discussions</h1>
 
       {/* Create Discussion Form */}
-      <div className="mb-8 p-4 bg-card rounded-lg border">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-8 p-6 bg-card rounded-lg border shadow-sm"
+      >
         <h2 className="text-xl font-semibold mb-4">Create New Discussion</h2>
         <Input
           placeholder="Title"
@@ -317,7 +323,7 @@ const Discussion = () => {
             )}
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Discussions List */}
       {isLoading ? (
@@ -327,8 +333,14 @@ const Discussion = () => {
       ) : (
         <div className="space-y-6">
           {discussions?.map((discussion) => (
-            <div key={discussion.id} className="p-4 bg-card rounded-lg border">
-              <div className="flex justify-between items-start mb-2">
+            <motion.div
+              key={discussion.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="p-6 bg-card rounded-lg border shadow-sm"
+            >
+              <div className="flex justify-between items-start mb-4">
                 <h3 className="text-xl font-semibold">{discussion.title}</h3>
                 {discussion.user_id === session?.user?.id && (
                   <Button
@@ -376,32 +388,45 @@ const Discussion = () => {
               </div>
 
               {/* Comments Section */}
-              {selectedDiscussion === discussion.id && (
-                <div className="mt-4 space-y-4">
-                  {comments?.map((comment) => (
-                    <div key={comment.id} className="p-3 bg-muted rounded">
-                      <p>{comment.content}</p>
-                      <small className="text-muted-foreground">
-                        {format(new Date(comment.created_at), "PPp")}
-                      </small>
+              <AnimatePresence>
+                {selectedDiscussion === discussion.id && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4 space-y-4"
+                  >
+                    {comments?.map((comment) => (
+                      <motion.div
+                        key={comment.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="p-3 bg-muted rounded"
+                      >
+                        <p>{comment.content}</p>
+                        <small className="text-muted-foreground">
+                          {format(new Date(comment.created_at), "PPp")}
+                        </small>
+                      </motion.div>
+                    ))}
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Add a comment..."
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                      />
+                      <Button
+                        onClick={() => createComment.mutate()}
+                        disabled={createComment.isPending || !comment}
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
                     </div>
-                  ))}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add a comment..."
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                    />
-                    <Button
-                      onClick={() => createComment.mutate()}
-                      disabled={createComment.isPending || !comment}
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           ))}
         </div>
       )}
