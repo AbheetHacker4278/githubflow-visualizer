@@ -398,7 +398,7 @@ const Discussion = () => {
 
       {/* Create Discussion Form */}
       <div className="mb-8 p-4 bg-card rounded-lg border">
-        <h2 className="text-xl font-semibold mb-4">Create New Discussion</h2>
+        <h2 className="text-xl font-semibold mb-1">Create New Discussion</h2>
         <Input
           placeholder="Title"
           value={title}
