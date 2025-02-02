@@ -23,7 +23,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { VisualizationHistory } from "@/components/VisualizationHistory";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
-import { LanguageNodeData } from "@/types/nodes";
+import { LanguageNodeData, DeploymentNodeData } from "@/types/nodes";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import ChatBot from "@/components/ChatBot";
@@ -38,6 +38,11 @@ const nodeTypes = {
   language: LanguageNode,
   branch: BranchNode,
 };
+
+// Default empty arrays for type safety
+const defaultCommits = [] as Array<{ sha: string; message: string; date: string }>;
+const defaultTags = [] as Array<{ name: string; type: "lightweight" | "annotated"; message?: string }>;
+const defaultFileChanges = [] as Array<{ path: string; changes: number }>;
 
 export default function Index() {
   const navigate = useNavigate();
@@ -113,14 +118,8 @@ export default function Index() {
       const { owner, repo } = extractRepoInfo(url);
       const { repoData, workflows, commits, deployments, languages, branches } =
         await fetchRepoData(owner, repo);
-      const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
-        repoData,
-        workflows,
-        commits,
-        deployments,
-        languages,
-        branches
-      );
+
+      console.log("Fetched data:", { workflows, commits, deployments, languages, branches });
 
       if (session?.user) {
         const { error } = await supabase.from("visualization_history").insert({
@@ -135,27 +134,29 @@ export default function Index() {
         }
       }
 
-      (window as any).__GITVIZ_DATA__ = {
-        branches,
-        commits,
-        deployments,
-        languages,
-        workflows,
-      };
+      const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
+        repoData,
+        workflows || [],
+        commits || defaultCommits,
+        deployments || [],
+        languages || {},
+        branches || []
+      );
 
       setNodes(newNodes);
       setEdges(newEdges);
-      setBranches(branches.map((branch) => branch.name));
+      setBranches(branches?.map((branch) => branch.name) || []);
 
       toast({
         title: "Success",
         description: `Repository visualization created with ${
-          Object.keys(languages).length
+          Object.keys(languages || {}).length
         } languages${
-          workflows.length > 0 ? ", workflows" : ""
-        }, commits, deployments, and ${branches.length} branches!`,
+          (workflows || []).length > 0 ? ", workflows" : ""
+        }, commits, deployments, and ${branches?.length || 0} branches!`,
       });
     } catch (error: any) {
+      console.error("Visualization error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to fetch repository data",
@@ -379,17 +380,17 @@ export default function Index() {
                 isOpen={!!selectedBranch}
                 onClose={() => setSelectedBranch(null)}
                 branchName={selectedBranch.data.label as string}
-                commits={selectedBranch.data.commits || []}
+                commits={selectedBranch.data.commits || defaultCommits}
                 heatLevel={selectedBranch.data.heatLevel as number}
                 isCollapsed={selectedBranch.data.isCollapsed as boolean}
-                tags={selectedBranch.data.tags || []}
-                fileChanges={selectedBranch.data.fileChanges || []}
+                tags={selectedBranch.data.tags || defaultTags}
+                fileChanges={selectedBranch.data.fileChanges || defaultFileChanges}
                 isFullscreen={isFullscreen}
               />
             )}
 
             {selectedNode?.type === 'deployment' && (
-              <DeploymentDetailsPanel deployment={selectedNode.data} />
+              <DeploymentDetailsPanel deployment={selectedNode.data as DeploymentNodeData} />
             )}
             {branches.length > 0 && (
               <div>
@@ -410,11 +411,11 @@ export default function Index() {
           isOpen={!!selectedBranch}
           onClose={() => setSelectedBranch(null)}
           branchName={selectedBranch.data.label as string}
-          commits={selectedBranch.data.commits || []}
+          commits={selectedBranch.data.commits || defaultCommits}
           heatLevel={selectedBranch.data.heatLevel as number}
           isCollapsed={selectedBranch.data.isCollapsed as boolean}
-          tags={selectedBranch.data.tags || []}
-          fileChanges={selectedBranch.data.fileChanges || []}
+          tags={selectedBranch.data.tags || defaultTags}
+          fileChanges={selectedBranch.data.fileChanges || defaultFileChanges}
           isFullscreen={isFullscreen}
         />
       )}
