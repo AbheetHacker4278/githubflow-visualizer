@@ -421,4 +421,5 @@ export default function Index() {
 
       <ChatBot repoUrl={repoUrl} />
     </div>
+  );
 }

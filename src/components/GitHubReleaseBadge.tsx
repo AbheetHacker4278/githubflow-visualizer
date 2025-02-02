@@ -15,6 +15,7 @@ const GitHubReleaseBadge = () => {
   const [releaseInfo, setReleaseInfo] = useState<ReleaseInfo | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchLatestRelease = async () => {
@@ -23,19 +24,33 @@ const GitHubReleaseBadge = () => {
           'https://api.github.com/repos/AbheetHacker4278/githubflow-visualizer/releases/latest'
         )
 
+        if (response.status === 404) {
+          setError('No releases found for this repository')
+          setReleaseInfo({
+            tag_name: 'v0.0.0',
+            name: 'No Release',
+            published_at: new Date().toISOString(),
+            body: 'This repository has no releases yet.',
+            html_url: 'https://github.com/AbheetHacker4278/githubflow-visualizer/releases',
+          })
+          return
+        }
+
         if (!response.ok) {
-          throw new Error('No release found')
+          throw new Error('Failed to fetch release information')
         }
 
         const data = await response.json()
         setReleaseInfo(data)
+        setError(null)
       } catch (err) {
         console.error('Error fetching release info:', err)
+        setError('Failed to fetch release information')
         setReleaseInfo({
-          tag_name: 'v1.0.0',
-          name: 'Latest Release',
+          tag_name: 'v0.0.0',
+          name: 'Error',
           published_at: new Date().toISOString(),
-          body: 'Unable to fetch release information. Displaying previous version.',
+          body: 'Unable to fetch release information.',
           html_url: 'https://github.com/AbheetHacker4278/githubflow-visualizer/releases',
         })
       } finally {
@@ -79,7 +94,7 @@ const GitHubReleaseBadge = () => {
         <div className="flex items-center space-x-2 px-4 py-1 rounded-full">
           <Tag className="w-4 h-4 text-emerald-400" />
           <span className="text-emerald-400 text-sm font-medium">
-            New Release {releaseInfo.tag_name}
+            {error ? 'No Release' : `Release ${releaseInfo.tag_name}`}
           </span>
         </div>
       </div>
@@ -120,4 +135,3 @@ const GitHubReleaseBadge = () => {
 }
 
 export default GitHubReleaseBadge
-
