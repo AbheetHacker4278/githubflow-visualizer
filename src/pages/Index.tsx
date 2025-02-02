@@ -219,8 +219,8 @@ export default function Index() {
         return;
       }
 
-      // Open GitHub's web editor
-      const editorUrl = `https://github.dev/${owner}/${repo}`;
+      // Open GitHub1s web editor instead of github.dev
+      const editorUrl = `https://github1s.com/${owner}/${repo}`;
       window.open(editorUrl, '_blank');
     } catch (error: any) {
       toast({
