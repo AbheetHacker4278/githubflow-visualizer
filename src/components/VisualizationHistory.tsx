@@ -15,6 +15,15 @@ import { useAuth } from "./AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
+interface HistoryItem {
+  id: string;
+  repo_owner: string;
+  repo_name: string;
+  repo_url: string;
+  last_visited: string;
+  visit_count: number;
+}
+
 export const VisualizationHistory = () => {
   const [open, setOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -22,7 +31,7 @@ export const VisualizationHistory = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: history, isLoading } = useQuery({
+  const { data: history, isLoading } = useQuery<HistoryItem[]>({
     queryKey: ["visualization-history"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -33,7 +42,7 @@ export const VisualizationHistory = () => {
       if (error) throw error;
 
       // Process data to get unique repos with counts
-      const repoMap = data.reduce((acc, item) => {
+      const repoMap = data.reduce((acc: Record<string, HistoryItem>, item) => {
         const repoKey = `${item.repo_owner}/${item.repo_name}`;
         if (!acc[repoKey]) {
           acc[repoKey] = {
