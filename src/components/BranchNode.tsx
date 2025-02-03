@@ -1,8 +1,8 @@
-import { memo, useState, useCallback, useEffect } from "react";
+import { memo, useState, useCallback, useEffect, useRef } from "react";
 import { Handle, Position } from "@xyflow/react";
 import BranchDetailsPanel from "./BranchDetailsPanel";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, ChevronDown, Users, Edit2 } from "lucide-react";
+import { ChevronRight, ChevronDown, Users, Edit2, Move, Trash2 } from "lucide-react";
 import { Contributor } from "@/types/collaboration";
 import { NodeAnnotation } from "@/types/nodes";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,7 +49,10 @@ const BranchNode = memo(({ data, id }: BranchNodeProps) => {
   const [textContent, setTextContent] = useState("");
   const [textColor, setTextColor] = useState("#FFFFFF");
   const [boxColor, setBoxColor] = useState("rgba(0, 0, 0, 0.7)");
+  const [isMoving, setIsMoving] = useState(false);
+  const [annotationPosition, setAnnotationPosition] = useState({ x: -64, y: 0 });
   const { toast } = useToast();
+  const annotationRef = useRef<HTMLDivElement>(null);
 
   const handleClick = useCallback(() => {
     setIsDetailsOpen(true);
@@ -83,16 +86,19 @@ const BranchNode = memo(({ data, id }: BranchNodeProps) => {
         }
 
         if (annotationData) {
+          const position = annotationData.position ? JSON.parse(annotationData.position) : { x: -64, y: 0 };
           setAnnotation({
             id: annotationData.id,
             nodeId: annotationData.node_id,
             textContent: annotationData.text_content,
             textColor: annotationData.text_color,
             boxColor: annotationData.box_color,
+            position,
           });
           setTextContent(annotationData.text_content);
           setTextColor(annotationData.text_color);
           setBoxColor(annotationData.box_color);
+          setAnnotationPosition(position);
         }
       } catch (error) {
         console.error("Error in fetchAnnotation:", error);
@@ -121,23 +127,24 @@ const BranchNode = memo(({ data, id }: BranchNodeProps) => {
         .eq("node_id", id)
         .maybeSingle();
 
+      const annotationData = {
+        text_content: textContent,
+        text_color: textColor,
+        box_color: boxColor,
+        position: JSON.stringify(annotationPosition),
+      };
+
       if (existingAnnotation) {
         const { error } = await supabase
           .from("node_annotations")
-          .update({
-            text_content: textContent,
-            text_color: textColor,
-            box_color: boxColor,
-          })
+          .update(annotationData)
           .eq("id", existingAnnotation.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase.from("node_annotations").insert({
+          ...annotationData,
           node_id: id,
-          text_content: textContent,
-          text_color: textColor,
-          box_color: boxColor,
           repo_url: window.location.href,
           user_id: session.user.id,
         });
@@ -151,6 +158,7 @@ const BranchNode = memo(({ data, id }: BranchNodeProps) => {
         textContent,
         textColor,
         boxColor,
+        position: annotationPosition,
       });
       setIsAnnotationDialogOpen(false);
       toast({
@@ -166,6 +174,55 @@ const BranchNode = memo(({ data, id }: BranchNodeProps) => {
       });
     }
   };
+
+  const handleDeleteAnnotation = async () => {
+    try {
+      if (!annotation?.id) return;
+
+      const { error } = await supabase
+        .from("node_annotations")
+        .delete()
+        .eq("id", annotation.id);
+
+      if (error) throw error;
+
+      setAnnotation(null);
+      toast({
+        title: "Success",
+        description: "Annotation deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting annotation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete annotation",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isMoving || !annotationRef.current) return;
+
+    const rect = annotationRef.current.parentElement?.getBoundingClientRect();
+    if (!rect) return;
+
+    const x = e.clientX - rect.left - annotationRef.current.offsetWidth / 2;
+    const y = e.clientY - rect.top - annotationRef.current.offsetHeight / 2;
+    setAnnotationPosition({ x, y });
+  }, [isMoving]);
+
+  useEffect(() => {
+    if (isMoving) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', () => setIsMoving(false));
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', () => setIsMoving(false));
+    };
+  }, [isMoving, handleMouseMove]);
 
   return (
     <>
@@ -213,12 +270,51 @@ const BranchNode = memo(({ data, id }: BranchNodeProps) => {
         </div>
         {annotation && (
           <div
-            className="absolute -right-64 top-0 p-2 rounded min-w-[200px] max-w-[250px] break-words text-sm"
+            ref={annotationRef}
+            className="absolute p-2 rounded min-w-[200px] max-w-[250px] break-words text-sm"
             style={{
               backgroundColor: annotation.boxColor,
               color: annotation.textColor,
+              left: annotationPosition.x,
+              top: annotationPosition.y,
+              cursor: isMoving ? 'grabbing' : 'grab',
+              zIndex: isMoving ? 1000 : 1,
             }}
           >
+            <div className="flex justify-between items-start mb-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setIsMoving(true);
+                }}
+              >
+                <Move className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 hover:text-red-500"
+                onClick={handleDeleteAnnotation}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <svg
+              className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2"
+              width="20"
+              height="40"
+              viewBox="0 0 20 40"
+            >
+              <path
+                d="M20 0L0 20L20 40"
+                fill="none"
+                stroke={annotation.boxColor}
+                strokeWidth="2"
+              />
+            </svg>
             {annotation.textContent}
           </div>
         )}
