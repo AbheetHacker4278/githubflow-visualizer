@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Discussion from "./pages/Discussion";
 import Documentation from "./components/Documentation";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/discussion" element={<Discussion />} />
             <Route path="/Documentation" element={<Documentation />} />
+            <Route path="/admin" element={<Admin />} />
             <Route
               path="/app"
               element={
