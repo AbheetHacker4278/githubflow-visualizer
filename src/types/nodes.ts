@@ -43,12 +43,3 @@ export interface Deployment {
   state: string;
   created_at: string;
 }
-
-export interface NodeAnnotation {
-  id: string;
-  nodeId: string;
-  textContent: string;
-  textColor: string;
-  boxColor: string;
-  position: { x: number; y: number };
-}

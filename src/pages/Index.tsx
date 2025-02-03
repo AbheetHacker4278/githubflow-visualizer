@@ -24,7 +24,6 @@ import { VisualizationHistory } from "@/components/VisualizationHistory";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
 import { LanguageNodeData, DeploymentNodeData } from "@/types/nodes";
-import { Contributor } from "@/types/collaboration";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import ChatBot from "@/components/ChatBot";
@@ -41,10 +40,9 @@ const nodeTypes = {
 };
 
 // Default empty arrays for type safety
-const defaultCommits: Array<{ sha: string; message: string; date: string }> = [];
-const defaultTags: Array<{ name: string; type: "lightweight" | "annotated"; message?: string }> = [];
-const defaultFileChanges: Array<{ path: string; changes: number }> = [];
-const defaultContributors: Contributor[] = [];
+const defaultCommits = [] as Array<{ sha: string; message: string; date: string }>;
+const defaultTags = [] as Array<{ name: string; type: "lightweight" | "annotated"; message?: string }>;
+const defaultFileChanges = [] as Array<{ path: string; changes: number }>;
 
 export default function Index() {
   const navigate = useNavigate();
@@ -139,7 +137,7 @@ export default function Index() {
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
         repoData,
         workflows || [],
-        commits || [],
+        commits || defaultCommits,
         deployments || [],
         languages || {},
         branches || []
@@ -336,14 +334,14 @@ export default function Index() {
                 "Visualize"
               )}
             </Button>
-            <Button  
+            {/* <Button  
               type="button"
               onClick={openInIDE}
               disabled={!repoUrl}
               className="bg-github-darker/50 hover:bg-github-darker/70 text-white"
             >
               IDE
-            </Button>
+            </Button> */}
           </div>
         </form>
       </div>
