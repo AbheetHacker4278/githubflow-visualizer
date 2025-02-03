@@ -178,6 +178,42 @@ export type Database = {
           },
         ]
       }
+      node_annotations: {
+        Row: {
+          box_color: string | null
+          created_at: string | null
+          id: string
+          node_id: string
+          repo_url: string
+          text_color: string | null
+          text_content: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          box_color?: string | null
+          created_at?: string | null
+          id?: string
+          node_id: string
+          repo_url: string
+          text_color?: string | null
+          text_content: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          box_color?: string | null
+          created_at?: string | null
+          id?: string
+          node_id?: string
+          repo_url?: string
+          text_color?: string | null
+          text_content?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_analytics: {
         Row: {
           created_at: string | null
