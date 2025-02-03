@@ -38,7 +38,7 @@ serve(async (req) => {
     );
 
     if (isAskingAboutCreator) {
-      const creatorResponse = `GitViz was created by Abheet Seth, who serves as the Lead Web Developer. He is a talented developer who built this platform to help visualize and understand GitHub repositories better. You can find more about him and his work on GitHub (https://github.com/AbheetHacker4278) and LinkedIn (https://www.linkedin.com/in/abheet-seth-58533a251/).`;
+      const creatorResponse = `GitViz was created by Abheet Seth, who serves as the Lead Web Developer. He is a Lead developer who built this platform to help visualize and understand GitHub repositories better. You can find more about him and his work on GitHub (https://github.com/AbheetHacker4278) and LinkedIn (https://www.linkedin.com/in/abheet-seth-58533a251/).`;
       
       return new Response(
         JSON.stringify({ response: creatorResponse }),

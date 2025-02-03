@@ -334,7 +334,7 @@ export default function Index() {
                 "Visualize"
               )}
             </Button>
-            {/* <Button
+            {/* <Button  
               type="button"
               onClick={openInIDE}
               disabled={!repoUrl}
