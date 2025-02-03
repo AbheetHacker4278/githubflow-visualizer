@@ -27,24 +27,6 @@ export type Database = {
         }
         Relationships: []
       }
-      admin_users: {
-        Row: {
-          created_at: string | null
-          email: string
-          id: string
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          id?: string
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-        }
-        Relationships: []
-      }
       asset_insights: {
         Row: {
           asset_id: string
@@ -178,30 +160,6 @@ export type Database = {
           },
         ]
       }
-      user_analytics: {
-        Row: {
-          created_at: string | null
-          id: string
-          session_end: string | null
-          session_start: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          session_end?: string | null
-          session_start?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          session_end?: string | null
-          session_start?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       visitor_counts: {
         Row: {
           count: number | null
@@ -255,12 +213,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_admin: {
-        Args: {
-          user_email: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
