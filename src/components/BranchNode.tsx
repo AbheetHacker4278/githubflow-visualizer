@@ -71,28 +71,32 @@ const BranchNode = memo(({ data, id }: BranchNodeProps) => {
 
   useEffect(() => {
     const fetchAnnotation = async () => {
-      const { data: annotationData, error } = await supabase
-        .from("node_annotations")
-        .select("*")
-        .eq("node_id", id)
-        .single();
+      try {
+        const { data: annotationData, error } = await supabase
+          .from("node_annotations")
+          .select("*")
+          .eq("node_id", id)
+          .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching annotation:", error);
-        return;
-      }
+        if (error) {
+          console.error("Error fetching annotation:", error);
+          return;
+        }
 
-      if (annotationData) {
-        setAnnotation({
-          id: annotationData.id,
-          nodeId: annotationData.node_id,
-          textContent: annotationData.text_content,
-          textColor: annotationData.text_color,
-          boxColor: annotationData.box_color,
-        });
-        setTextContent(annotationData.text_content);
-        setTextColor(annotationData.text_color);
-        setBoxColor(annotationData.box_color);
+        if (annotationData) {
+          setAnnotation({
+            id: annotationData.id,
+            nodeId: annotationData.node_id,
+            textContent: annotationData.text_content,
+            textColor: annotationData.text_color,
+            boxColor: annotationData.box_color,
+          });
+          setTextContent(annotationData.text_content);
+          setTextColor(annotationData.text_color);
+          setBoxColor(annotationData.box_color);
+        }
+      } catch (error) {
+        console.error("Error in fetchAnnotation:", error);
       }
     };
 
