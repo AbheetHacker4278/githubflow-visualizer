@@ -40,9 +40,10 @@ const nodeTypes = {
 };
 
 // Default empty arrays for type safety
-const defaultCommits = [] as Array<{ sha: string; message: string; date: string }>;
-const defaultTags = [] as Array<{ name: string; type: "lightweight" | "annotated"; message?: string }>;
-const defaultFileChanges = [] as Array<{ path: string; changes: number }>;
+const defaultCommits: Array<{ sha: string; message: string; date: string }> = [];
+const defaultTags: Array<{ name: string; type: "lightweight" | "annotated"; message?: string }> = [];
+const defaultFileChanges: Array<{ path: string; changes: number }> = [];
+const defaultContributors: Contributor[] = [];
 
 export default function Index() {
   const navigate = useNavigate();
@@ -334,14 +335,14 @@ export default function Index() {
                 "Visualize"
               )}
             </Button>
-            {/* <Button  
+            <Button  
               type="button"
               onClick={openInIDE}
               disabled={!repoUrl}
               className="bg-github-darker/50 hover:bg-github-darker/70 text-white"
             >
               IDE
-            </Button> */}
+            </Button>
           </div>
         </form>
       </div>

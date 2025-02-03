@@ -68,11 +68,22 @@ const DeploymentNode = memo(({ data, id }: DeploymentNodeProps) => {
 
   const handleSaveAnnotation = async () => {
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to add annotations",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: existingAnnotation } = await supabase
         .from("node_annotations")
         .select("*")
         .eq("node_id", id)
-        .single();
+        .maybeSingle();
 
       if (existingAnnotation) {
         const { error } = await supabase
@@ -92,6 +103,7 @@ const DeploymentNode = memo(({ data, id }: DeploymentNodeProps) => {
           text_color: textColor,
           box_color: boxColor,
           repo_url: window.location.href,
+          user_id: session.user.id,
         });
 
         if (error) throw error;
