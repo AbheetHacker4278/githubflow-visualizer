@@ -24,6 +24,7 @@ import { VisualizationHistory } from "@/components/VisualizationHistory";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
 import { LanguageNodeData, DeploymentNodeData } from "@/types/nodes";
+import { Contributor } from "@/types/collaboration";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import ChatBot from "@/components/ChatBot";
@@ -138,7 +139,7 @@ export default function Index() {
       const { nodes: newNodes, edges: newEdges } = createNodesAndEdges(
         repoData,
         workflows || [],
-        commits || defaultCommits,
+        commits || [],
         deployments || [],
         languages || {},
         branches || []

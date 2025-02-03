@@ -50,5 +50,5 @@ export interface NodeAnnotation {
   textContent: string;
   textColor: string;
   boxColor: string;
-  position?: { x: number; y: number };
+  position: { x: number; y: number };
 }

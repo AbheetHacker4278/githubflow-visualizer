@@ -184,6 +184,7 @@ export type Database = {
           created_at: string | null
           id: string
           node_id: string
+          position: Json | null
           repo_url: string
           text_color: string | null
           text_content: string
@@ -195,6 +196,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           node_id: string
+          position?: Json | null
           repo_url: string
           text_color?: string | null
           text_content: string
@@ -206,6 +208,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           node_id?: string
+          position?: Json | null
           repo_url?: string
           text_color?: string | null
           text_content?: string
