@@ -64,19 +64,18 @@ const AdminPage = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch total users count
-      const { count: userCount } = await supabase
-        .from("auth.users")
-        .select("*", { count: "exact" });
+      // Get total users count from user_analytics
+      const { count } = await supabase
+        .from("user_analytics")
+        .select("*", { count: "exact", head: true });
 
-      setTotalUsers(userCount || 0);
+      setTotalUsers(count || 0);
 
-      // Fetch user analytics
+      // Fetch user analytics with email
       const { data: analytics, error: analyticsError } = await supabase
         .from("user_analytics")
         .select(`
           user_id,
-          auth.users!user_analytics_user_id_fkey(email),
           session_start,
           session_end
         `);
@@ -85,7 +84,6 @@ const AdminPage = () => {
 
       // Process analytics data
       const processedData = analytics.reduce((acc: UserAnalytics[], session) => {
-        const email = session.auth?.users?.email || "Unknown";
         const timeSpent = session.session_end 
           ? new Date(session.session_end).getTime() - new Date(session.session_start).getTime()
           : 0;
@@ -96,7 +94,7 @@ const AdminPage = () => {
         } else {
           acc.push({
             user_id: session.user_id,
-            email,
+            email: "User " + session.user_id.slice(0, 8), // Anonymized display
             total_time: timeSpent,
           });
         }
@@ -116,12 +114,16 @@ const AdminPage = () => {
 
   const removeUser = async (userId: string) => {
     try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      const { error } = await supabase
+        .from("user_analytics")
+        .delete()
+        .eq("user_id", userId);
+
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "User has been removed successfully",
+        description: "User data has been removed successfully",
       });
       
       fetchData(); // Refresh data
