@@ -21,7 +21,7 @@ interface ChatBotProps {
   botName?: string;
 }
 
-// Previous AnimatedLogo and TypingIndicator components remain unchanged...
+// Previous AnimatedLogo and TypingIndicator components remain unchanged..
 const AnimatedLogo = () => (
   <div className="relative w-8 h-8 transition-transform hover:scale-110">
     <svg
