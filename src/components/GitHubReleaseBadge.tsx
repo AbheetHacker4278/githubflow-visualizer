@@ -25,7 +25,6 @@ const GitHubReleaseBadge = () => {
         )
 
         if (response.status === 404) {
-          console.log("No releases found for this repository");
           setError('No releases found for this repository')
           setReleaseInfo({
             tag_name: 'v0.0.0',

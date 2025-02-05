@@ -31,23 +31,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import "@xyflow/react/dist/style.css";
 
-interface SimpleCommit {
-  sha: string;
-  message: string;
-  date: string;
-}
-
-interface SimpleTag {
-  name: string;
-  type: "lightweight" | "annotated";
-  message?: string;
-}
-
-interface FileChange {
-  path: string;
-  changes: number;
-}
-
 const nodeTypes = {
   github: GitHubNode,
   commit: CommitNode,
@@ -56,9 +39,10 @@ const nodeTypes = {
   branch: BranchNode,
 };
 
-const defaultCommits: SimpleCommit[] = [];
-const defaultTags: SimpleTag[] = [];
-const defaultFileChanges: FileChange[] = [];
+// Default empty arrays for type safety
+const defaultCommits = [] as Array<{ sha: string; message: string; date: string }>;
+const defaultTags = [] as Array<{ name: string; type: "lightweight" | "annotated"; message?: string }>;
+const defaultFileChanges = [] as Array<{ path: string; changes: number }>;
 
 export default function Index() {
   const navigate = useNavigate();
@@ -236,6 +220,7 @@ export default function Index() {
         return;
       }
 
+      // Open GitHub1s web editor instead of github.dev
       const editorUrl = `https://github1s.com/${owner}/${repo}`;
       window.open(editorUrl, '_blank');
     } catch (error: any) {
@@ -349,14 +334,14 @@ export default function Index() {
                 "Visualize"
               )}
             </Button>
-            <Button  
+            {/* <Button  
               type="button"
               onClick={openInIDE}
               disabled={!repoUrl}
               className="bg-github-darker/50 hover:bg-github-darker/70 text-white"
             >
               IDE
-            </Button>
+            </Button> */}
           </div>
         </form>
       </div>
