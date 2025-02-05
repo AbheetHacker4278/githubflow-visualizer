@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,14 +17,13 @@ serve(async (req) => {
       throw new Error('Text is required');
     }
 
-    // Create a new SpeechSynthesisUtterance object
+    // Use Web Speech API for text-to-speech
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
-    // Use Web Speech API for text-to-speech
     if (typeof speechSynthesis !== 'undefined') {
       speechSynthesis.speak(utterance);
     }

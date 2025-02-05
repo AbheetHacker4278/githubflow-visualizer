@@ -11,7 +11,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -20,13 +19,13 @@ serve(async (req) => {
     const { message, repoUrl, context, visualizationData } = await req.json();
     console.log("Received request with:", { message, repoUrl, context, visualizationData });
 
-    // Create a context-aware system message
     const systemContext = `You are GitViz Assistant, an AI helper for the GitViz application that visualizes GitHub repositories.
     ${repoUrl ? `You are currently analyzing this repository: ${repoUrl}` : 'No repository is currently being visualized.'}
     
-    Keep responses concise, technical but approachable, and focused on helping users understand their repository structure.`;
+    Keep responses concise, technical but approachable, and focused on helping users understand their repository structure.
+    
+    Important: You are capable of voice interaction. When users speak to you, you should respond in a conversational manner.`;
 
-    // Convert chat history to Gemini format
     const chatHistory = context.map((msg: { role: string; content: string }) => ({
       role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content }],
@@ -35,7 +34,6 @@ serve(async (req) => {
     console.log("Using system context:", systemContext);
     console.log("Prepared chat history:", chatHistory);
 
-    // Start a new chat
     const chat = model.startChat({
       history: chatHistory,
       generationConfig: {
@@ -43,7 +41,6 @@ serve(async (req) => {
       },
     });
 
-    // Send message and get response
     const result = await chat.sendMessage(systemContext + "\n\n" + message);
     const response = result.response;
     const text = response.text();
