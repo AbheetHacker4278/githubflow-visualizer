@@ -18,4 +18,20 @@ export interface GitHubDeployment {
 
 export interface GitHubBranch {
   name: string;
+  commits?: Array<{
+    sha: string;
+    message: string;
+    date: string;
+  }>;
+  heatLevel?: number;
+  isCollapsed?: boolean;
+  tags?: Array<{
+    name: string;
+    type: "lightweight" | "annotated";
+    message?: string;
+  }>;
+  fileChanges?: Array<{
+    path: string;
+    changes: number;
+  }>;
 }

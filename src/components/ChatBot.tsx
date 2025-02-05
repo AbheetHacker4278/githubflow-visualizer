@@ -296,8 +296,8 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
     const messageText = textInput || input;
     if (!messageText.trim() && !selectedImage) return;
 
-    const userMessage = { 
-      role: "user" as const, 
+    const userMessage: Message = {
+      role: "user",
       content: messageText,
       timestamp: new Date(),
       id: Math.random().toString(36).substr(2, 9),
@@ -324,8 +324,8 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
 
       if (error) throw error;
       
-      const assistantMessage = { 
-        role: "assistant", 
+      const assistantMessage: Message = {
+        role: "assistant",
         content: data.response,
         timestamp: new Date(),
         id: Math.random().toString(36).substr(2, 9)

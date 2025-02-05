@@ -21,11 +21,6 @@ serve(async (req) => {
     // Convert base64 to binary
     const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
     
-    // Create form data
-    const formData = new FormData();
-    formData.append('file', new Blob([binaryAudio], { type: 'audio/webm' }));
-    formData.append('model', 'whisper-1');
-
     // Use Google's Speech-to-Text API
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
@@ -36,6 +31,8 @@ serve(async (req) => {
 
     const response = await result.response;
     const text = response.text();
+
+    console.log("Speech to text result:", text);
 
     return new Response(
       JSON.stringify({ text }),

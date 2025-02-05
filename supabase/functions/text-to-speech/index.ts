@@ -25,8 +25,12 @@ serve(async (req) => {
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
-    // Speak the text
-    speechSynthesis.speak(utterance);
+    // Use Web Speech API for text-to-speech
+    if (typeof speechSynthesis !== 'undefined') {
+      speechSynthesis.speak(utterance);
+    }
+
+    console.log("Text to speech completed for:", text);
 
     return new Response(
       JSON.stringify({ success: true }),
