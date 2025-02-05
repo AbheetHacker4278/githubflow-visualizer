@@ -35,3 +35,20 @@ export interface GitHubBranch {
     changes: number;
   }>;
 }
+
+export interface SimplifiedCommit {
+  sha: string;
+  message: string;
+  date: string;
+}
+
+export interface Tag {
+  name: string;
+  type: "lightweight" | "annotated";
+  message?: string;
+}
+
+export interface FileChange {
+  path: string;
+  changes: number;
+}
