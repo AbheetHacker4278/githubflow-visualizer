@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Send, Loader2, Image as ImageIcon, X, Mic, Volume2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
@@ -13,7 +13,7 @@ interface Message {
   content: string;
   timestamp: Date;
   id: string;
-  image?: string; // Base64 string for images
+  image?: string;
 }
 
 interface ChatBotProps {
@@ -21,7 +21,6 @@ interface ChatBotProps {
   botName?: string;
 }
 
-// Previous AnimatedLogo and TypingIndicator components remain unchanged..
 const AnimatedLogo = () => (
   <div className="relative w-8 h-8 transition-transform hover:scale-110">
     <img className="max-w-8" src="https://i.ibb.co/Qzwd0MS/Screenshot-2025-02-03-153911-removebg-preview.png" alt="" />
@@ -36,7 +35,11 @@ const TypingIndicator = () => (
   </div>
 );
 
-const MessageBubble = ({ message, isLatest }: { message: Message; isLatest: boolean }) => (
+const MessageBubble = ({ message, isLatest, onSpeak }: { 
+  message: Message; 
+  isLatest: boolean;
+  onSpeak?: (text: string) => void;
+}) => (
   <div
     className={`flex flex-col ${
       message.role === "assistant" ? "items-start" : "items-end"
@@ -59,7 +62,19 @@ const MessageBubble = ({ message, isLatest }: { message: Message; isLatest: bool
           />
         </div>
       )}
-      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+      <div className="flex justify-between items-start gap-2">
+        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+        {message.role === "assistant" && onSpeak && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6 hover:bg-secondary-foreground/10"
+            onClick={() => onSpeak(message.content)}
+          >
+            <Volume2 className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
     </div>
     <span className="text-xs text-muted-foreground mt-1 opacity-0 animate-fade-in">
       {new Date(message.timestamp).toLocaleTimeString([], { 
@@ -70,7 +85,6 @@ const MessageBubble = ({ message, isLatest }: { message: Message; isLatest: bool
   </div>
 );
 
-// Previous styles remain unchanged...
 const styles = `
   @keyframes dash {
     0% {
@@ -173,10 +187,13 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -193,6 +210,142 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
       setTimeout(scrollToBottom, 100);
     }
   }, [isOpen]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async () => {
+          const base64Audio = reader.result?.toString().split(',')[1];
+          if (base64Audio) {
+            setInput("Processing voice input...");
+            try {
+              const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke(
+                'speech-to-text',
+                { body: { audio: base64Audio } }
+              );
+
+              if (transcriptionError) throw transcriptionError;
+              
+              const transcribedText = transcriptionData.text;
+              setInput(transcribedText);
+              await handleSend(transcribedText);
+            } catch (error) {
+              console.error('Speech to text error:', error);
+              toast({
+                title: "Error",
+                description: "Failed to process voice input",
+                variant: "destructive",
+              });
+              setInput("");
+            }
+          }
+        };
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Recording error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start recording. Please check your microphone permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      // Stop all tracks in the stream
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
+  const speakMessage = async (text: string) => {
+    try {
+      await supabase.functions.invoke('text-to-speech', {
+        body: { text }
+      });
+    } catch (error) {
+      console.error('Text to speech error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to speak message",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSend = async (textInput?: string) => {
+    const messageText = textInput || input;
+    if (!messageText.trim() && !selectedImage) return;
+
+    const userMessage = { 
+      role: "user" as const, 
+      content: messageText,
+      timestamp: new Date(),
+      id: Math.random().toString(36).substr(2, 9),
+      image: selectedImage || undefined
+    };
+    
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setSelectedImage(null);
+    setIsLoading(true);
+
+    try {
+      const visualizationData = (window as any).__GITVIZ_DATA__ || {};
+      
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { 
+          message: messageText,
+          repoUrl,
+          context: messages.slice(-5),
+          visualizationData,
+          image: selectedImage
+        }
+      });
+
+      if (error) throw error;
+      
+      const assistantMessage = { 
+        role: "assistant", 
+        content: data.response,
+        timestamp: new Date(),
+        id: Math.random().toString(36).substr(2, 9)
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      
+      // Speak the assistant's response
+      await speakMessage(data.response);
+    } catch (error) {
+      console.error("Chat error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to get response from chatbot",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -211,55 +364,6 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
         setSelectedImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSend = async () => {
-    if (!input.trim() && !selectedImage) return;
-
-    const userMessage = { 
-      role: "user" as const, 
-      content: input,
-      timestamp: new Date(),
-      id: Math.random().toString(36).substr(2, 9),
-      image: selectedImage || undefined
-    };
-    
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setSelectedImage(null);
-    setIsLoading(true);
-
-    try {
-      const visualizationData = (window as any).__GITVIZ_DATA__ || {};
-      
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: { 
-          message: input,
-          repoUrl,
-          context: messages.slice(-5),
-          visualizationData,
-          image: selectedImage
-        }
-      });
-
-      if (error) throw error;
-      
-      setMessages((prev) => [...prev, { 
-        role: "assistant", 
-        content: data.response,
-        timestamp: new Date(),
-        id: Math.random().toString(36).substr(2, 9)
-      }]);
-    } catch (error) {
-      console.error("Chat error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to get response from chatbot",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -292,10 +396,7 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
           </SheetTitle>
         </SheetHeader>
         <div className="flex h-[calc(100vh-8rem)] flex-col">
-          <ScrollArea 
-            className="flex-1 px-4"
-            ref={scrollAreaRef}
-          >
+          <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
             <div className="space-y-4 py-4">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 gap-2 animate-fade-in">
@@ -311,6 +412,7 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
                       key={message.id}
                       message={message}
                       isLatest={index === messages.length - 1}
+                      onSpeak={message.role === "assistant" ? speakMessage : undefined}
                     />
                   ))}
                   {isLoading && (
@@ -356,17 +458,26 @@ const ChatBot = ({ repoUrl, botName = "GitViz Assistant" }: ChatBotProps) => {
               >
                 <ImageIcon className="h-4 w-4" />
               </Button>
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`rounded-full ${isRecording ? 'bg-red-500 hover:bg-red-600 text-white' : ''}`}
+                type="button"
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
               <Input
                 placeholder="Type your message..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
-                disabled={isLoading}
+                disabled={isLoading || isRecording}
                 className="rounded-full transition-all duration-300 focus:scale-[1.02]"
               />
               <Button 
-                onClick={handleSend} 
-                disabled={isLoading}
+                onClick={() => handleSend()}
+                disabled={isLoading || isRecording}
                 size="icon"
                 className="rounded-full px-6 gradient-bg hover:opacity-90 transition-all duration-300 hover:scale-105"
               >
