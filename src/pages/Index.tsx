@@ -334,14 +334,14 @@ export default function Index() {
                 "Visualize"
               )}
             </Button>
-            {/* <Button  
+            <Button  
               type="button"
               onClick={openInIDE}
               disabled={!repoUrl}
               className="bg-github-darker/50 hover:bg-github-darker/70 text-white"
             >
               IDE
-            </Button> */}
+            </Button>
           </div>
         </form>
       </div>

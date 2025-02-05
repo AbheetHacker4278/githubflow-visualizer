@@ -27,6 +27,24 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       asset_insights: {
         Row: {
           asset_id: string
@@ -160,6 +178,69 @@ export type Database = {
           },
         ]
       }
+      node_annotations: {
+        Row: {
+          box_color: string | null
+          created_at: string | null
+          id: string
+          node_id: string
+          position: Json | null
+          repo_url: string
+          text_color: string | null
+          text_content: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          box_color?: string | null
+          created_at?: string | null
+          id?: string
+          node_id: string
+          position?: Json | null
+          repo_url: string
+          text_color?: string | null
+          text_content: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          box_color?: string | null
+          created_at?: string | null
+          id?: string
+          node_id?: string
+          position?: Json | null
+          repo_url?: string
+          text_color?: string | null
+          text_content?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_analytics: {
+        Row: {
+          created_at: string | null
+          id: string
+          session_end: string | null
+          session_start: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          session_end?: string | null
+          session_start?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          session_end?: string | null
+          session_start?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       visitor_counts: {
         Row: {
           count: number | null
@@ -213,7 +294,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: {
+          user_email: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
