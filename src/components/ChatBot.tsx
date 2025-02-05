@@ -24,7 +24,7 @@ interface ChatBotProps {
 // Previous AnimatedLogo and TypingIndicator components remain unchanged..
 const AnimatedLogo = () => (
   <div className="relative w-8 h-8 transition-transform hover:scale-110">
-    <svg
+    {/* <svg
       viewBox="0 0 24 24"
       className="w-full h-full fill-current"
       xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +45,8 @@ const AnimatedLogo = () => (
         strokeWidth="2"
         strokeLinecap="round"
       />
-    </svg>
+    </svg> */}
+    <img className="max-w-8" src="https://i.ibb.co/Qzwd0MS/Screenshot-2025-02-03-153911-removebg-preview.png" alt="" />
   </div>
 );
 
@@ -135,15 +136,6 @@ const styles = `
     50% {
       transform: translateY(-4px);
     }
-  }
-
-  .gradient-bg {
-    background: linear-gradient(120deg, #4f46e5, #06b6d4);
-    transition: all 0.3s ease;
-  }
-
-  .gradient-bg:hover {
-    background: linear-gradient(120deg, #4338ca, #0891b2);
   }
 
   .logo-shadow {
