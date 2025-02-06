@@ -40,7 +40,7 @@ const Landing = () => {
     { label: "Features", href: "#features" },
     { label: "Documentation", href: "/Documentation" },
     { label: "About Us", href: "#about" },
-    // { label: "Discussion", href: "/discussion" },
+    { label: "Discussion", href: "/discussion" },
   ];
 
   const features = [
