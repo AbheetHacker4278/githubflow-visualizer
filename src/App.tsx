@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +10,7 @@ import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Discussion from "./pages/Discussion";
+import DiscussionDetail from "./pages/DiscussionDetail";
 import Documentation from "./components/Documentation";
 
 const queryClient = new QueryClient();
@@ -24,6 +26,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/discussion" element={<Discussion />} />
+            <Route path="/discussion/:id" element={<DiscussionDetail />} />
             <Route path="/Documentation" element={<Documentation />} />
             <Route
               path="/app"

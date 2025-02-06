@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -546,104 +544,30 @@ const Discussion = () => {
         <div className="space-y-6">
           {discussions?.map((discussion) => (
             <div key={discussion.id} className="p-4 bg-card rounded-lg border">
-              {editingDiscussion === discussion.id ? (
-                <div className="space-y-4">
-                  <Input
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    placeholder="Title"
+              <div 
+                className="cursor-pointer"
+                onClick={() => navigate(`/discussion/${discussion.id}`)}
+              >
+                <h3 className="text-xl font-semibold hover:text-blue-500 transition-colors">
+                  {discussion.title}
+                </h3>
+                <p className="text-muted-foreground mb-4">{discussion.content}</p>
+                {discussion.image_url && (
+                  <img
+                    src={discussion.image_url}
+                    alt="Discussion"
+                    className="max-w-md rounded-lg mb-4"
                   />
-                  <Textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    placeholder="Content"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => {
-                        editDiscussion.mutate({
-                          id: discussion.id,
-                          title: editTitle,
-                          content: editContent,
-                        });
-                      }}
-                      disabled={editDiscussion.isPending}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setEditingDiscussion(null)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-semibold">{discussion.title}</h3>
-                    <div className="flex gap-2">
-                      {discussion.user_id === session?.user?.id && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingDiscussion(discussion.id);
-                              setEditTitle(discussion.title);
-                              setEditContent(discussion.content);
-                            }}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (window.confirm("Are you sure you want to delete this discussion?")) {
-                                deleteDiscussion.mutate(discussion.id);
-                              }
-                            }}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                      {discussion.user_id !== session?.user?.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setReportingItem({ type: 'discussion', id: discussion.id });
-                            setIsReportDialogOpen(true);
-                          }}
-                        >
-                          <Flag className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground mb-4">{discussion.content}</p>
-                  {discussion.is_edited && (
-                    <p className="text-sm text-muted-foreground mb-2">(edited)</p>
-                  )}
-                </>
-              )}
-
-              {discussion.image_url && (
-                <img
-                  src={discussion.image_url}
-                  alt="Discussion"
-                  className="max-w-md rounded-lg mb-4"
-                />
-              )}
-              <div className="flex items-center gap-4 mb-4">
+                )}
+              </div>
+              <div className="flex items-center gap-4">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => toggleLike.mutate(discussion.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleLike.mutate(discussion.id);
+                  }}
                   className={hasUserLikedDiscussion(discussion.id) ? "text-red-500" : ""}
                 >
                   <Heart className={`h-4 w-4 mr-2 ${hasUserLikedDiscussion(discussion.id) ? "fill-current" : ""}`} />
@@ -652,160 +576,21 @@ const Discussion = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSelectedDiscussion(
-                    selectedDiscussion === discussion.id ? null : discussion.id
-                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/discussion/${discussion.id}`);
+                  }}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   {discussion.comments_count || 0} Comments
                 </Button>
               </div>
-
-              {selectedDiscussion === discussion.id && (
-                <div className="mt-4 space-y-4">
-                  {comments?.map((comment) => (
-                    <div key={comment.id} className="p-3 bg-muted rounded">
-                      {editingComment === comment.id ? (
-                        <div className="space-y-2">
-                          <Textarea
-                            value={editCommentContent}
-                            onChange={(e) => setEditCommentContent(e.target.value)}
-                            placeholder="Edit your comment"
-                          />
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                editComment.mutate({
-                                  id: comment.id,
-                                  content: editCommentContent,
-                                });
-                              }}
-                              disabled={editComment.isPending}
-                            >
-                              Save
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setEditingComment(null)}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <p>{comment.content}</p>
-                          {comment.is_edited && (
-                            <p className="text-sm text-muted-foreground">(edited)</p>
-                          )}
-                          <div className="flex justify-between items-center mt-2">
-                            <small className="text-muted-foreground">
-                              {format(new Date(comment.created_at), "PPp")}
-                            </small>
-                            <div className="flex gap-2">
-                              {comment.user_id === session?.user?.id && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingComment(comment.id);
-                                    setEditCommentContent(comment.content);
-                                  }}
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                              {comment.user_id !== session?.user?.id && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setReportingItem({ type: 'comment', id: comment.id });
-                                    setIsReportDialogOpen(true);
-                                  }}
-                                >
-                                  <Flag className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add a comment..."
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                    />
-                    <Button
-                      onClick={() => createComment.mutate()}
-                      disabled={createComment.isPending || !comment}
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
       )}
-
-      {/* Report Dialog */}
-      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Report {reportingItem?.type}</DialogTitle>
-            <DialogDescription>
-              Please select a reason for reporting this {reportingItem?.type}
-            </DialogDescription>
-          </DialogHeader>
-          <Select value={reportReason} onValueChange={setReportReason}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a reason" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="spam">Spam</SelectItem>
-              <SelectItem value="harassment">Harassment</SelectItem>
-              <SelectItem value="inappropriate">Inappropriate Content</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsReportDialogOpen(false);
-                setReportingItem(null);
-                setReportReason("");
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (reportingItem && reportReason) {
-                  createReport.mutate({
-                    type: reportingItem.type,
-                    id: reportingItem.id,
-                    reason: reportReason,
-                  });
-                }
-              }}
-              disabled={!reportReason || createReport.isPending}
-            >
-              Submit Report
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
 
 export default Discussion;
-
