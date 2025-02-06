@@ -546,17 +546,53 @@ const Discussion = () => {
             <div key={discussion.id} className="p-4 bg-card rounded-lg border">
               <div 
                 className="cursor-pointer"
-                onClick={() => navigate(`/discussion/${discussion.id}`)}
               >
-                <h3 className="text-xl font-semibold hover:text-blue-500 transition-colors">
-                  {discussion.title}
-                </h3>
-                <p className="text-muted-foreground mb-4">{discussion.content}</p>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 
+                    className="text-xl font-semibold hover:text-blue-500 transition-colors"
+                    onClick={() => navigate(`/discussion/${discussion.id}`)}
+                  >
+                    {discussion.title}
+                  </h3>
+                  {discussion.user_id === session?.user?.id && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingDiscussion(discussion.id);
+                          setEditTitle(discussion.title);
+                          setEditContent(discussion.content);
+                        }}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteDiscussion.mutate(discussion.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <p 
+                  className="text-muted-foreground mb-4"
+                  onClick={() => navigate(`/discussion/${discussion.id}`)}
+                >
+                  {discussion.content}
+                </p>
                 {discussion.image_url && (
                   <img
                     src={discussion.image_url}
                     alt="Discussion"
                     className="max-w-md rounded-lg mb-4"
+                    onClick={() => navigate(`/discussion/${discussion.id}`)}
                   />
                 )}
               </div>
@@ -584,6 +620,19 @@ const Discussion = () => {
                   <MessageCircle className="h-4 w-4 mr-2" />
                   {discussion.comments_count || 0} Comments
                 </Button>
+                {discussion.user_id !== session?.user?.id && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setReportingItem({ type: 'discussion', id: discussion.id });
+                      setIsReportDialogOpen(true);
+                    }}
+                  >
+                    <Flag className="h-4 w-4 mr-2" /> Report
+                  </Button>
+                )}
               </div>
             </div>
           ))}
