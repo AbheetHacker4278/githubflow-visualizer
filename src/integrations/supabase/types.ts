@@ -87,6 +87,7 @@ export type Database = {
           created_at: string | null
           discussion_id: string
           id: string
+          is_edited: boolean | null
           updated_at: string | null
           user_id: string
         }
@@ -95,6 +96,7 @@ export type Database = {
           created_at?: string | null
           discussion_id: string
           id?: string
+          is_edited?: boolean | null
           updated_at?: string | null
           user_id: string
         }
@@ -103,6 +105,7 @@ export type Database = {
           created_at?: string | null
           discussion_id?: string
           id?: string
+          is_edited?: boolean | null
           updated_at?: string | null
           user_id?: string
         }
@@ -122,6 +125,7 @@ export type Database = {
           created_at: string | null
           id: string
           image_url: string | null
+          is_edited: boolean | null
           likes_count: number | null
           title: string
           updated_at: string | null
@@ -132,6 +136,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           image_url?: string | null
+          is_edited?: boolean | null
           likes_count?: number | null
           title: string
           updated_at?: string | null
@@ -142,6 +147,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           image_url?: string | null
+          is_edited?: boolean | null
           likes_count?: number | null
           title?: string
           updated_at?: string | null
@@ -216,6 +222,54 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          comment_id: string | null
+          created_at: string | null
+          discussion_id: string | null
+          id: string
+          reason: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string | null
+          discussion_id?: string | null
+          id?: string
+          reason: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string | null
+          discussion_id?: string | null
+          id?: string
+          reason?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "discussions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_analytics: {
         Row: {

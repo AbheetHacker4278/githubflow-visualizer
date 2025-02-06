@@ -6,12 +6,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Heart, Image, Loader2, Send, Trash2, Menu, X } from "lucide-react";
+import { MessageCircle, Heart, Image, Loader2, Send, Trash2, Menu, X, Edit2, Flag } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import NavAnimation from "./NavAnimation";
 import { UserMenu } from "@/components/UserMenu";
 import VisualizationHistory from "@/components/VisualizationHistory";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Discussion {
   id: string;
@@ -23,6 +38,7 @@ interface Discussion {
   likes_count: number;
   comments: { count: number }[];
   comments_count?: number;
+  is_edited?: boolean;
 }
 
 interface Comment {
@@ -31,6 +47,7 @@ interface Comment {
   created_at: string;
   user_id: string;
   discussion_id: string;
+  is_edited?: boolean;
 }
 
 interface Like {
@@ -294,6 +311,106 @@ const Discussion = () => {
     );
   }
 
+  const [editingDiscussion, setEditingDiscussion] = useState<string | null>(null);
+  const [editingComment, setEditingComment] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editCommentContent, setEditCommentContent] = useState("");
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportingItem, setReportingItem] = useState<{ type: 'discussion' | 'comment', id: string } | null>(null);
+
+  // Add report mutation
+  const createReport = useMutation({
+    mutationFn: async ({ type, id, reason }: { type: 'discussion' | 'comment', id: string, reason: string }) => {
+      if (!session?.user) throw new Error("Must be logged in");
+
+      const { error } = await supabase.from("reports").insert({
+        user_id: session.user.id,
+        [type === 'discussion' ? 'discussion_id' : 'comment_id']: id,
+        reason
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Report submitted",
+        description: "Thank you for your report. We will review it shortly.",
+      });
+      setIsReportDialogOpen(false);
+      setReportingItem(null);
+      setReportReason("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add edit discussion mutation
+  const editDiscussion = useMutation({
+    mutationFn: async ({ id, title, content }: { id: string; title: string; content: string }) => {
+      if (!session?.user) throw new Error("Must be logged in");
+
+      const { error } = await supabase
+        .from("discussions")
+        .update({ title, content, is_edited: true })
+        .eq("id", id)
+        .eq("user_id", session.user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      setEditingDiscussion(null);
+      toast({
+        title: "Success",
+        description: "Discussion updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add edit comment mutation
+  const editComment = useMutation({
+    mutationFn: async ({ id, content }: { id: string; content: string }) => {
+      if (!session?.user) throw new Error("Must be logged in");
+
+      const { error } = await supabase
+        .from("comments")
+        .update({ content, is_edited: true })
+        .eq("id", id)
+        .eq("user_id", session.user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", selectedDiscussion] });
+      setEditingComment(null);
+      toast({
+        title: "Success",
+        description: "Comment updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <div className="container mx-auto px-4 py-8">
 
@@ -439,24 +556,92 @@ const Discussion = () => {
         <div className="space-y-6">
           {discussions?.map((discussion) => (
             <div key={discussion.id} className="p-4 bg-card rounded-lg border">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-xl font-semibold">{discussion.title}</h3>
-                {discussion.user_id === session?.user?.id && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      if (window.confirm("Are you sure you want to delete this discussion?")) {
-                        deleteDiscussion.mutate(discussion.id);
-                      }
-                    }}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <p className="text-muted-foreground mb-4">{discussion.content}</p>
+              {editingDiscussion === discussion.id ? (
+                <div className="space-y-4">
+                  <Input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    placeholder="Title"
+                  />
+                  <Textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    placeholder="Content"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        editDiscussion.mutate({
+                          id: discussion.id,
+                          title: editTitle,
+                          content: editContent,
+                        });
+                      }}
+                      disabled={editDiscussion.isPending}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditingDiscussion(null)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-semibold">{discussion.title}</h3>
+                    <div className="flex gap-2">
+                      {discussion.user_id === session?.user?.id && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingDiscussion(discussion.id);
+                              setEditTitle(discussion.title);
+                              setEditContent(discussion.content);
+                            }}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (window.confirm("Are you sure you want to delete this discussion?")) {
+                                deleteDiscussion.mutate(discussion.id);
+                              }
+                            }}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                      {discussion.user_id !== session?.user?.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setReportingItem({ type: 'discussion', id: discussion.id });
+                            setIsReportDialogOpen(true);
+                          }}
+                        >
+                          <Flag className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground mb-4">{discussion.content}</p>
+                  {discussion.is_edited && (
+                    <p className="text-sm text-muted-foreground mb-2">(edited)</p>
+                  )}
+                </>
+              )}
+
               {discussion.image_url && (
                 <img
                   src={discussion.image_url}
@@ -491,10 +676,74 @@ const Discussion = () => {
                 <div className="mt-4 space-y-4">
                   {comments?.map((comment) => (
                     <div key={comment.id} className="p-3 bg-muted rounded">
-                      <p>{comment.content}</p>
-                      <small className="text-muted-foreground">
-                        {format(new Date(comment.created_at), "PPp")}
-                      </small>
+                      {editingComment === comment.id ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            value={editCommentContent}
+                            onChange={(e) => setEditCommentContent(e.target.value)}
+                            placeholder="Edit your comment"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                editComment.mutate({
+                                  id: comment.id,
+                                  content: editCommentContent,
+                                });
+                              }}
+                              disabled={editComment.isPending}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingComment(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p>{comment.content}</p>
+                          {comment.is_edited && (
+                            <p className="text-sm text-muted-foreground">(edited)</p>
+                          )}
+                          <div className="flex justify-between items-center mt-2">
+                            <small className="text-muted-foreground">
+                              {format(new Date(comment.created_at), "PPp")}
+                            </small>
+                            <div className="flex gap-2">
+                              {comment.user_id === session?.user?.id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingComment(comment.id);
+                                    setEditCommentContent(comment.content);
+                                  }}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {comment.user_id !== session?.user?.id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setReportingItem({ type: 'comment', id: comment.id });
+                                    setIsReportDialogOpen(true);
+                                  }}
+                                >
+                                  <Flag className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                   <div className="flex gap-2">
@@ -516,6 +765,55 @@ const Discussion = () => {
           ))}
         </div>
       )}
+
+      {/* Report Dialog */}
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report {reportingItem?.type}</DialogTitle>
+            <DialogDescription>
+              Please select a reason for reporting this {reportingItem?.type}
+            </DialogDescription>
+          </DialogHeader>
+          <Select value={reportReason} onValueChange={setReportReason}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a reason" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="spam">Spam</SelectItem>
+              <SelectItem value="harassment">Harassment</SelectItem>
+              <SelectItem value="inappropriate">Inappropriate Content</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsReportDialogOpen(false);
+                setReportingItem(null);
+                setReportReason("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (reportingItem && reportReason) {
+                  createReport.mutate({
+                    type: reportingItem.type,
+                    id: reportingItem.id,
+                    reason: reportReason,
+                  });
+                }
+              }}
+              disabled={!reportReason || createReport.isPending}
+            >
+              Submit Report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
