@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
@@ -68,13 +69,19 @@ const Discussion = () => {
   const [selectedDiscussion, setSelectedDiscussion] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  const [editingDiscussion, setEditingDiscussion] = useState<string | null>(null);
+  const [editingComment, setEditingComment] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editCommentContent, setEditCommentContent] = useState("");
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportingItem, setReportingItem] = useState<{ type: 'discussion' | 'comment', id: string } | null>(null);
 
   const navLinks = [
     { label: "Features", href: "#features" },
     { label: "Documentation", href: "/Documentation" },
     { label: "About Us", href: "#about" },
-    // { label: "Discussion", href: "/discussion" },
   ];
 
   // Fetch discussions with likes and comments count
@@ -97,51 +104,6 @@ const Discussion = () => {
         comments_count: discussion.comments?.[0]?.count || 0,
         likes_count: discussion.likes?.[0]?.count || 0
       })) as Discussion[];
-    },
-  });
-
-  const deleteDiscussion = useMutation({
-    mutationFn: async (discussionId: string) => {
-      if (!session?.user) throw new Error("Must be logged in");
-
-      // First, delete all comments for this discussion
-      const { error: commentsError } = await supabase
-        .from("comments")
-        .delete()
-        .eq("discussion_id", discussionId);
-
-      if (commentsError) throw commentsError;
-
-      // Then, delete all likes for this discussion
-      const { error: likesError } = await supabase
-        .from("likes")
-        .delete()
-        .eq("discussion_id", discussionId);
-
-      if (likesError) throw likesError;
-
-      // Finally, delete the discussion itself
-      const { error } = await supabase
-        .from("discussions")
-        .delete()
-        .eq("id", discussionId)
-        .eq("user_id", session.user.id); // Ensure user can only delete their own discussions
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["discussions"] });
-      toast({
-        title: "Success",
-        description: "Discussion deleted successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
     },
   });
 
@@ -259,6 +221,52 @@ const Discussion = () => {
     },
   });
 
+  // Delete discussion mutation
+  const deleteDiscussion = useMutation({
+    mutationFn: async (discussionId: string) => {
+      if (!session?.user) throw new Error("Must be logged in");
+
+      // First, delete all comments for this discussion
+      const { error: commentsError } = await supabase
+        .from("comments")
+        .delete()
+        .eq("discussion_id", discussionId);
+
+      if (commentsError) throw commentsError;
+
+      // Then, delete all likes for this discussion
+      const { error: likesError } = await supabase
+        .from("likes")
+        .delete()
+        .eq("discussion_id", discussionId);
+
+      if (likesError) throw likesError;
+
+      // Finally, delete the discussion itself
+      const { error } = await supabase
+        .from("discussions")
+        .delete()
+        .eq("id", discussionId)
+        .eq("user_id", session.user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["discussions"] });
+      toast({
+        title: "Success",
+        description: "Discussion deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Toggle like mutation
   const toggleLike = useMutation({
     mutationFn: async (discussionId: string) => {
@@ -287,60 +295,6 @@ const Discussion = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discussions"] });
       queryClient.invalidateQueries({ queryKey: ["likes", session?.user?.id] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Check if user has liked a discussion
-  const hasUserLikedDiscussion = (discussionId: string) => {
-    return userLikes?.some(like => like.discussion_id === discussionId);
-  };
-
-  if (!session) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <h1 className="text-2xl font-bold mb-4">Please sign in to access discussions</h1>
-        <Button onClick={() => navigate("/auth")}>Sign In</Button>
-      </div>
-    );
-  }
-
-  const [editingDiscussion, setEditingDiscussion] = useState<string | null>(null);
-  const [editingComment, setEditingComment] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const [editCommentContent, setEditCommentContent] = useState("");
-  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
-  const [reportReason, setReportReason] = useState("");
-  const [reportingItem, setReportingItem] = useState<{ type: 'discussion' | 'comment', id: string } | null>(null);
-
-  // Add report mutation
-  const createReport = useMutation({
-    mutationFn: async ({ type, id, reason }: { type: 'discussion' | 'comment', id: string, reason: string }) => {
-      if (!session?.user) throw new Error("Must be logged in");
-
-      const { error } = await supabase.from("reports").insert({
-        user_id: session.user.id,
-        [type === 'discussion' ? 'discussion_id' : 'comment_id']: id,
-        reason
-      });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Report submitted",
-        description: "Thank you for your report. We will review it shortly.",
-      });
-      setIsReportDialogOpen(false);
-      setReportingItem(null);
-      setReportReason("");
     },
     onError: (error: Error) => {
       toast({
@@ -411,23 +365,65 @@ const Discussion = () => {
     },
   });
 
+  // Add report mutation
+  const createReport = useMutation({
+    mutationFn: async ({ type, id, reason }: { type: 'discussion' | 'comment', id: string, reason: string }) => {
+      if (!session?.user) throw new Error("Must be logged in");
+
+      const { error } = await supabase.from("reports").insert({
+        user_id: session.user.id,
+        [type === 'discussion' ? 'discussion_id' : 'comment_id']: id,
+        reason
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Report submitted",
+        description: "Thank you for your report. We will review it shortly.",
+      });
+      setIsReportDialogOpen(false);
+      setReportingItem(null);
+      setReportReason("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Check if user has liked a discussion
+  const hasUserLikedDiscussion = (discussionId: string) => {
+    return userLikes?.some(like => like.discussion_id === discussionId);
+  };
+
+  if (!session) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <h1 className="text-2xl font-bold mb-4">Please sign in to access discussions</h1>
+        <Button onClick={() => navigate("/auth")}>Sign In</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
-
-<nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-black/30 backdrop-blur-sm border-b border-white/10' : ''}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-black/30 backdrop-blur-sm border-b border-white/10' : ''}`}>
         <div className="absolute inset-0 overflow-hidden">
           <NavAnimation />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
             <a href="/" className="flex items-center space-x-2">
               <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">
                 GitViz Discussion Forum
               </span>
             </a>
 
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
               {navLinks.map((link, index) => (
                 <a
@@ -441,12 +437,11 @@ const Discussion = () => {
               ))}
             </div>
 
-            {/* Desktop CTA */}
             <div className="hidden md:flex items-center space-x-4">
               {session ? (
                 [
-                  <UserMenu />,
-                  <VisualizationHistory />
+                  <UserMenu key="user-menu" />,
+                  <VisualizationHistory key="viz-history" />
                 ]
               ) : (
                 <Button
@@ -459,7 +454,6 @@ const Discussion = () => {
               )}
             </div>
 
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
@@ -472,7 +466,6 @@ const Discussion = () => {
             </button>
           </div>
 
-          {/* Mobile Navigation */}
           <div
             className={`md:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
               }`}
@@ -511,9 +504,7 @@ const Discussion = () => {
           </div>
         </div>
       </nav>
-      {/* <h1 className="text-3xl font-bold mt-8">Discussions</h1> */}
 
-      {/* Create Discussion Form */}
       <div className="mb-2 p-4 mt-20 bg-card rounded-lg border">
         <h2 className="text-xl font-semibold mb-4">Create New Discussion</h2>
         <Input
@@ -547,7 +538,6 @@ const Discussion = () => {
         </div>
       </div>
 
-      {/* Discussions List */}
       {isLoading ? (
         <div className="flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
@@ -671,7 +661,6 @@ const Discussion = () => {
                 </Button>
               </div>
 
-              {/* Comments Section */}
               {selectedDiscussion === discussion.id && (
                 <div className="mt-4 space-y-4">
                   {comments?.map((comment) => (
@@ -819,3 +808,4 @@ const Discussion = () => {
 };
 
 export default Discussion;
+
