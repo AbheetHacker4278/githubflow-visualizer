@@ -347,59 +347,6 @@ const Discussion = () => {
     return userLikes?.some(like => like.discussion_id === discussionId);
   };
 
-  // Add deleteAllDiscussions mutation
-  const deleteAllDiscussions = useMutation({
-    mutationFn: async () => {
-      if (!session?.user) throw new Error("Must be logged in");
-
-      // First, delete all reports for user's discussions
-      const { error: reportsError } = await supabase
-        .from("reports")
-        .delete()
-        .eq("user_id", session.user.id);
-
-      if (reportsError) throw reportsError;
-
-      // Then, delete all comments on user's discussions
-      const { error: commentsError } = await supabase
-        .from("comments")
-        .delete()
-        .eq("user_id", session.user.id);
-
-      if (commentsError) throw commentsError;
-
-      // Then, delete all likes on user's discussions
-      const { error: likesError } = await supabase
-        .from("likes")
-        .delete()
-        .eq("user_id", session.user.id);
-
-      if (likesError) throw likesError;
-
-      // Finally, delete all discussions by the user
-      const { error } = await supabase
-        .from("discussions")
-        .delete()
-        .eq("user_id", session.user.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["discussions"] });
-      toast({
-        title: "Success",
-        description: "All your discussions have been deleted",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -505,24 +452,7 @@ const Discussion = () => {
       </nav>
 
       <div className="mb-2 p-4 mt-20 bg-card rounded-lg border">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Create New Discussion</h2>
-          <Button
-            variant="destructive"
-            onClick={() => {
-              if (window.confirm("Are you sure you want to delete all your discussions? This action cannot be undone.")) {
-                deleteAllDiscussions.mutate();
-              }
-            }}
-            disabled={deleteAllDiscussions.isPending}
-          >
-            {deleteAllDiscussions.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Delete All My Discussions"
-            )}
-          </Button>
-        </div>
+        <h2 className="text-xl font-semibold mb-4">Create New Discussion</h2>
         <Input
           placeholder="Title"
           value={title}
