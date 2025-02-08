@@ -405,7 +405,7 @@ const Landing = () => {
                   year: "2025 - Phase 2",
                   title: "Feature - 1",
                   description: "Discussion Page for Developers",
-                  isCompleted: false,
+                  isCompleted: true,
                 },
                 {
                   year: "2025 - Phase 3",
