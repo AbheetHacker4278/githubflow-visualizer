@@ -80,6 +80,7 @@ const Discussion = () => {
     { label: "Features", href: "#features" },
     { label: "Documentation", href: "/Documentation" },
     { label: "About Us", href: "#about" },
+    { label: "Discussion", href: "/discussion" },
   ];
 
   // Fetch discussions with likes and comments count
