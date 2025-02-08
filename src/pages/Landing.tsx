@@ -397,7 +397,7 @@ const Landing = () => {
               {[
                 {
                   year: "2025 - Phase 1",
-                  title: "Launch",
+                  title: "Launch With Core Feature",
                   description: "Initial platform release with core features",
                   isCompleted: true,
                 },
@@ -462,7 +462,7 @@ const Landing = () => {
                     ) : (
                       <div className='group'>
                         <FaClock className="w-6 h-6 text-zinc-900 border border-green-600 rounded-full p-1 bg-yellow-400" />
-                        <span className="absolute invisible group-hover:visible bg-gray-800 text-white px-2 py-1 rounded text-sm -top-8 left-1/2 transform -translate-x-1/2">Pending</span>
+                        <span className="absolute invisible group-hover:visible bg-gray-800 text-white px-2 py-1 rounded text-sm -top-8 left-1/2 transform -translate-x-1/2">Under Development</span>
                       </div>
                     )}
                   </div>
