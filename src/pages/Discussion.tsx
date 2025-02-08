@@ -83,7 +83,7 @@ const Discussion = () => {
     { label: "Discussion", href: "/discussion" },
   ];
 
-  // Fetch discussions with likes and comments count
+  // Fetch discussions with likes and comments coun
   const { data: discussions, isLoading } = useQuery({
     queryKey: ["discussions"],
     queryFn: async () => {
