@@ -19,6 +19,7 @@ import ChatbotNotification from '@/components/ChatbotNotification';
 import { UserMenu } from '@/components/UserMenu';
 import { VisualizationHistory } from '@/components/VisualizationHistory';
 import Documentation from '../components/Documentation';
+import Graph3D from '@/components/Graph3D';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -549,6 +550,10 @@ const Landing = () => {
           <div id='about'>
             <ContributorsSection />
           </div>
+
+          {/* <div className='max-w-96 max-h-96'>
+            <Graph3D />
+          </div> */}
 
           {/* Statistics Section */}
           <h3 className="text-3xl md:text-4xl font-bold text-center mb-12 relative">
