@@ -1,3 +1,4 @@
+
 import { Node, Edge } from "@xyflow/react";
 import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
 import { LanguageNodeData, BranchNodeData } from "../types/nodes";
@@ -84,30 +85,30 @@ export const createNodesAndEdges = (
       const isCollapsed = heatLevel < 25; // Collapse inactive branches by default
       const contributors = getContributors(commits);
 
-      // Mock tags for demonstration - replace with actual tags data
       const tags = branch.name === "main" ? [
         { name: "v1.0.0", type: "annotated" as const, message: "Major release" },
         { name: "latest", type: "lightweight" as const }
       ] : [];
 
-      // Mock file changes - replace with actual file changes data
       const fileChanges = [
         { path: "src/main.ts", changes: 15 },
         { path: "package.json", changes: 3 }
       ];
 
+      const nodeData: BranchNodeData = {
+        label: branch.name,
+        commits: branchCommits,
+        heatLevel,
+        isCollapsed,
+        tags,
+        fileChanges,
+        contributors
+      };
+
       newNodes.push({
         id,
         type: "branch",
-        data: { 
-          label: branch.name,
-          commits: branchCommits,
-          heatLevel,
-          isCollapsed,
-          tags,
-          fileChanges,
-          contributors
-        },
+        data: nodeData,
         position: { x: -200 + (index * 150), y: yOffset },
       });
       newEdges.push({
