@@ -163,7 +163,15 @@ const DiscussionDetail = () => {
     mutationFn: async (discussionId: string) => {
       if (!session?.user) throw new Error("Must be logged in");
 
-      // First, delete all comments
+      // First, delete all reports for this discussion
+      const { error: reportsError } = await supabase
+        .from("reports")
+        .delete()
+        .eq("discussion_id", discussionId);
+
+      if (reportsError) throw reportsError;
+
+      // Then, delete all comments
       const { error: commentsError } = await supabase
         .from("comments")
         .delete()
@@ -179,7 +187,7 @@ const DiscussionDetail = () => {
 
       if (likesError) throw likesError;
 
-      // Finally, delete the discussion
+      // Finally, delete the discussion itself
       const { error } = await supabase
         .from("discussions")
         .delete()

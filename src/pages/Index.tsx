@@ -40,9 +40,9 @@ const nodeTypes = {
 };
 
 // Default empty arrays for type safety
-const defaultCommits = [] as Array<{ sha: string; message: string; date: string }>;
-const defaultTags = [] as Array<{ name: string; type: "lightweight" | "annotated"; message?: string }>;
-const defaultFileChanges = [] as Array<{ path: string; changes: number }>;
+const defaultCommits: Array<{ sha: string; message: string; date: string }> = [];
+const defaultTags: Array<{ name: string; type: "lightweight" | "annotated"; message?: string }> = [];
+const defaultFileChanges: Array<{ path: string; changes: number }> = [];
 
 export default function Index() {
   const navigate = useNavigate();

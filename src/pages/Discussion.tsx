@@ -225,7 +225,15 @@ const Discussion = () => {
     mutationFn: async (discussionId: string) => {
       if (!session?.user) throw new Error("Must be logged in");
 
-      // First, delete all comments for this discussion
+      // First, delete all reports for this discussion
+      const { error: reportsError } = await supabase
+        .from("reports")
+        .delete()
+        .eq("discussion_id", discussionId);
+
+      if (reportsError) throw reportsError;
+
+      // Then, delete all comments
       const { error: commentsError } = await supabase
         .from("comments")
         .delete()
@@ -233,7 +241,7 @@ const Discussion = () => {
 
       if (commentsError) throw commentsError;
 
-      // Then, delete all likes for this discussion
+      // Then, delete all likes
       const { error: likesError } = await supabase
         .from("likes")
         .delete()
@@ -294,66 +302,6 @@ const Discussion = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discussions"] });
       queryClient.invalidateQueries({ queryKey: ["likes", session?.user?.id] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Add edit discussion mutation
-  const editDiscussion = useMutation({
-    mutationFn: async ({ id, title, content }: { id: string; title: string; content: string }) => {
-      if (!session?.user) throw new Error("Must be logged in");
-
-      const { error } = await supabase
-        .from("discussions")
-        .update({ title, content, is_edited: true })
-        .eq("id", id)
-        .eq("user_id", session.user.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["discussions"] });
-      setEditingDiscussion(null);
-      toast({
-        title: "Success",
-        description: "Discussion updated successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Add edit comment mutation
-  const editComment = useMutation({
-    mutationFn: async ({ id, content }: { id: string; content: string }) => {
-      if (!session?.user) throw new Error("Must be logged in");
-
-      const { error } = await supabase
-        .from("comments")
-        .update({ content, is_edited: true })
-        .eq("id", id)
-        .eq("user_id", session.user.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["comments", selectedDiscussion] });
-      setEditingComment(null);
-      toast({
-        title: "Success",
-        description: "Comment updated successfully",
-      });
     },
     onError: (error: Error) => {
       toast({
@@ -639,6 +587,55 @@ const Discussion = () => {
           ))}
         </div>
       )}
+
+      {/* Report Dialog */}
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report {reportingItem?.type}</DialogTitle>
+            <DialogDescription>
+              Please select a reason for reporting this {reportingItem?.type}
+            </DialogDescription>
+          </DialogHeader>
+          <Select value={reportReason} onValueChange={setReportReason}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a reason" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="spam">Spam</SelectItem>
+              <SelectItem value="harassment">Harassment</SelectItem>
+              <SelectItem value="inappropriate">Inappropriate Content</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsReportDialogOpen(false);
+                setReportingItem(null);
+                setReportReason("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (reportingItem && reportReason) {
+                  createReport.mutate({
+                    type: reportingItem.type,
+                    id: reportingItem.id,
+                    reason: reportReason,
+                  });
+                }
+              }}
+              disabled={!reportReason || createReport.isPending}
+            >
+              Submit Report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
