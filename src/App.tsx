@@ -12,22 +12,24 @@ import Auth from "./pages/Auth";
 import Discussion from "./pages/Discussion";
 import DiscussionDetail from "./pages/DiscussionDetail";
 import Documentation from "./components/Documentation";
+import { ChatRoomsList } from "./components/chat/ChatRoomsList";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
+  <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/discussion" element={<Discussion />} />
             <Route path="/discussion/:id" element={<DiscussionDetail />} />
             <Route path="/Documentation" element={<Documentation />} />
+            <Route path="/chat" element={<ChatRoomsList />} />
             <Route
               path="/app"
               element={
@@ -39,10 +41,10 @@ const App = () => (
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </BrowserRouter>
 );
 
 export default App;
