@@ -410,7 +410,7 @@ const Landing = () => {
                 {
                   year: "2025 - Phase 3",
                   title: "Feature - 2",
-                  description: "AI powered Advanced analytics",
+                  description: "Community Room Chat",
                   isCompleted: false,
                 },
                 {
