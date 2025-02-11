@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Discussion from "./pages/Discussion";
 import DiscussionDetail from "./pages/DiscussionDetail";
 import Documentation from "./components/Documentation";
+import { ChatRoomsList } from "./components/chat/ChatRoomsList";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/discussion" element={<Discussion />} />
             <Route path="/discussion/:id" element={<DiscussionDetail />} />
             <Route path="/Documentation" element={<Documentation />} />
+            <Route path="/chat" element={<ChatRoomsList />} />
             <Route
               path="/app"
               element={
