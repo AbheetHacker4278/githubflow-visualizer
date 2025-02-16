@@ -51,9 +51,8 @@ export const CreateRoomDialog = () => {
       const { data: roomCode, error: codeError } = await supabase.rpc('generate_room_code');
       if (codeError) throw codeError;
 
-      // Then create the room
-      const { data: room, error: roomError } = await supabase
-        .from("chat_rooms")
+      // Create the room using a single transaction
+      const { data, error } = await supabase.from("chat_rooms")
         .insert({
           name: roomName,
           code: roomCode,
@@ -64,25 +63,25 @@ export const CreateRoomDialog = () => {
         .select()
         .single();
 
-      if (roomError) throw roomError;
+      if (error) throw error;
 
-      // Finally add the creator as a member in a separate transaction
-      const { error: memberError } = await supabase
-        .from("room_members")
+      // If room creation succeeds, add the creator as a member
+      const { error: memberError } = await supabase.from("room_members")
         .insert({
-          room_id: room.id,
+          room_id: data.id,
           user_id: session.user.id,
         });
 
       if (memberError) {
-        // If adding member fails, we should clean up the room
-        await supabase.from("chat_rooms").delete().eq("id", room.id);
-        throw memberError;
+        console.error("Failed to add member:", memberError);
+        // Clean up the created room if member addition fails
+        await supabase.from("chat_rooms").delete().eq("id", data.id);
+        throw new Error("Failed to join the room. Please try again.");
       }
 
       toast({
-        title: "Success!",
-        description: `Room created successfully. Room code: ${room.code}`,
+        title: "Room created successfully!",
+        description: `Your room code is: ${data.code}`,
       });
 
       setIsOpen(false);
