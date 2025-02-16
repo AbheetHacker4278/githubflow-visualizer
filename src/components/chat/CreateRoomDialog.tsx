@@ -47,46 +47,51 @@ export const CreateRoomDialog = () => {
 
     setIsLoading(true);
     try {
-      // Generate room code
+      // First generate room code
       const { data: roomCode, error: codeError } = await supabase.rpc('generate_room_code');
       if (codeError) throw codeError;
 
-      // Insert the room
-      const { data: roomData, error: roomError } = await supabase
+      // Then create the room
+      const { data: room, error: roomError } = await supabase
         .from("chat_rooms")
         .insert({
           name: roomName,
           code: roomCode,
           created_by: session.user.id,
           max_size: parsedMaxSize,
-          password: password || null, // Store null if no password is provided
+          password: password || null,
         })
         .select()
         .single();
 
       if (roomError) throw roomError;
 
-      // Add creator as member
+      // Finally add the creator as a member in a separate transaction
       const { error: memberError } = await supabase
         .from("room_members")
         .insert({
-          room_id: roomData.id,
+          room_id: room.id,
           user_id: session.user.id,
         });
 
-      if (memberError) throw memberError;
+      if (memberError) {
+        // If adding member fails, we should clean up the room
+        await supabase.from("chat_rooms").delete().eq("id", room.id);
+        throw memberError;
+      }
 
       toast({
-        title: "Room created!",
-        description: `Room code: ${roomData.code}`,
+        title: "Success!",
+        description: `Room created successfully. Room code: ${room.code}`,
       });
+
       setIsOpen(false);
       resetForm();
     } catch (error: any) {
       console.error("Room creation error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create room",
+        description: error.message || "Failed to create room. Please try again.",
         variant: "destructive",
       });
     } finally {
