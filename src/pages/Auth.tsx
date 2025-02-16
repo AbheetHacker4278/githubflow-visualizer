@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
@@ -303,9 +302,6 @@ const AuthPage = () => {
               redirectTo={`${window.location.origin}/app`}
               view="magic_link"
               showLinks={true}
-              captchaParams={{
-                size: 'invisible'
-              }}
             />
           </motion.div>
         </motion.div>
