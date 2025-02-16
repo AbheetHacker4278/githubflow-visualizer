@@ -25,7 +25,14 @@ export const CreateRoomDialog = () => {
 
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session?.user) return;
+    if (!session?.user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to create a room",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Validate max size
     const parsedMaxSize = parseInt(maxSize);
@@ -40,12 +47,16 @@ export const CreateRoomDialog = () => {
 
     setIsLoading(true);
     try {
+      // Generate room code
+      const { data: roomCode, error: codeError } = await supabase.rpc('generate_room_code');
+      if (codeError) throw codeError;
+
       // Insert the room
       const { data: roomData, error: roomError } = await supabase
         .from("chat_rooms")
         .insert({
           name: roomName,
-          code: await generateRoomCode(),
+          code: roomCode,
           created_by: session.user.id,
           max_size: parsedMaxSize,
           password: password || null, // Store null if no password is provided
@@ -71,21 +82,16 @@ export const CreateRoomDialog = () => {
       });
       setIsOpen(false);
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Room creation error:", error);
       toast({
         title: "Error",
-        description: "Failed to create room",
+        description: error.message || "Failed to create room",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const generateRoomCode = async (): Promise<string> => {
-    const { data, error } = await supabase.rpc("generate_room_code");
-    if (error) throw error;
-    return data;
   };
 
   const resetForm = () => {
