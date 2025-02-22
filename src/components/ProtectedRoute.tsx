@@ -1,17 +1,19 @@
 
 import { ReactNode, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 
 export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { session } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!session) {
-      navigate("/auth");
+      // Save the attempted route
+      navigate("/auth", { state: { from: location.pathname } });
     }
-  }, [session, navigate]);
+  }, [session, navigate, location]);
 
   // Only render children if user is authenticated
   if (!session) {
