@@ -52,10 +52,10 @@
 }
 
 .react-flow__edge-path {
-  @apply stroke-[#39FF14] !important;
+  @apply stroke-github-accent !important;
 }
 
-.react-flow__edge.animated .react-flow__edge-path {
+.react-flow__edge.annotation-connection .react-flow__edge-path {
   stroke: #39FF14 !important;
   stroke-width: 2;
   filter: drop-shadow(0 0 8px #39FF14);

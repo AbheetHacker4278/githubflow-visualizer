@@ -120,14 +120,12 @@ const Flow = ({
       ...params,
       id: `edge-${Date.now()}`,
       animated: true,
+      className: isAnnotationConnection ? 'annotation-connection' : '',
       style: { 
-        stroke: isAnnotationConnection ? '#39FF14' : '#58A6FF', 
-        strokeWidth: isAnnotationConnection ? 3 : 2,
-        opacity: isAnnotationConnection ? 0.8 : 1,
+        strokeWidth: 2,
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: isAnnotationConnection ? '#39FF14' : '#58A6FF',
       },
     };
     
