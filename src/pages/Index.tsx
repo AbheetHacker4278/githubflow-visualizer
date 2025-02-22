@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import {
   ReactFlow,
@@ -23,7 +24,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { VisualizationHistory } from "@/components/VisualizationHistory";
 import { fetchRepoData } from "@/services/github";
 import { createNodesAndEdges } from "@/utils/flowUtils";
-import { LanguageNodeData, DeploymentNodeData } from "@/types/nodes";
+import { LanguageNodeData, DeploymentNodeData, GitHubCommit } from "@/types/nodes";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import ChatBot from "@/components/ChatBot";
@@ -39,10 +40,22 @@ const nodeTypes = {
   branch: BranchNode,
 };
 
-// Default empty arrays for type safety
-const defaultCommits: Array<{ sha: string; message: string; date: string }> = [];
-const defaultTags: Array<{ name: string; type: "lightweight" | "annotated"; message?: string }> = [];
-const defaultFileChanges: Array<{ path: string; changes: number }> = [];
+// Define interfaces for the types
+interface Tag {
+  name: string;
+  type: "lightweight" | "annotated";
+  message?: string;
+}
+
+interface FileChange {
+  path: string;
+  changes: number;
+}
+
+// Initialize with proper types
+const defaultCommits: GitHubCommit[] = [];
+const defaultTags: Tag[] = [];
+const defaultFileChanges: FileChange[] = [];
 
 export default function Index() {
   const navigate = useNavigate();
