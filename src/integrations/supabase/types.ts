@@ -81,39 +81,6 @@ export type Database = {
         }
         Relationships: []
       }
-      chat_rooms: {
-        Row: {
-          code: string
-          created_at: string | null
-          created_by: string
-          id: string
-          max_size: number
-          name: string
-          password: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          code: string
-          created_at?: string | null
-          created_by: string
-          id?: string
-          max_size?: number
-          name: string
-          password?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          code?: string
-          created_at?: string | null
-          created_by?: string
-          id?: string
-          max_size?: number
-          name?: string
-          password?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       comments: {
         Row: {
           content: string
@@ -304,70 +271,6 @@ export type Database = {
           },
         ]
       }
-      room_members: {
-        Row: {
-          joined_at: string | null
-          room_id: string
-          user_id: string
-        }
-        Insert: {
-          joined_at?: string | null
-          room_id: string
-          user_id: string
-        }
-        Update: {
-          joined_at?: string | null
-          room_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "room_members_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "chat_rooms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      room_messages: {
-        Row: {
-          content: string | null
-          created_at: string | null
-          id: string
-          image_url: string | null
-          room_id: string
-          user_id: string
-          video_url: string | null
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string | null
-          id?: string
-          image_url?: string | null
-          room_id: string
-          user_id: string
-          video_url?: string | null
-        }
-        Update: {
-          content?: string | null
-          created_at?: string | null
-          id?: string
-          image_url?: string | null
-          room_id?: string
-          user_id?: string
-          video_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "room_messages_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "chat_rooms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_analytics: {
         Row: {
           created_at: string | null
@@ -445,10 +348,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_room_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       is_admin: {
         Args: {
           user_email: string
