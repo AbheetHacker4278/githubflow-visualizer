@@ -42,6 +42,7 @@ const Landing = () => {
     { label: "Documentation", href: "/Documentation" },
     { label: "About Us", href: "#about" },
     { label: "Discussion", href: "/discussion" },
+    { label: "Chat", href: "/chat" }, // Added new chat link
   ];
 
   const features = [
