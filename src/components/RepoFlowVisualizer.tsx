@@ -95,14 +95,23 @@ const Flow = ({
   };
 
   const onConnect = (params: any) => {
+    const isAnnotationConnection = nodes.some(
+      node => (node.id === params.source || node.id === params.target) && 
+      node.type === 'annotation'
+    );
+
     const edge = {
       ...params,
       id: `edge-${Date.now()}`,
       animated: true,
-      style: { stroke: '#58A6FF', strokeWidth: 2 },
+      style: { 
+        stroke: isAnnotationConnection ? '#39FF14' : '#58A6FF', 
+        strokeWidth: isAnnotationConnection ? 3 : 2,
+        opacity: isAnnotationConnection ? 0.8 : 1,
+      },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: '#58A6FF',
+        color: isAnnotationConnection ? '#39FF14' : '#58A6FF',
       },
     };
     
