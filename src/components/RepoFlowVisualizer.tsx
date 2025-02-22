@@ -8,6 +8,7 @@ import {
   Node,
   Panel,
   OnNodesChange,
+  useReactFlow,
 } from "@xyflow/react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -16,10 +17,11 @@ import CommitNode from "@/components/CommitNode";
 import DeploymentNode from "@/components/DeploymentNode";
 import LanguageNode from "@/components/LanguageNode";
 import BranchNode from "@/components/BranchNode";
+import CustomAnnotation from "@/components/CustomAnnotation";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import { LanguageNodeData, DeploymentNodeData } from "@/types/nodes";
-import { Tag, FileChange, GitHubCommit } from "@/types/github";
+import { Plus, Maximize2, Minimize2 } from "lucide-react";
 
 const nodeTypes = {
   github: GitHubNode,
@@ -27,6 +29,7 @@ const nodeTypes = {
   deployment: DeploymentNode,
   language: LanguageNode,
   branch: BranchNode,
+  annotation: CustomAnnotation,
 };
 
 interface RepoFlowVisualizerProps {
@@ -47,6 +50,7 @@ export const RepoFlowVisualizer = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const flowRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { setNodes, getNodes } = useReactFlow();
 
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
@@ -73,6 +77,21 @@ export const RepoFlowVisualizer = ({
     }
   };
 
+  const addCustomAnnotation = () => {
+    const newNode = {
+      id: `annotation-${Date.now()}`,
+      type: 'annotation',
+      data: { label: 'New Annotation', isEditing: true },
+      position: { x: 100, y: 100 },
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+    toast({
+      title: "Annotation Added",
+      description: "Drag to position and edit the text as needed",
+    });
+  };
+
   return (
     <div ref={flowRef} className="flow-container relative">
       <ReactFlow
@@ -85,9 +104,26 @@ export const RepoFlowVisualizer = ({
       >
         <Background color="#58A6FF" className="opacity-9" />
         <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
-        <Panel position="top-right" className="p-2">
-          <Button onClick={toggleFullscreen} className="bg-gray-700 text-white px-4 py-2 rounded-md">
-            {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+        <Panel position="top-right" className="flex gap-2 p-2">
+          <Button
+            onClick={addCustomAnnotation}
+            className="bg-github-accent/20 text-white hover:bg-github-accent/30 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Annotation
+          </Button>
+          <Button onClick={toggleFullscreen} className="bg-gray-700 text-white flex items-center gap-2">
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-4 h-4" />
+                Exit Fullscreen
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-4 h-4" />
+                Enter Fullscreen
+              </>
+            )}
           </Button>
         </Panel>
         <Panel position="top-left" className="glass-card p-4 rounded-lg max-w-72">
