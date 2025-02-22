@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edge, Node, NodeChange, applyNodeChanges } from "@xyflow/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { UserMenu } from "@/components/UserMenu";
@@ -78,6 +78,14 @@ export default function Index() {
       setLoading(false);
     }
   };
+
+  // Add useEffect to handle repo URL from search params
+  useEffect(() => {
+    const repoUrl = searchParams.get('repo');
+    if (repoUrl) {
+      handleVisualization(decodeURIComponent(repoUrl));
+    }
+  }, [searchParams]); // Re-run when search params change
 
   const onNodesChange = (changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
