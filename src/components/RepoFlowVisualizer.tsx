@@ -117,10 +117,27 @@ const Flow = ({
     
     setEdges((eds) => [...eds, edge]);
     
-    toast({
-      title: "Connection Created",
-      description: "Annotation has been connected successfully",
-    });
+    if (isAnnotationConnection) {
+      const sourceNode = nodes.find(n => n.id === params.source);
+      const targetNode = nodes.find(n => n.id === params.target);
+      toast({
+        title: "Connection Created",
+        description: (
+          <div className="flex flex-col">
+            <span className="text-[#39FF14] font-medium">
+              Connected: {sourceNode?.type} → {targetNode?.type}
+            </span>
+            <span className="text-xs opacity-80">Connection added successfully</span>
+          </div>
+        ),
+        className: "border-[#39FF14]/30 bg-[#39FF14]/10",
+      });
+    } else {
+      toast({
+        title: "Connection Created",
+        description: "Connection added successfully",
+      });
+    }
   };
 
   return (
