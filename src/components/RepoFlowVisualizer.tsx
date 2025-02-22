@@ -1,4 +1,3 @@
-
 import { useRef, useState } from "react";
 import {
   ReactFlow,
@@ -94,6 +93,23 @@ const Flow = ({
     });
   };
 
+  const getNodeLabel = (node: Node | undefined) => {
+    if (!node) return '';
+    if (node.type === 'deployment') {
+      return (node.data as any).label || 'Deployment';
+    }
+    if (node.type === 'language') {
+      return (node.data as any).language || 'Language';
+    }
+    if (node.type === 'commit') {
+      return (node.data as any).message?.slice(0, 20) + '...' || 'Commit';
+    }
+    if (node.type === 'annotation') {
+      return node.data.label || 'Annotation';
+    }
+    return node.type || 'Node';
+  };
+
   const onConnect = (params: any) => {
     const isAnnotationConnection = nodes.some(
       node => (node.id === params.source || node.id === params.target) && 
@@ -120,14 +136,21 @@ const Flow = ({
     if (isAnnotationConnection) {
       const sourceNode = nodes.find(n => n.id === params.source);
       const targetNode = nodes.find(n => n.id === params.target);
+      const sourceName = getNodeLabel(sourceNode);
+      const targetName = getNodeLabel(targetNode);
+      
       toast({
         title: "Connection Created",
         description: (
           <div className="flex flex-col">
-            <span className="text-[#39FF14] font-medium">
-              Connected: {sourceNode?.type} → {targetNode?.type}
+            <span className="text-[#39FF14] font-medium flex items-center gap-2">
+              {sourceName}
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h14m-7-7 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              {targetName}
             </span>
-            <span className="text-xs opacity-80">Connection added successfully</span>
+            <span className="text-xs opacity-80">Path connection established</span>
           </div>
         ),
         className: "border-[#39FF14]/30 bg-[#39FF14]/10",
