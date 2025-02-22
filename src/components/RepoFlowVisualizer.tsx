@@ -122,10 +122,11 @@ const Flow = ({
       animated: true,
       className: isAnnotationConnection ? 'annotation-connection' : '',
       style: { 
-        strokeWidth: 2,
+        strokeWidth: isAnnotationConnection ? 3 : 2,
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
+        color: isAnnotationConnection ? '#39FF14' : '#58A6FF',
       },
     };
     
@@ -172,10 +173,9 @@ const Flow = ({
         onConnect={onConnect}
         defaultEdgeOptions={{
           animated: true,
-          style: { stroke: '#58A6FF', strokeWidth: 2 },
+          style: { strokeWidth: 2 },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: '#58A6FF',
           },
         }}
         fitView

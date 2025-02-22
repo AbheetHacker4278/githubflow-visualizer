@@ -55,10 +55,19 @@
   @apply stroke-github-accent !important;
 }
 
+/* Style specifically for annotation connections */
+.react-flow__edge.annotation-connection {
+  z-index: 1000;
+}
+
 .react-flow__edge.annotation-connection .react-flow__edge-path {
   stroke: #39FF14 !important;
-  stroke-width: 2;
+  stroke-width: 3 !important;
   filter: drop-shadow(0 0 8px #39FF14);
+}
+
+.react-flow__edge.annotation-connection .react-flow__edge-text {
+  fill: #39FF14;
 }
 
 .react-flow__controls {
