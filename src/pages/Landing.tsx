@@ -19,7 +19,6 @@ import ChatbotNotification from '@/components/ChatbotNotification';
 import { UserMenu } from '@/components/UserMenu';
 import { VisualizationHistory } from '@/components/VisualizationHistory';
 import Documentation from '../components/Documentation';
-import Graph3D from '@/components/Graph3D';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -42,7 +41,6 @@ const Landing = () => {
     { label: "Documentation", href: "/Documentation" },
     { label: "About Us", href: "#about" },
     { label: "Discussion", href: "/discussion" },
-    { label: "Chat", href: "/chat" }, // Added new chat link
   ];
 
   const features = [
