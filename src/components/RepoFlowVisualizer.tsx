@@ -1,3 +1,4 @@
+
 import { useRef, useState } from "react";
 import {
   ReactFlow,
@@ -9,6 +10,7 @@ import {
   OnNodesChange,
   useReactFlow,
   ReactFlowProvider,
+  MarkerType,
 } from "@xyflow/react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -93,7 +95,23 @@ const Flow = ({
   };
 
   const onConnect = (params: any) => {
-    setEdges((eds) => [...eds, { ...params, id: `edge-${Date.now()}` }]);
+    const edge = {
+      ...params,
+      id: `edge-${Date.now()}`,
+      animated: true,
+      style: { stroke: '#58A6FF', strokeWidth: 2 },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: '#58A6FF',
+      },
+    };
+    
+    setEdges((eds) => [...eds, edge]);
+    
+    toast({
+      title: "Connection Created",
+      description: "Annotation has been connected successfully",
+    });
   };
 
   return (
@@ -105,6 +123,14 @@ const Flow = ({
         onNodesChange={onNodesChange}
         onNodeClick={onNodeClick}
         onConnect={onConnect}
+        defaultEdgeOptions={{
+          animated: true,
+          style: { stroke: '#58A6FF', strokeWidth: 2 },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#58A6FF',
+          },
+        }}
         fitView
       >
         <Background color="#58A6FF" className="opacity-9" />

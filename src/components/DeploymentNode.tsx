@@ -1,3 +1,4 @@
+
 import { memo } from "react";
 import { Handle, Position } from "@xyflow/react";
 
@@ -21,8 +22,26 @@ const DeploymentNode = memo(({ data }: DeploymentNodeProps) => {
         <span className="text-xs text-gray-400">{data.environment}</span>
         <span className="text-xs text-gray-400">{data.status} - {data.date}</span>
       </div>
-      <Handle type="target" position={Position.Top} className="!bg-github-accent" />
-      <Handle type="source" position={Position.Bottom} className="!bg-github-accent" />
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        className="!bg-github-accent w-3 h-3" 
+      />
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        className="!bg-github-accent w-3 h-3" 
+      />
+      <Handle 
+        type="target" 
+        position={Position.Top} 
+        className="!bg-github-accent w-3 h-3" 
+      />
+      <Handle 
+        type="source" 
+        position={Position.Bottom} 
+        className="!bg-github-accent w-3 h-3" 
+      />
     </div>
   );
 });
