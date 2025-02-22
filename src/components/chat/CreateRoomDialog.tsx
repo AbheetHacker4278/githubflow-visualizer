@@ -47,12 +47,16 @@ export const CreateRoomDialog = () => {
 
     setIsLoading(true);
     try {
-      // First generate room code
+      // Generate room code
       const { data: roomCode, error: codeError } = await supabase.rpc('generate_room_code');
-      if (codeError) throw codeError;
+      if (codeError) {
+        console.error("Error generating room code:", codeError);
+        throw new Error("Failed to generate room code");
+      }
 
-      // Create the room using a single transaction
-      const { data, error } = await supabase.from("chat_rooms")
+      // Create the room
+      const { data: room, error: roomError } = await supabase
+        .from("chat_rooms")
         .insert({
           name: roomName,
           code: roomCode,
@@ -63,25 +67,29 @@ export const CreateRoomDialog = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (roomError) {
+        console.error("Error creating room:", roomError);
+        throw new Error("Failed to create room");
+      }
 
-      // If room creation succeeds, add the creator as a member
-      const { error: memberError } = await supabase.from("room_members")
+      // Add creator as member
+      const { error: memberError } = await supabase
+        .from("room_members")
         .insert({
-          room_id: data.id,
+          room_id: room.id,
           user_id: session.user.id,
         });
 
       if (memberError) {
-        console.error("Failed to add member:", memberError);
-        // Clean up the created room if member addition fails
-        await supabase.from("chat_rooms").delete().eq("id", data.id);
-        throw new Error("Failed to join the room. Please try again.");
+        console.error("Error adding member:", memberError);
+        // Clean up the created room
+        await supabase.from("chat_rooms").delete().eq("id", room.id);
+        throw new Error("Failed to join the room");
       }
 
       toast({
-        title: "Room created successfully!",
-        description: `Your room code is: ${data.code}`,
+        title: "Room created!",
+        description: `Room code: ${room.code}`,
       });
 
       setIsOpen(false);
@@ -90,7 +98,7 @@ export const CreateRoomDialog = () => {
       console.error("Room creation error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create room. Please try again.",
+        description: error.message || "Failed to create room",
         variant: "destructive",
       });
     } finally {
