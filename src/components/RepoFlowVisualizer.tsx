@@ -1,3 +1,4 @@
+
 import { useRef, useState } from "react";
 import {
   ReactFlow,
@@ -7,8 +8,6 @@ import {
   Node,
   Panel,
   OnNodesChange,
-  NodeChange,
-  applyNodeChanges,
 } from "@xyflow/react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +48,7 @@ export const RepoFlowVisualizer = ({
   const flowRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // Initialize empty arrays with proper types
   const defaultCommits: GitHubCommit[] = [];
   const defaultTags: Tag[] = [];
   const defaultFileChanges: FileChange[] = [];
@@ -126,11 +126,11 @@ export const RepoFlowVisualizer = ({
           isOpen={!!selectedBranch}
           onClose={() => setSelectedBranch(null)}
           branchName={selectedBranch.data.label as string}
-          commits={selectedBranch.data.commits || defaultCommits}
+          commits={selectedBranch.data.commits || []}
           heatLevel={selectedBranch.data.heatLevel as number}
           isCollapsed={selectedBranch.data.isCollapsed as boolean}
-          tags={selectedBranch.data.tags || defaultTags}
-          fileChanges={selectedBranch.data.fileChanges || defaultFileChanges}
+          tags={selectedBranch.data.tags || []}
+          fileChanges={selectedBranch.data.fileChanges || []}
           isFullscreen={isFullscreen}
         />
       )}

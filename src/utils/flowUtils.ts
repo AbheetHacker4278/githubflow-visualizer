@@ -1,4 +1,3 @@
-
 import { Node, Edge } from "@xyflow/react";
 import { GitHubCommit, GitHubDeployment, GitHubBranch } from "../types/github";
 import { LanguageNodeData, BranchNodeData } from "../types/nodes";
@@ -193,7 +192,7 @@ export const createNodesAndEdges = (
 
   // Add deployment nodes with proper typing
   if (deployments.length > 0) {
-    deployments.forEach((deployment: Deployment, index) => {
+    deployments.forEach((deployment: GitHubDeployment, index) => {
       const id = `deployment-${index}`;
       newNodes.push({
         id,
