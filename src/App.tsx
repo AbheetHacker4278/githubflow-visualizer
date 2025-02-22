@@ -13,6 +13,7 @@ import Discussion from "./pages/Discussion";
 import DiscussionDetail from "./pages/DiscussionDetail";
 import Documentation from "./components/Documentation";
 import ChatRoom from "./pages/ChatRoom";
+import ChatRoomDetail from "./pages/ChatRoomDetail";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ChatRoom />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chat/:id"
+              element={
+                <ProtectedRoute>
+                  <ChatRoomDetail />
                 </ProtectedRoute>
               }
             />
