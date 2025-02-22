@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
@@ -13,6 +12,8 @@ import { toast } from "sonner";
 
 export default function ChatRoomPage() {
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [newRoomName, setNewRoomName] = useState("");
   const [newRoomPassword, setNewRoomPassword] = useState("");
   const [maxSize, setMaxSize] = useState(10);
@@ -25,22 +26,44 @@ export default function ChatRoomPage() {
       return;
     }
 
-    fetchRooms();
-    subscribeToRooms();
+    const init = async () => {
+      await fetchRooms();
+      subscribeToRooms();
+    };
+
+    init();
+
+    // Cleanup subscription on unmount
+    return () => {
+      const channel = supabase.channel("schema-db-changes");
+      supabase.removeChannel(channel);
+    };
   }, [session]);
 
   const fetchRooms = async () => {
     try {
+      setLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
         .from("chat_rooms")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setRooms(data);
-    } catch (error) {
-      console.error("Error fetching rooms:", error);
-      toast.error("Failed to load chat rooms");
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setRooms(data);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to load chat rooms";
+      console.error("Error fetching rooms:", err);
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,24 +73,34 @@ export default function ChatRoomPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "chat_rooms" },
-        (payload) => {
-          console.log("Room change received:", payload);
+        () => {
           fetchRooms();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to room changes');
+        }
+        if (status === 'CHANNEL_ERROR') {
+          console.error('Failed to subscribe to room changes');
+          toast.error("Failed to subscribe to room updates");
+        }
+      });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return channel;
   };
 
   const createRoom = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      toast.error("Please login to create a room");
+      return;
+    }
 
     try {
-      const { data: roomCode } = await supabase.rpc("generate_room_code");
+      const { data: roomCode, error: codeError } = await supabase.rpc("generate_room_code");
       
+      if (codeError) throw codeError;
+
       const { data, error } = await supabase
         .from("chat_rooms")
         .insert({
@@ -82,47 +115,62 @@ export default function ChatRoomPage() {
 
       if (error) throw error;
 
+      if (!data) {
+        throw new Error("No data returned after creating room");
+      }
+
       // Join the room automatically as creator
-      await supabase.from("room_members").insert({
-        room_id: data.id,
-        user_id: session.user.id,
-      });
+      const { error: memberError } = await supabase
+        .from("room_members")
+        .insert({
+          room_id: data.id,
+          user_id: session.user.id,
+        });
+
+      if (memberError) throw memberError;
 
       toast.success("Room created successfully!");
       navigate(`/chat/${data.id}`);
-    } catch (error) {
-      console.error("Error creating room:", error);
-      toast.error("Failed to create room");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to create room";
+      console.error("Error creating room:", err);
+      toast.error(errorMessage);
     }
   };
 
   const joinRoom = async (room: ChatRoom) => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      toast.error("Please login to join a room");
+      return;
+    }
 
     try {
-      const { data: members } = await supabase
+      const { data: members, error: membersError } = await supabase
         .from("room_members")
         .select("*")
         .eq("room_id", room.id);
+
+      if (membersError) throw membersError;
 
       if (members && members.length >= room.max_size) {
         toast.error("Room is full");
         return;
       }
 
-      const { error } = await supabase
+      const { error: joinError } = await supabase
         .from("room_members")
         .insert({
           room_id: room.id,
           user_id: session.user.id,
         });
 
-      if (error) throw error;
+      if (joinError) throw joinError;
 
       navigate(`/chat/${room.id}`);
-    } catch (error) {
-      console.error("Error joining room:", error);
-      toast.error("Failed to join room");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to join room";
+      console.error("Error joining room:", err);
+      toast.error(errorMessage);
     }
   };
 
@@ -166,7 +214,13 @@ export default function ChatRoomPage() {
         </Sheet>
       </div>
 
-      {rooms.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-4">Loading chat rooms...</div>
+      ) : error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : rooms.length === 0 ? (
         <Alert>
           <AlertDescription>
             No chat rooms available. Create one to get started!
