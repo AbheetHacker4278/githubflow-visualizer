@@ -20,3 +20,20 @@ export interface FileChange {
   path: string;
   changes: number;
 }
+
+export interface GitHubDeployment {
+  id: number;
+  environment: string;
+  state: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GitHubBranch {
+  name: string;
+  commit: {
+    sha: string;
+    url: string;
+  };
+  protected: boolean;
+}
