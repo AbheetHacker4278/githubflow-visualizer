@@ -1,4 +1,3 @@
-
 import { useRef, useState } from "react";
 import {
   ReactFlow,
@@ -9,6 +8,7 @@ import {
   Panel,
   OnNodesChange,
   useReactFlow,
+  ReactFlowProvider,
 } from "@xyflow/react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +39,7 @@ interface RepoFlowVisualizerProps {
   onNodesChange: OnNodesChange;
 }
 
-export const RepoFlowVisualizer = ({
+const Flow = ({
   nodes,
   edges,
   branches,
@@ -50,7 +50,7 @@ export const RepoFlowVisualizer = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const flowRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { setNodes, getNodes } = useReactFlow();
+  const { setNodes } = useReactFlow();
 
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
@@ -172,3 +172,9 @@ export const RepoFlowVisualizer = ({
     </div>
   );
 };
+
+export const RepoFlowVisualizer = (props: RepoFlowVisualizerProps) => (
+  <ReactFlowProvider>
+    <Flow {...props} />
+  </ReactFlowProvider>
+);
