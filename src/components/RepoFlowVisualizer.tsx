@@ -50,7 +50,7 @@ const Flow = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const flowRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { setNodes } = useReactFlow();
+  const { setNodes, setEdges } = useReactFlow();
 
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
@@ -92,6 +92,10 @@ const Flow = ({
     });
   };
 
+  const onConnect = (params: any) => {
+    setEdges((eds) => [...eds, { ...params, id: `edge-${Date.now()}` }]);
+  };
+
   return (
     <div ref={flowRef} className="flow-container relative">
       <ReactFlow
@@ -100,6 +104,7 @@ const Flow = ({
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onNodeClick={onNodeClick}
+        onConnect={onConnect}
         fitView
       >
         <Background color="#58A6FF" className="opacity-9" />
