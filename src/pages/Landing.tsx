@@ -19,6 +19,7 @@ import ChatbotNotification from '@/components/ChatbotNotification';
 import { UserMenu } from '@/components/UserMenu';
 import { VisualizationHistory } from '@/components/VisualizationHistory';
 import Documentation from '../components/Documentation';
+import Graph3D from '@/components/Graph3D';
 
 const Landing = () => {
   const navigate = useNavigate();

@@ -12,8 +12,6 @@ import Auth from "./pages/Auth";
 import Discussion from "./pages/Discussion";
 import DiscussionDetail from "./pages/DiscussionDetail";
 import Documentation from "./components/Documentation";
-import ChatRoom from "./pages/ChatRoom";
-import ChatRoomDetail from "./pages/ChatRoomDetail";
 
 const queryClient = new QueryClient();
 
@@ -31,22 +29,14 @@ const App = () => (
             <Route path="/discussion/:id" element={<DiscussionDetail />} />
             <Route path="/Documentation" element={<Documentation />} />
             <Route
-              path="/chat"
+              path="/app"
               element={
                 <ProtectedRoute>
-                  <ChatRoom />
+                  <Index />
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/chat/:id"
-              element={
-                <ProtectedRoute>
-                  <ChatRoomDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/app" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </TooltipProvider>
