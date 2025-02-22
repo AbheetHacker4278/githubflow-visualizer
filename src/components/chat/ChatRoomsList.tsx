@@ -47,17 +47,21 @@ export const ChatRoomsList = () => {
   const loadRooms = async () => {
     if (!session?.user) return;
 
-    const { data, error } = await supabase
-      .from("chat_rooms")
-      .select("id, name, code")
-      .or(
-        `created_by.eq.${session.user.id},id.in.(${
-          `SELECT room_id FROM room_members WHERE user_id = '${session.user.id}'`
-        })`
-      );
+    try {
+      // First get rooms user created or is a member of
+      const { data, error } = await supabase
+        .from("chat_rooms")
+        .select("id, name, code")
+        .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setRooms(data);
+      if (error) {
+        console.error("Error loading rooms:", error);
+        return;
+      }
+
+      setRooms(data || []);
+    } catch (error) {
+      console.error("Error loading rooms:", error);
     }
   };
 
