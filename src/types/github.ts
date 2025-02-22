@@ -1,21 +1,22 @@
+
 export interface GitHubCommit {
   sha: string;
   commit: {
     message: string;
     author: {
-      name: string;
       date: string;
+      name: string;
     };
   };
 }
 
-export interface GitHubDeployment {
-  id: string;
-  environment: string;
-  state: string;
-  created_at: string;
+export interface Tag {
+  name: string;
+  type: "lightweight" | "annotated";
+  message?: string;
 }
 
-export interface GitHubBranch {
-  name: string;
+export interface FileChange {
+  path: string;
+  changes: number;
 }
