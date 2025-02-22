@@ -47,29 +47,26 @@ export const CreateRoomDialog = () => {
 
     setIsLoading(true);
     try {
-      // Generate room code
-      const { data: roomCode, error: codeError } = await supabase.rpc('generate_room_code');
-      if (codeError) {
-        console.error("Error generating room code:", codeError);
-        throw new Error("Failed to generate room code");
-      }
-
-      // Create the room
+      // Create the room first
       const { data: room, error: roomError } = await supabase
         .from("chat_rooms")
         .insert({
           name: roomName,
-          code: roomCode,
           created_by: session.user.id,
           max_size: parsedMaxSize,
           password: password || null,
+          code: Math.random().toString(36).substring(2, 8).toUpperCase(), // Generate a simple code
         })
         .select()
         .single();
 
       if (roomError) {
         console.error("Error creating room:", roomError);
-        throw new Error("Failed to create room");
+        throw new Error(roomError.message);
+      }
+
+      if (!room) {
+        throw new Error("Room creation failed");
       }
 
       // Add creator as member
@@ -84,7 +81,7 @@ export const CreateRoomDialog = () => {
         console.error("Error adding member:", memberError);
         // Clean up the created room
         await supabase.from("chat_rooms").delete().eq("id", room.id);
-        throw new Error("Failed to join the room");
+        throw new Error(memberError.message);
       }
 
       toast({
@@ -97,8 +94,8 @@ export const CreateRoomDialog = () => {
     } catch (error: any) {
       console.error("Room creation error:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to create room",
+        title: "Error creating room",
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
