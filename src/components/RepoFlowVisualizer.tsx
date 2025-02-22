@@ -48,11 +48,6 @@ export const RepoFlowVisualizer = ({
   const flowRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Initialize empty arrays with proper types
-  const defaultCommits: GitHubCommit[] = [];
-  const defaultTags: Tag[] = [];
-  const defaultFileChanges: FileChange[] = [];
-
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
     if (node.type === 'branch') {
@@ -126,11 +121,11 @@ export const RepoFlowVisualizer = ({
           isOpen={!!selectedBranch}
           onClose={() => setSelectedBranch(null)}
           branchName={selectedBranch.data.label as string}
-          commits={selectedBranch.data.commits || []}
+          commits={(selectedBranch.data.commits || []) as Array<{sha: string; message: string; date: string}>}
           heatLevel={selectedBranch.data.heatLevel as number}
           isCollapsed={selectedBranch.data.isCollapsed as boolean}
-          tags={selectedBranch.data.tags || []}
-          fileChanges={selectedBranch.data.fileChanges || []}
+          tags={(selectedBranch.data.tags || []) as Array<{name: string; type: "lightweight" | "annotated"; message?: string}>}
+          fileChanges={(selectedBranch.data.fileChanges || []) as Array<{path: string; changes: number}>}
           isFullscreen={isFullscreen}
         />
       )}
