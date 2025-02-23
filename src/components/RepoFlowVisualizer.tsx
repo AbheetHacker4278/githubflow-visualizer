@@ -1,3 +1,4 @@
+
 import { useRef, useState } from "react";
 import {
   ReactFlow,
@@ -54,6 +55,23 @@ const Flow = ({
   const { setNodes, setEdges } = useReactFlow();
 
   const handleLivePreview = () => {
+    // First check if there's a deployment URL available
+    const deploymentNode = nodes.find(node => node.type === 'deployment' && 
+      (node.data as DeploymentNodeData).status === 'success');
+    
+    if (deploymentNode) {
+      const deploymentUrl = (deploymentNode.data as DeploymentNodeData).url;
+      if (deploymentUrl && typeof deploymentUrl === 'string') {
+        window.open(deploymentUrl, '_blank');
+        toast({
+          title: "Live Preview",
+          description: "Opening deployed version...",
+        });
+        return;
+      }
+    }
+
+    // Fallback to CodeSandbox preview if no deployment URL is available
     const urlParams = new URLSearchParams(window.location.search);
     const repoUrl = urlParams.get('repo');
     
