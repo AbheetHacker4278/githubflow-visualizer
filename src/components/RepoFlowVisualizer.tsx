@@ -1,3 +1,4 @@
+
 import { useRef, useState } from "react";
 import {
   ReactFlow,
@@ -78,21 +79,6 @@ const Flow = ({
     }
   };
 
-  const addCustomAnnotation = () => {
-    const newNode = {
-      id: `annotation-${Date.now()}`,
-      type: 'annotation',
-      data: { label: 'New Annotation', isEditing: true },
-      position: { x: 100, y: 100 },
-    };
-
-    setNodes((nds) => [...nds, newNode]);
-    toast({
-      title: "Annotation Added",
-      description: "Drag to position and edit the text as needed",
-    });
-  };
-
   const getNodeLabel = (node: Node | undefined) => {
     if (!node) return '';
     if (node.type === 'deployment') {
@@ -108,6 +94,21 @@ const Flow = ({
       return node.data.label || 'Annotation';
     }
     return node.type || 'Node';
+  };
+
+  const addCustomAnnotation = () => {
+    const newNode = {
+      id: `annotation-${Date.now()}`,
+      type: 'annotation',
+      data: { label: 'New Annotation', isEditing: true },
+      position: { x: 100, y: 100 },
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+    toast({
+      title: "Annotation Added",
+      description: "Drag to position and edit the text as needed",
+    });
   };
 
   const onConnect = (params: any) => {
