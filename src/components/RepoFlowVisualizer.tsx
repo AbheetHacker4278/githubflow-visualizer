@@ -1,4 +1,3 @@
-
 import { useRef, useState } from "react";
 import {
   ReactFlow,
@@ -23,7 +22,7 @@ import CustomAnnotation from "@/components/CustomAnnotation";
 import BranchDetailsPanel from "@/components/BranchDetailsPanel";
 import DeploymentDetailsPanel from "@/components/DeploymentDetailsPanel";
 import { LanguageNodeData, DeploymentNodeData } from "@/types/nodes";
-import { Plus, Maximize2, Minimize2 } from "lucide-react";
+import { Plus, Maximize2, Minimize2, Eye, ExternalLink } from "lucide-react";
 
 const nodeTypes = {
   github: GitHubNode,
@@ -53,6 +52,49 @@ const Flow = ({
   const flowRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { setNodes, setEdges } = useReactFlow();
+
+  const handleLivePreview = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const repoUrl = urlParams.get('repo');
+    
+    if (repoUrl) {
+      const previewUrl = repoUrl.replace('github.com', 'githubbox.com');
+      window.open(previewUrl, '_blank');
+      
+      toast({
+        title: "Live Preview",
+        description: "Opening repository in CodeSandbox...",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Repository URL not found",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeploymentPreview = () => {
+    const deploymentNode = nodes.find(node => node.type === 'deployment' && 
+      (node.data as DeploymentNodeData).status === 'success');
+    
+    if (deploymentNode) {
+      const deploymentUrl = (deploymentNode.data as DeploymentNodeData).url;
+      if (deploymentUrl) {
+        window.open(deploymentUrl, '_blank');
+        toast({
+          title: "Deployment Preview",
+          description: "Opening deployed version...",
+        });
+      }
+    } else {
+      toast({
+        title: "No Deployment",
+        description: "No active deployment found for this repository",
+        variant: "destructive",
+      });
+    }
+  };
 
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
@@ -184,6 +226,20 @@ const Flow = ({
         <Background color="#58A6FF" className="opacity-9" />
         <Controls className="!bottom-4 !right-4 !top-auto !left-auto text-black hover:bg-white" />
         <Panel position="top-right" className="flex gap-2 p-2">
+          <Button
+            onClick={handleLivePreview}
+            className="bg-emerald-600/40 text-white hover:bg-emerald-600/60 flex items-center gap-2"
+          >
+            <Eye className="w-4 h-4" />
+            Live Preview
+          </Button>
+          <Button
+            onClick={handleDeploymentPreview}
+            className="bg-purple-600/40 text-white hover:bg-purple-600/60 flex items-center gap-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View Deployment
+          </Button>
           <Button
             onClick={addCustomAnnotation}
             className="bg-github-accent/20 text-white hover:bg-github-accent/30 flex items-center gap-2"
