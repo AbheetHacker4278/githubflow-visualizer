@@ -91,29 +91,6 @@ const Flow = ({
       });
     }
   };
-
-  const handleDeploymentPreview = () => {
-    const deploymentNode = nodes.find(node => node.type === 'deployment' && 
-      (node.data as DeploymentNodeData).status === 'success');
-    
-    if (deploymentNode) {
-      const deploymentUrl = (deploymentNode.data as DeploymentNodeData).url;
-      if (deploymentUrl) {
-        window.open(deploymentUrl, '_blank');
-        toast({
-          title: "Deployment Preview",
-          description: "Opening deployed version...",
-        });
-      }
-    } else {
-      toast({
-        title: "No Deployment",
-        description: "No active deployment found for this repository",
-        variant: "destructive",
-      });
-    }
-  };
-
   const onNodeClick = (_: React.MouseEvent<HTMLDivElement>, node: Node) => {
     setSelectedNode(node);
     if (node.type === 'branch') {
@@ -250,13 +227,6 @@ const Flow = ({
           >
             <Eye className="w-4 h-4" />
             Live Preview
-          </Button>
-          <Button
-            onClick={handleDeploymentPreview}
-            className="bg-purple-600/40 text-white hover:bg-purple-600/60 flex items-center gap-2"
-          >
-            <ExternalLink className="w-4 h-4" />
-            View Deployment
           </Button>
           <Button
             onClick={addCustomAnnotation}
