@@ -120,10 +120,11 @@ const Flow = ({
     const edge = {
       ...params,
       id: `edge-${Date.now()}`,
-      animated: true,
+      animated: true, // Always animate connections
       className: isAnnotationConnection ? 'annotation-connection' : '',
       style: { 
         strokeWidth: isAnnotationConnection ? 3 : 2,
+        animation: 'flowAnimation 1s infinite linear',
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
@@ -150,7 +151,7 @@ const Flow = ({
               </svg>
               {targetName}
             </span>
-            <span className="text-xs opacity-80">Path connection established</span>
+            <span className="text-xs opacity-80">Animated connection established</span>
           </div>
         ),
         className: "border-[#39FF14]/30 bg-[#39FF14]/10",
@@ -158,7 +159,7 @@ const Flow = ({
     } else {
       toast({
         title: "Connection Created",
-        description: "Connection added successfully",
+        description: "Animated connection established",
       });
     }
   };
@@ -173,8 +174,11 @@ const Flow = ({
         onNodeClick={onNodeClick}
         onConnect={onConnect}
         defaultEdgeOptions={{
-          animated: true,
-          style: { strokeWidth: 2 },
+          animated: true, // Make all edges animated by default
+          style: { 
+            strokeWidth: 2,
+            animation: 'flowAnimation 1s infinite linear',
+          },
           markerEnd: {
             type: MarkerType.ArrowClosed,
           },

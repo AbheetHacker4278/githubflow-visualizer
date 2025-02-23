@@ -55,6 +55,25 @@
   @apply stroke-github-accent !important;
 }
 
+/* Style for all animated edges */
+.react-flow__edge {
+  @apply transition-all duration-300;
+}
+
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 5;
+  animation: flowAnimation 1s infinite linear;
+}
+
+@keyframes flowAnimation {
+  from {
+    stroke-dashoffset: 10;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* Style specifically for annotation connections */
 .react-flow__edge.annotation-connection {
   z-index: 1000;
