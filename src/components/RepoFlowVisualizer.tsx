@@ -1,4 +1,3 @@
-
 import { useRef, useState } from "react";
 import {
   ReactFlow,
@@ -97,18 +96,57 @@ const Flow = ({
   };
 
   const addCustomAnnotation = () => {
+    const availableNodes = nodes.filter(node => node.type !== 'annotation');
+    const targetNode = availableNodes[Math.floor(Math.random() * availableNodes.length)];
+    
+    const newAnnotationId = `annotation-${Date.now()}`;
     const newNode = {
-      id: `annotation-${Date.now()}`,
+      id: newAnnotationId,
       type: 'annotation',
       data: { label: 'New Annotation', isEditing: true },
-      position: { x: 100, y: 100 },
+      position: { 
+        x: (targetNode?.position?.x || 100) - 200, 
+        y: (targetNode?.position?.y || 100) - 50 
+      },
     };
 
     setNodes((nds) => [...nds, newNode]);
-    toast({
-      title: "Annotation Added",
-      description: "Drag to position and edit the text as needed",
-    });
+
+    if (targetNode) {
+      const newEdge = {
+        id: `edge-${Date.now()}`,
+        source: newAnnotationId,
+        target: targetNode.id,
+        animated: true,
+        className: 'annotation-connection',
+        style: { 
+          strokeWidth: 3,
+          animation: 'flowAnimation 1s infinite linear',
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: '#39FF14',
+        },
+      };
+
+      setEdges((eds) => [...eds, newEdge]);
+
+      toast({
+        title: "Annotation Added",
+        description: (
+          <div className="flex flex-col">
+            <span className="text-[#39FF14] font-medium">Connected to {getNodeLabel(targetNode)}</span>
+            <span className="text-xs opacity-80">Drag to reposition and edit the text</span>
+          </div>
+        ),
+        className: "border-[#39FF14]/30 bg-[#39FF14]/10",
+      });
+    } else {
+      toast({
+        title: "Annotation Added",
+        description: "Drag to position and edit the text as needed",
+      });
+    }
   };
 
   const onConnect = (params: any) => {
@@ -120,7 +158,7 @@ const Flow = ({
     const edge = {
       ...params,
       id: `edge-${Date.now()}`,
-      animated: true, // Always animate connections
+      animated: true,
       className: isAnnotationConnection ? 'annotation-connection' : '',
       style: { 
         strokeWidth: isAnnotationConnection ? 3 : 2,
@@ -174,7 +212,7 @@ const Flow = ({
         onNodeClick={onNodeClick}
         onConnect={onConnect}
         defaultEdgeOptions={{
-          animated: true, // Make all edges animated by default
+          animated: true,
           style: { 
             strokeWidth: 2,
             animation: 'flowAnimation 1s infinite linear',
