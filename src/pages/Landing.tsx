@@ -410,13 +410,13 @@ const Landing = () => {
                 {
                   year: "2025 - Phase 3",
                   title: "Feature - 2",
-                  description: "Community Room Chat",
+                  description: "Integrated Development Environment",
                   isCompleted: false,
                 },
                 {
                   year: "2025 - Phase 4",
                   title: "Feature - 3",
-                  description: "Integrated Development Environment",
+                  description: "More Customizations Editable features",
                   isCompleted: false,
                 },
                 {
